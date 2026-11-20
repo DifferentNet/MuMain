@@ -84,4 +84,7 @@ std::optional<int> GetCombatPowerChange(const CombatPowerEquipment& equipment, c
 // GetCombatPowerChange for the hero's own equipment; nullopt when there's no hero, the item is one the hero wears or
 // the hero's class can't wear it.
 std::optional<int> GetHeroCombatPowerChange(const ITEM& item);
+
+// The Combat Power of the hero's own equipment (GetEquipmentCombatPower); nullopt when there's no hero.
+std::optional<int> GetHeroEquipmentCombatPower();
 } // namespace GameLogic::Items

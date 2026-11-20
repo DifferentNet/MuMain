@@ -124,12 +124,13 @@
 			<span class="modern-icon-btn-glyph-px">&#9672;</span>
 		</div>
 
-		<!-- Set/Socket option header labels, each spanning half of #panel's width to match the
-		     former native hover-rect split. -->
+		<!-- Set option and Combat Power header labels, each spanning half of #panel's width to match the
+		     former native hover-rect split. The Combat Power stands where the socket option was (this server
+		     has no sockets) and shows once the server told it. -->
 		<div id="set_option_label" class="option-label option-label-set" data-class-active="set_option_active"
 		     data-event-mouseover="my_inventory_set_option_hover" data-event-mouseout="my_inventory_set_option_unhover">{{set_option_label}}</div>
-		<div id="socket_option_label" class="option-label option-label-socket" data-class-active="socket_option_active"
-		     data-event-mouseover="my_inventory_socket_option_hover" data-event-mouseout="my_inventory_socket_option_unhover">{{socket_option_label}}</div>
+		<div id="combat_power_label" class="option-label option-label-cp" data-if="combat_power_known"
+		     data-attr-data-hint="combat_power_hint">{{combat_power_label}}</div>
 	</div>
 </body>
 </rml>

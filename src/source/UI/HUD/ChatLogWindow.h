@@ -9,6 +9,7 @@
 #include "UI/HUD/ChatInputBox.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Chat/ChatItemLink.h"
+#include "UI/Chat/ChatRowWrap.h"
 
 #include <RmlUi/Core/Types.h>
 
@@ -16,6 +17,7 @@
 #include <string>
 #include <chrono>
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -177,8 +179,9 @@ namespace mu::ui::window
         static constexpr float SCROLL_TOP_BOTTOM_PART_HEIGHT = 3.0f;
         static constexpr float SCROLL_MIDDLE_PART_HEIGHT = 15.0f;
         static constexpr float CLIENT_WIDTH = WND_WIDTH - SCROLL_BAR_WIDTH * 2.0f - (WND_LEFT_RIGHT_EDGE * 2.0f);
-        // SeparateText(): room kept free at the end of a split first row (the chat window's font draws a
-        // little wider than g_pRenderText measures, most of all on /play).
+        // SplitIntoRows() without RmlUi or a hidden row, or in a log too narrow to split for: room kept free at the
+        // end of a row measured with g_pRenderText (the chat window's font draws a little wider than it measures,
+        // most of all on /play).
         static constexpr int FIRST_ROW_SAFETY_MARGIN = 8;
         typedef std::wstring type_string;
         typedef std::vector<CMessageText*>	type_vector_msgs;
@@ -297,6 +300,38 @@ namespace mu::ui::window
         // #lines of the current document, found by its id once rather than several times a frame.
         Rml::Element* LinesElement() const;
         mutable Rml::ObserverPtr<Rml::Element> m_LinesElement;
+        // The hidden row of #lines a message of this type is measured with (chat_log.rml): the GM one is bold.
+        Rml::Element* RowProbe(MESSAGE_TYPE MsgType) const;
+        mutable Rml::ObserverPtr<Rml::Element> m_RowProbe;
+        mutable Rml::ObserverPtr<Rml::Element> m_GmRowProbe;
+        // The width the hidden row of this type gives a row's text, in RmlUi's layout px; 0 until RmlUi has updated
+        // the log's document once (before that the legacy line's text size is not on it yet). A hidden document,
+        // which RmlUi leaves as it was, and one not laid out yet are brought up to date here, once a frame at most.
+        float RowRoom(MESSAGE_TYPE MsgType);
+        // Whether a message of this type can be split into rows now: on the hidden row, or with the native font
+        // when there is no RmlUi to wait for or the log's markup has no hidden row (UI::Chat::ChooseChatRowSource()).
+        bool CanSplitRows(MESSAGE_TYPE MsgType);
+        // The document RmlUi has updated since it was built (AfterRmlLayout()); only compared, never followed.
+        const Rml::ElementDocument* m_UpdatedDocument = nullptr;
+        // The document whose missing hidden row CanSplitRows() has logged, once; only compared, never followed.
+        const Rml::ElementDocument* m_NoProbeLogged = nullptr;
+        // RowRoom() forced the document's layout this frame.
+        bool m_bLayoutForced = false;
+        // MU Skynet: messages that came before the log could measure their rows (the first ones at world entry come
+        // before the log's document exists), in the order they came. Each is split and added as soon as it can be,
+        // and the ones after it wait behind it, so the order stays.
+        struct PendingMessage
+        {
+            type_string id;
+            type_string text;
+            MESSAGE_TYPE type;
+            MESSAGE_TYPE errType;
+            std::vector<UI::Chat::ChatItemLink> links;
+        };
+        std::deque<PendingMessage> m_PendingMessages;
+        void AddPendingMessages();
+        // A full list drops its oldest lines before a message comes in (AddText()).
+        void DropOldestAtCap(MESSAGE_TYPE MsgType);
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatLogRmlModel& model);
         void OnRmlReloaded();
@@ -393,15 +428,23 @@ namespace mu::ui::window
         type_vector_msgs* GetMsgs(MESSAGE_TYPE MsgType);
         void AddWithLinks(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType,
                           MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
+        // Adds the message's rows, or keeps it pending while the log cannot measure them yet.
         void ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType,
                             MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
         // One row of a message, into its own list, the all-messages list and, for an error, the list it belongs
         // to. False when that list is missing; the message then stops there.
         bool AddRow(type_vector_msgs& msgs, const type_string& strID, const type_string& strRow, MESSAGE_TYPE MsgType,
                     MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
+        // Splits the message into rows now and adds them, each with the links standing wholly in it.
+        void AddRows(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
+                     const std::vector<UI::Chat::ChatItemLink>& links);
 
-        void SeparateText(IN const type_string& strID, IN const type_string& strText, MESSAGE_TYPE MsgType,
-                          OUT type_string& strText1, OUT type_string& strText2);
+        // The rows a message takes in the log, none wider than a row of the log (UI/Chat/ChatRowWrap.h), as the
+        // pieces of strText they hold: the first is drawn with "ID : " in front of it, the rest hold the text alone.
+        // An item's name (`links`) stays whole in one row.
+        std::vector<UI::Chat::ChatTextSpan> SplitIntoRows(const type_string& strID, const type_string& strText,
+                                                          MESSAGE_TYPE MsgType,
+                                                          const std::vector<UI::Chat::ChatItemLink>& links);
 
         bool CheckFilterText(const type_string& strTestText);
         void AddFilterWord(const type_string& strWord);

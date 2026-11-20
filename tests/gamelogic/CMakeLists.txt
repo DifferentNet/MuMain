@@ -232,6 +232,15 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Events/EntryLevels.cpp
 )
 
+# The skill books that ask for Marlon's "Gain Hero Status", as the server asks (GameLogic/Items/SkillBookQuest).
+mu_add_test(
+    NAME test_skill_book_quest
+    SOURCES
+        test_skill_book_quest.cpp
+    LINK_LIBS
+        MuClient
+)
+
 # MU Helper's crafting materials option: feathers, the Spirit and the Fenrir materials leave the quest option (2026-11-20).
 mu_add_test(
     NAME test_helper_craft_pick

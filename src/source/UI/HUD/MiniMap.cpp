@@ -22,6 +22,8 @@
 #include "UI/HUD/MiniMapPartyDots.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "UI/Party/PartyListRefresh.h"
+#include "Core/Input/GamepadInput.h"
+#include "UI/HUD/PadGlyphs.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -324,6 +326,7 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
 {
     c.Bind("text_px", &model.textPx);
     c.Bind("close_hint", &model.closeHint);
+    c.Bind("pad_close_visible", &model.padCloseVisible);
 
     auto clip = c.RegisterStruct<MiniMapClipEntry>();
     clip.RegisterMember("left", &MiniMapClipEntry::left);
@@ -442,13 +445,20 @@ bool mu::ui::window::CMiniMap::PrepareWarmUp()
 void mu::ui::window::CMiniMap::SyncScreen()
 {
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
-    // Converted once per language text, not every frame.
-    if (m_pCloseHintSource != I18N::Game::Close388)
+    // Converted once per language text and pad glyphs, not every frame. With the pad in use the hint
+    // names the pad's close button (B; Circle on a PlayStation pad), pad round 7.
+    const bool padInUse = UI::Mobile::IsGamepadInUse();
+    const wchar_t* const hintSource = padInUse ? I18N::Game::PadMapClose : I18N::Game::Close388;
+    const int hintKind = padInUse ? static_cast<int>(Core::Input::Gamepad::ShownKind()) : -1;
+    if (m_pCloseHintSource != hintSource || m_CloseHintKind != hintKind)
     {
-        m_pCloseHintSource = I18N::Game::Close388;
-        Sync(m_RmlView.Binder(), &MiniMapRmlModel::closeHint, "close_hint",
-             StringUtils::WideToNarrow(I18N::Game::Close388));
+        m_pCloseHintSource = hintSource;
+        m_CloseHintKind = hintKind;
+        const std::wstring hint = padInUse ? UI::HUD::PadGlyphs::Named(hintSource) : std::wstring(hintSource);
+        Sync(m_RmlView.Binder(), &MiniMapRmlModel::closeHint, "close_hint", StringUtils::WideToNarrow(hint.c_str()));
     }
+    // The pad has no pointer to hover the cross with: the same text stands beside it.
+    Sync(m_RmlView.Binder(), &MiniMapRmlModel::padCloseVisible, "pad_close_visible", padInUse);
 
     // The border tiles depend on the screen alone: rebuilt when it changes, or when a theme reload
     // left the model empty.

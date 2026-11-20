@@ -40,6 +40,12 @@
 				       data-class-chat-link--socket="seg.rarity == 'socket'"
 				       data-class-chat-link--ancient="seg.rarity == 'ancient'"
 				       data-attr-link="seg.link">{{seg.text}}</span></div>
+			<!-- MU Skynet: two rows that are never drawn and take no room, as wide as a row's text may be (the
+			     framed scrollbar's width kept free, chat_log.rcss). A message is measured in their font when it
+			     comes and split into as many rows as it needs (CChatLogWindow::SplitIntoRows()); the GM one is
+			     bold. After the lines, so a line's place among the children stays its index in the model. -->
+			<div id="line_probe" class="chat-line chat-line--chat chat-line-probe" data-style-font-size="text_px + 'px'"></div>
+			<div id="line_probe_gm" class="chat-line chat-line--gm chat-line-probe" data-style-font-size="text_px + 'px'"></div>
 		</div>
 	</div>
 </body>

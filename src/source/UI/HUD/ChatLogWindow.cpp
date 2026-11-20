@@ -24,6 +24,7 @@
 #include "Render/Text/CUIRenderText.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Element.h>
+#include <RmlUi/Core/ElementUtilities.h>
 
 #include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -35,6 +36,7 @@
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Engine/Object/ZzzInventory.h"
+#include "UI/Chat/ChatRowWrap.h"
 
 #include <chrono>
 #include <utility>
@@ -82,6 +84,9 @@ void mu::ui::window::CChatLogWindow::Init()
     m_CurrentRenderMsgType = TYPE_ALL_MESSAGE;
     m_bShowChatLog = true;
 
+    m_UpdatedDocument = nullptr;
+    m_bLayoutForced = false;
+    m_NoProbeLogged = nullptr;
 }
 
 bool mu::ui::window::CChatLogWindow::Create(CManager* pNewUIMng, int nShowingLines /* = 6 */)
@@ -153,15 +158,7 @@ void mu::ui::window::CChatLogWindow::AddWithLinks(const type_string& strID, cons
         return;
     }
 
-    if (GetNumberOfLines(MsgType) >= MAX_NUMBER_OF_LINES)
-    {
-        RemoveFrontLine(MsgType, LINES_DROPPED_AT_CAP);
-    }
-
-    if (GetNumberOfLines(TYPE_ALL_MESSAGE) >= MAX_NUMBER_OF_LINES)
-    {
-        RemoveFrontLine(TYPE_ALL_MESSAGE, LINES_DROPPED_AT_CAP);
-    }
+    DropOldestAtCap(MsgType);
 
     if (m_vecFilters.empty())
     {
@@ -188,23 +185,6 @@ void mu::ui::window::CChatLogWindow::AddWithLinks(const type_string& strID, cons
 namespace
 {
     using ItemLinkList = std::vector<UI::Chat::ChatItemLink>;
-
-    // MU Moldova, items in the chat: a long line breaks before an item's name it would cut (or after it, when the
-    // line starts with it), so a name stays whole in one row.
-    void KeepItemLinksWhole(const std::wstring& text, const ItemLinkList& links, std::wstring& row1, std::wstring& row2)
-    {
-        if (links.empty() || row1.empty())
-            return;
-        std::vector<UI::Chat::ItemLinkAttach::Span> spans;
-        spans.reserve(links.size());
-        for (const UI::Chat::ChatItemLink& link : links)
-            spans.push_back({link.start, link.length});
-        const std::size_t split = UI::Chat::ItemLinkAttach::KeepLinksWhole(row1.size(), spans);
-        if (split == row1.size())
-            return;
-        row1 = text.substr(0, split);
-        row2 = text.substr(split);
-    }
 
     // The links standing wholly in the row text[from, to), counted from the row's start.
     ItemLinkList LinksBetween(const ItemLinkList& links, std::size_t from, std::size_t to)
@@ -251,8 +231,48 @@ bool mu::ui::window::CChatLogWindow::AddRow(type_vector_msgs& msgs, const type_s
     return true;
 }
 
+void mu::ui::window::CChatLogWindow::DropOldestAtCap(MESSAGE_TYPE MsgType)
+{
+    if (GetNumberOfLines(MsgType) >= MAX_NUMBER_OF_LINES)
+    {
+        RemoveFrontLine(MsgType, LINES_DROPPED_AT_CAP);
+    }
+
+    if (GetNumberOfLines(TYPE_ALL_MESSAGE) >= MAX_NUMBER_OF_LINES)
+    {
+        RemoveFrontLine(TYPE_ALL_MESSAGE, LINES_DROPPED_AT_CAP);
+    }
+}
+
 void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
                                                     const ItemLinkList& links)
+{
+    // MU Skynet: until the log can measure a message's rows it waits, and the ones after it wait behind it.
+    AddPendingMessages();
+    if (!m_PendingMessages.empty() || !CanSplitRows(MsgType))
+    {
+        // More than the log keeps: the oldest would go at the cap anyway.
+        if (m_PendingMessages.size() >= MAX_NUMBER_OF_LINES)
+            m_PendingMessages.pop_front();
+        m_PendingMessages.push_back({strID, strText, MsgType, ErrMsgType, links});
+        return;
+    }
+    AddRows(strID, strText, MsgType, ErrMsgType, links);
+}
+
+void mu::ui::window::CChatLogWindow::AddPendingMessages()
+{
+    while (!m_PendingMessages.empty() && CanSplitRows(m_PendingMessages.front().type))
+    {
+        const PendingMessage message = std::move(m_PendingMessages.front());
+        m_PendingMessages.pop_front();
+        DropOldestAtCap(message.type);
+        AddRows(message.id, message.text, message.type, message.errType, message.links);
+    }
+}
+
+void mu::ui::window::CChatLogWindow::AddRows(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
+                                             const ItemLinkList& links)
 {
     m_bLinesDirty = true;
     type_vector_msgs* pvecMsgs = GetMsgs(MsgType);
@@ -263,30 +283,16 @@ void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, co
     }
 
     const int rowScroll = (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType) ? 1 : 0;
+    // Every row goes to the message's own list, the all-messages list and the error list as one message did
+    // before; the sender only on the first row. A row carries the links standing wholly in it.
+    const std::vector<UI::Chat::ChatTextSpan> rows = SplitIntoRows(strID, strText, MsgType, links);
     int nScrollLines = 0;
-    if (strText.size() >= 20)
+    for (std::size_t row = 0; row < rows.size(); ++row)
     {
-        type_string	strText1, strText2;
-        SeparateText(strID, strText, MsgType, strText1, strText2);
-        KeepItemLinksWhole(strText, links, strText1, strText2);
-        const std::size_t split = strText1.size();
-        // Only the first row carries the sender: the rest follows as its own row below, as in the all-messages list.
-        if (!strText1.empty())
-        {
-            if (!AddRow(*pvecMsgs, strID, strText1, MsgType, ErrMsgType, LinksBetween(links, 0, split)))
-                return;
-            nScrollLines += rowScroll;
-        }
-        if (!strText2.empty())
-        {
-            if (!AddRow(*pvecMsgs, L"", strText2, MsgType, ErrMsgType, LinksBetween(links, split, strText.size())))
-                return;
-            nScrollLines += rowScroll;
-        }
-    }
-    else
-    {
-        if (!AddRow(*pvecMsgs, strID, strText, MsgType, ErrMsgType, links))
+        const UI::Chat::ChatTextSpan& span = rows[row];
+        const type_string rowID = row == 0 ? strID : type_string();
+        const type_string rowText = strText.substr(span.start, span.length);
+        if (!AddRow(*pvecMsgs, rowID, rowText, MsgType, ErrMsgType, LinksBetween(links, span.start, span.start + span.length)))
             return;
         nScrollLines += rowScroll;
     }
@@ -663,6 +669,9 @@ void mu::ui::window::CChatLogWindow::OnRmlReloaded()
 {
     // The next SyncRmlModel() fills the rebuilt document.
     m_bLinesDirty = true;
+    // Its rows are measured once RmlUi has updated it (RowRoom()), and a missing hidden row is logged again.
+    m_UpdatedDocument = nullptr;
+    m_NoProbeLogged = nullptr;
     UI::Placement::Invalidate();
 }
 
@@ -716,6 +725,9 @@ void mu::ui::window::CChatLogWindow::SyncRmlModel()
 
     SyncNativeLineGeometry();
 
+    // The messages that came before the log could measure their rows, now that it can.
+    AddPendingMessages();
+
     if (FadeChanged())
         m_bLinesDirty = true;
 
@@ -762,6 +774,12 @@ bool mu::ui::window::CChatLogWindow::FadeChanged()
 void mu::ui::window::CChatLogWindow::AfterRmlLayout(Rml::Context* context)
 {
     auto* document = m_RmlView.Document();
+    if (document && document->GetContext() == context)
+    {
+        // RmlUi has put the model's values on the document's elements: its rows can be measured (RowRoom()).
+        m_UpdatedDocument = document;
+        m_bLayoutForced = false;
+    }
     if (!document || document->GetContext() != context || !document->IsVisible())
         return;
 
@@ -886,7 +904,9 @@ bool mu::ui::window::CChatLogWindow::RebuildLineModel()
         wanted.faded = !fade.shown[index];
         wanted.lead = static_cast<int>(index) == fade.firstShown;
         const char* slug = pMsgText ? MessageTypeSlug(pMsgText->GetType()) : nullptr;
-        if (slug == nullptr || pMsgText->GetText().empty())
+        // MU Skynet: a row with a sender and no text is drawn: the first row of a message whose first word did not
+        // fit after the sender (UI/Chat/ChatRowWrap.h).
+        if (slug == nullptr || (pMsgText->GetText().empty() && pMsgText->GetID().empty()))
         {
             // Native skipped drawing these (bRenderMessage stayed false), but an entry still has
             // to exist: chat_line_rightclick() looks its sender up by array index, so the model
@@ -1262,48 +1282,84 @@ float mu::ui::window::CChatLogWindow::GetKeyEventOrder()
     return 8.0f;
 }
 
-void mu::ui::window::CChatLogWindow::SeparateText(IN const type_string& strID, IN const type_string& strText,
-                                                 MESSAGE_TYPE MsgType, OUT type_string& strText1,
-                                                 OUT type_string& strText2)
+Rml::Element* mu::ui::window::CChatLogWindow::RowProbe(MESSAGE_TYPE MsgType) const
 {
-    g_pRenderText->SetFont(MsgType == TYPE_GM_MESSAGE ? g_hFontBold : g_hFont);
-    // The first row is drawn as one string, "ID : text" (RebuildLineModel()), so it is measured as one: the
-    // sender part measured on its own came out narrower than drawn and the row's end was cut off. The margin
-    // covers the chat window's own font drawing a little wider than this measure.
+    if (MsgType == TYPE_GM_MESSAGE)
+        return KeptElementById(m_RmlView.Document(), m_GmRowProbe, "line_probe_gm");
+    return KeptElementById(m_RmlView.Document(), m_RowProbe, "line_probe");
+}
+
+float mu::ui::window::CChatLogWindow::RowRoom(MESSAGE_TYPE MsgType)
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    Rml::Element* probe = RowProbe(MsgType);
+    if (document == nullptr || probe == nullptr || document != m_UpdatedDocument)
+        return 0.f;
+
+    const auto room = [probe]
+    { return probe->GetFontFaceHandle() != 0 ? probe->GetBox().GetSize(Rml::BoxArea::Content).x : 0.f; };
+    // RmlUi neither updates nor lays out a hidden document (Context::SetSkipHiddenDocuments()): the log hidden
+    // while a map loads, or by the player, has the values RmlUi put on it but not yet their font or layout.
+    if ((!document->IsVisible() || room() <= 0.f) && !m_bLayoutForced)
+    {
+        m_bLayoutForced = true;
+        document->UpdateDocument();
+    }
+    return room();
+}
+
+bool mu::ui::window::CChatLogWindow::CanSplitRows(MESSAGE_TYPE MsgType)
+{
+    const Rml::ElementDocument* document = m_RmlView.Document();
+    const bool logUpdated = document != nullptr && document == m_UpdatedDocument;
+    const bool hasProbe = RowProbe(MsgType) != nullptr;
+    const UI::Chat::ChatRowSource source = UI::Chat::ChooseChatRowSource(
+        RmlUiRuntime::Instance().GetContext() != nullptr, logUpdated, hasProbe, RowRoom(MsgType));
+    if (source == UI::Chat::ChatRowSource::NativeFont && logUpdated && !hasProbe && m_NoProbeLogged != document)
+    {
+        m_NoProbeLogged = document;
+        // %ls: the web build's vswprintf (musl) knows no %hs.
+        g_ErrorReport.Write(L"> [ChatLog] No #%ls in chat_log.rml: rows measured with the native font.\r\n",
+                            MsgType == TYPE_GM_MESSAGE ? L"line_probe_gm" : L"line_probe");
+    }
+    return source != UI::Chat::ChatRowSource::Wait;
+}
+
+std::vector<UI::Chat::ChatTextSpan> mu::ui::window::CChatLogWindow::SplitIntoRows(
+    const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, const ItemLinkList& links)
+{
+    // The first row is drawn as one string, "ID : text" (RebuildLineModel()), so it is measured as one.
     const type_string prefix = strID.empty() ? type_string() : strID + L" : ";
-    const auto firstRowWidth = [&prefix, &strText](std::size_t textLength)
+    // MU Skynet, items in the chat: an item's name stays whole in one row (LinksBetween() keeps a row's links).
+    std::vector<UI::Chat::ChatTextSpan> names;
+    names.reserve(links.size());
+    for (const UI::Chat::ChatItemLink& link : links)
+        names.push_back({link.start, link.length});
+
+    // Measured in the log's own font against the room its rows have, both read off the hidden row of the
+    // message's type (chat_log.rml, either theme): the layout px of the log as RmlUi draws it at any UI scale.
+    if (const float room = RowRoom(MsgType); room > 0.f)
     {
-        const type_string row = prefix + strText.substr(0, textLength);
-        return static_cast<int>(g_pRenderText->MeasureText(row.c_str(), static_cast<int>(row.length())).cx);
-    };
-    const int max_first_line_size = static_cast<int>(CLIENT_WIDTH) - FIRST_ROW_SAFETY_MARGIN;
-
-    int required_size = firstRowWidth(strText.length());
-
-    if (required_size <= max_first_line_size)
-    {
-        strText1 = strText;
-        strText2 = L"";
-        return;
-    }
-
-    BOOL bSpaceExist = (strText.find_last_of(L" ") != std::wstring::npos) ? TRUE : FALSE;
-    int iLocToken = strText.length();
-
-    while ((required_size > max_first_line_size) && (iLocToken > -1))
-    {
-        iLocToken = (bSpaceExist) ? strText.find_last_of(L" ", iLocToken - 1) : iLocToken - 1;
-        if (iLocToken <= 0)
+        Rml::Element* probe = RowProbe(MsgType);
+        const UI::Chat::MeasureChatRow measure = [probe](const type_string& row)
         {
-            strText1.clear();
-            strText2 = strText;
-            return;
-        }
-        required_size = firstRowWidth(static_cast<std::size_t>(iLocToken));
+            return static_cast<float>(
+                Rml::ElementUtilities::GetStringWidth(probe, StringUtils::WideToNarrow(row.c_str())));
+        };
+        const float rowWidth = UI::Chat::ChatRowWidth(room);
+        if (!UI::Chat::ChatRowTooNarrow(rowWidth, measure))
+            return UI::Chat::WrapChatRowSpans(prefix, strText, rowWidth, measure, names);
     }
 
-    strText1 = strText.substr(0, iLocToken);
-    strText2 = strText.substr(iLocToken, strText.length() - iLocToken);
+    // No RmlUi, a log without the hidden row (CanSplitRows()), or one too narrow to split for: the native font
+    // against the original's client width.
+    g_pRenderText->SetFont(MsgType == TYPE_GM_MESSAGE ? g_hFontBold : g_hFont);
+    return UI::Chat::WrapChatRowSpans(prefix, strText, static_cast<float>(CLIENT_WIDTH) - FIRST_ROW_SAFETY_MARGIN,
+        [](const type_string& row)
+        {
+            return static_cast<float>(g_pRenderText->MeasureText(row.c_str(), static_cast<int>(row.length())).cx);
+        },
+        names);
 }
 
 bool mu::ui::window::CChatLogWindow::CheckFilterText(const type_string& strTestText)
@@ -1354,6 +1410,8 @@ void mu::ui::window::CChatLogWindow::AddFilterWord(const type_string& strWord)
 void mu::ui::window::CChatLogWindow::ClearAll()
 {
     m_bLinesDirty = true;
+    // The waiting messages came before the clear too.
+    m_PendingMessages.clear();
     for (int i = TYPE_ALL_MESSAGE; i < NUMBER_OF_TYPES; i++)
     {
         Clear((MESSAGE_TYPE)i);

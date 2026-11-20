@@ -3,6 +3,7 @@
 
 #include "RmlLayoutFixture.h"
 #include "../../src/ThirdParty/RmlUi/Source/Core/DecoratorTiled.h"
+#include <RmlUi/Core/ElementUtilities.h>
 #include <RmlUi/Core/FontEngineInterface.h>
 #include <RmlUi/Core/Mesh.h>
 #include <RmlUi/Core/TextShapingContext.h>
@@ -102,4 +103,71 @@ TEST_CASE("chat fill respects theme insets independently of modal backdrop style
         CHECK(fill->GetBox().GetSize(Rml::BoxArea::Border).y == doctest::Approx(90.f));
         document->Close();
     }
+}
+
+TEST_CASE("chat row probes carry a line's font and the room of a row's text in both themes [ui][styling]")
+{
+    UI::Tests::RmlLayoutFixture fixture;
+    // The framed scrollbar's width per theme (chat_log.rcss), on a PC and on the phone's HUD: the probes' right
+    // inset repeats it, so it is checked against the scrollbar RmlUi actually draws.
+    struct ThemeScrollbar
+    {
+        std::string theme;
+        bool phoneHud;
+        float scrollbar;
+    };
+    for (const ThemeScrollbar& entry : {ThemeScrollbar{"legacy", false, 15.f}, ThemeScrollbar{"legacy", true, 24.f},
+                                        ThemeScrollbar{"modern", false, 8.f}, ThemeScrollbar{"modern", true, 8.f}})
+    {
+        CAPTURE(entry.theme);
+        CAPTURE(entry.phoneHud);
+        fixture.context->ActivateTheme("mobile-hud", entry.phoneHud);
+        auto* document = fixture.Load(entry.theme, "chat_log");
+        REQUIRE(document);
+        auto* panel = document->GetElementById("panel");
+        auto* lines = document->GetElementById("lines");
+        auto* probe = document->GetElementById("line_probe");
+        auto* gmProbe = document->GetElementById("line_probe_gm");
+        REQUIRE(panel);
+        REQUIRE(lines);
+        REQUIRE(probe);
+        REQUIRE(gmProbe);
+        panel->SetProperty("width", "281px");
+        panel->SetProperty("height", "100px");
+        lines->SetProperty("height", "90px");
+        fixture.Refresh();
+
+        // After the lines, so a line's place among the children stays its index in the model.
+        REQUIRE(lines->GetNumChildren() >= 3);
+        CHECK(lines->GetChild(lines->GetNumChildren() - 2) == probe);
+        CHECK(lines->GetChild(lines->GetNumChildren() - 1) == gmProbe);
+        const float unframedWidth = probe->GetBox().GetSize(Rml::BoxArea::Border).x;
+
+        // More lines than the well shows, with the frame up: the scrollbar takes its width off the well.
+        Rml::Element* filler = lines->InsertBefore(document->CreateElement("div"), probe);
+        filler->SetProperty("display", "block");
+        filler->SetProperty("height", "400px");
+        filler->SetProperty("flex-shrink", "0");
+        panel->SetClass("framed", true);
+        fixture.Refresh();
+        const float scrollbar = lines->GetBox().GetSize(Rml::BoxArea::Padding).x - lines->GetClientWidth();
+        CHECK(scrollbar == doctest::Approx(entry.scrollbar));
+
+        for (Rml::Element* row : {probe, gmProbe})
+        {
+            CHECK(row->GetFontFaceHandle() != 0);
+            // No room taken, so the pointed-line test passes over them.
+            CHECK(row->GetOffsetHeight() == 0.f);
+            CHECK(row->GetBox().GetEdge(Rml::BoxArea::Margin, Rml::BoxEdge::Bottom) == 0.f);
+            // As wide as the well beside the scrollbar, whether the frame shows it or not.
+            CHECK(row->GetBox().GetSize(Rml::BoxArea::Border).x == doctest::Approx(lines->GetClientWidth()));
+            CHECK(row->GetBox().GetSize(Rml::BoxArea::Border).x == doctest::Approx(unframedWidth));
+            CHECK(row->GetBox().GetSize(Rml::BoxArea::Content).x > 0.f);
+        }
+        // A GM line is bold.
+        CHECK(Rml::ElementUtilities::GetStringWidth(gmProbe, "Hello world, hello") >
+              Rml::ElementUtilities::GetStringWidth(probe, "Hello world, hello"));
+        document->Close();
+    }
+    fixture.context->ActivateTheme("mobile-hud", false);
 }

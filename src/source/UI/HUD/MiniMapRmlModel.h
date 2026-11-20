@@ -61,6 +61,9 @@ struct MiniMapRmlModel
     std::vector<MiniMapLiveEntry> lives;
     std::vector<Rml::String> sideLines; // CSS matrix() of each left/right border tile
     Rml::String closeHint;
+    // The close hint drawn by the cross while a pad plays (pad round 7): the cross's tooltip needs a
+    // pointer, and the pad has none in the world.
+    bool padCloseVisible = false;
 
     // The hovered marker's name (CMiniMap::Check_Btn()), physical px.
     bool hintVisible = false;

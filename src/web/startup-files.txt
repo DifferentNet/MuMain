@@ -1769,6 +1769,7 @@ Data/Interface/RmlUi/themes/legacy/shop_notice.rcss
 Data/Interface/RmlUi/themes/legacy/purchase_shop.rml
 Data/Interface/RmlUi/themes/legacy/purchase_shop.rcss
 Data/Interface/newui_item_back04.OZT
+Data/Interface/newui_chainfo_top.OZT
 Data/Interface/newui_item_back02-L.OZT
 Data/Interface/newui_item_back02-R.OZT
 Data/Interface/newui_item_back03.OZT

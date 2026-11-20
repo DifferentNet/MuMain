@@ -108,6 +108,21 @@
 #lines scrollbarvertical { width: 0; }
 #panel.framed #lines scrollbarvertical { width: 15dp; }
 
+/* MU Skynet: the hidden rows a message is measured with before it is split into rows (chat_log.rml,
+   CChatLogWindow::SplitIntoRows()): a line's font and side edges, as wide as the well less the framed
+   scrollbar, so a row fits whether the frame shows or not. No height and no margin, so the pointed-line
+   test (CChatLogWindow::SenderLineAt()) passes over them. Two classes, so a line's own height and margin
+   below never win. */
+.chat-line.chat-line-probe {
+	position: absolute;
+	left: 0;
+	right: 15dp;
+	top: 0;
+	height: 0;
+	margin: 0;
+	visibility: hidden;
+}
+
 /* No padding: native's background quad is exactly the measured text (RenderText() without a box).
    Text size, height and the 15-unit row pitch come from chat_log.rml's bindings. flex-shrink 0:
    with an explicit height, a flex item would otherwise shrink to fit a full well and the rows
@@ -157,6 +172,7 @@
 @media (theme: mobile-hud) {
 	#panel.framed #lines { pointer-events: auto; }
 	#panel.framed #lines scrollbarvertical { width: 24dp; }
+	.chat-line.chat-line-probe { right: 24dp; }
 	/* The chat opens framed on a phone; the 10dp strip is too thin for a finger, the bar's size button steps the
 	   height instead. */
 	#resize_handle { display: none; }

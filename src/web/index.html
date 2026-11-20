@@ -162,7 +162,7 @@
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
-  <button id="download-game" type="button" hidden><span class="label-full">Download game · Скачать игру</span><span class="label-short">Скачать игру</span></button>
+  <button id="download-game" type="button" hidden><span class="label-full">Download the whole game · Скачать всю игру</span><span class="label-short">Скачать всю игру</span></button>
   <button id="new-version" type="button" hidden title="A new version of the game came out while this page was open · Пока страница была открыта, вышла новая версия игры"><span class="label-full">New version: reload · Новая версия: обновить</span><span class="label-short">Новая версия: обновить</span></button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
   <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download">Screenshot</button>
@@ -562,8 +562,8 @@
   // installed app alike). Lite: as before, each file when the game first reads it, plus the automatic
   // download of what comes into sight on a phone's Wi-Fi. Full: everything now, on any network: the
   // files and every map's pack (downloadRestInBackground). Kept in the browser (FULL_DOWNLOAD: "1" Full,
-  // "0" Lite); the footer's "Download game" shows the progress and changes it too. Phones and tablets
-  // see it on the Play card, the installed app once, until a choice is made; a computer downloads
+  // "0" Lite); the footer's "Download the whole game" shows the progress and changes it too. Phones and
+  // tablets see it on the Play card, the installed app once, until a choice is made; a computer downloads
   // everything in the background anyway.
   const FULL_DOWNLOAD = "mu-web/full-download";
   let applyDownloadChoice = null;   // starts or stops the download once the page can (downloadButton)
@@ -2489,7 +2489,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         return;
       }
       appendLog(`Game files in the background: downloading ${files.length} of ${urls.length}` +
-                (full ? " (the whole game, asked for with Download game)"
+                (full ? " (the whole game, asked for with Download the whole game)"
                       : phoneDownloads ? " (a phone on Wi-Fi: what comes into sight)" : "") +
                 (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
       const started = performance.now();
@@ -2526,8 +2526,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       await dropOldVersions([...kept]);
     }
 
-    // The footer's "Download game" (in the ⋮ menu on phones): how much of the game is on this device,
-    // and a tap downloads the rest now, on any network. On Android the automatic download takes only
+    // The footer's "Download the whole game" (in the ⋮ menu on phones): how much of the game is on this
+    // device, and a tap downloads the rest now, on any network. While idle that count is in its title, not
+    // a percent on it: a PC takes a map's pack only on entering the map, so the percent stayed at 98 % and
+    // read as a stuck download (ghinzuro 2026-11-20). On Android the automatic download takes only
     // Wi-Fi and only what comes into sight, an iPhone's Safari doesn't say its network so it takes none,
     // and an installed app can't be opened with ?prefetch (ghinzuro asked for the button, 2026-10-31).
     // The choice is kept (FULL_DOWNLOAD): later visits download a release's new files at the start.
@@ -2548,9 +2550,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           button.title = `${have} of ${total} files, ${Math.round(megabytes)} MB so far; tap to stop · ` +
                          `${have} из ${total} файлов, скачано ${Math.round(megabytes)} МБ; нажмите, чтобы остановить`;
         } else {
-          setFooterLabel(button, `Download game · Скачать игру · ${percent()} %`, `Скачать игру · ${percent()} %`);
-          button.title = "Download the whole game to this device now, so nothing in the game waits for the network · " +
-                         "Скачать всю игру на это устройство сейчас, чтобы в игре ничего не ждало сети";
+          setFooterLabel(button, "Download the whole game · Скачать всю игру", "Скачать всю игру");
+          button.title = `${have} of ${total} files on this device; maps you haven't entered yet download when you ` +
+                         `enter them, or all at once with this button · На устройстве ${have} из ${total} файлов; ` +
+                         `карты, где вы ещё не были, скачаются при входе на них или сразу все по этой кнопке`;
         }
       };
       button.onclick = () => {

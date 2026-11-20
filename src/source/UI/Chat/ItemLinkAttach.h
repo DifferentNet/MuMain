@@ -118,10 +118,6 @@ struct Renamed
 Renamed Rename(std::wstring_view text, const std::vector<std::optional<Span>>& spans,
                const std::vector<std::wstring>& names);
 
-// Where a chat row that would break at `split` breaks instead so no link is cut: before the link it would cut, or
-// after it when that link starts the text.
-std::size_t KeepLinksWhole(std::size_t split, const std::vector<Span>& spans);
-
 // A piece of a chat row: plain text, or the link of that index.
 struct Segment
 {

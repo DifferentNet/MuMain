@@ -26,6 +26,7 @@
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Items/JewelUpgradeResult.h"
+#include "GameLogic/Items/SkillBookQuest.h"
 #include "World/MapInfra/PortalMgr.h"
 #include "GameLogic/Quests/CSQuest.h"
 #include "I18N/All.h"
@@ -1318,17 +1319,17 @@ bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, I
 
     if (IsSkillBook(pItem))
     {
-        bool bReadBookGem = true;
-
-        if (pItem->Type == ITEM_SCROLL_OF_NOVA || pItem->Type == ITEM_SCROLL_OF_WIZARDRY_ENHANCE ||
-            pItem->Type == ITEM_CRYSTAL_OF_MULTI_SHOT || pItem->Type == ITEM_CRYSTAL_OF_RECOVERY ||
-            pItem->Type == ITEM_CRYSTAL_OF_DESTRUCTION)
+        // MU Moldova: the client asks only what the server asks (OpenMU's item requirements). 12:44 Crystal of
+        // Destruction is the one book with a quest requirement, Marlon's "Gain Hero Status"; Nova, Wizardry
+        // Enhance, Multi-Shot and Recovery go to the level and stat check as the other books do.
+        if (GameLogic::Items::SkillBookNeedsHeroStatusQuest(pItem->Type) &&
+            g_csQuest.getQuestState2(QUEST_CHANGE_UP_3) != QUEST_END)
         {
-            if (g_csQuest.getQuestState2(QUEST_CHANGE_UP_3) != QUEST_END)
-            {
-                bReadBookGem = false;
-            }
+            PostEquipRefusal(I18N::Game::SkillBookNeedsHeroQuest);
+            return true;
         }
+
+        bool bReadBookGem = true;
 
         if (pItem->Type == ITEM_SCROLL_OF_CHAOTIC_DISEIER)
         {

@@ -192,6 +192,33 @@ std::string SetAxis(const Request& request)
     SDL_SetJoystickVirtualAxis(g_virtual, *axis, JoystickValue(*axis, value));
     return StateResult(request);
 }
+
+// The virtual pad's battery, sent as SDL sends a real pad's report: it takes the same path to the
+// system log's low battery line (Core/Input/GamepadBattery.h). PC only, as the line is: the browser
+// build reads no battery, so there it is refused.
+std::string SetBattery(const Request& request)
+{
+#ifdef __EMSCRIPTEN__
+    return Error(request, ErrorCode::NotAllowed, "`battery` is PC only: the browser build reads no pad battery");
+#else
+    if (g_virtual == nullptr)
+        return Error(request, ErrorCode::NotConnected, "no virtual pad: send `pad` with `action` attach first");
+    int percent = -1;
+    if (!request.GetInt("percent", percent))
+        return Error(request, ErrorCode::BadRequest, "`battery` needs a `percent` (0 to 100, -1 unknown)");
+    bool wired = false;
+    if (!request.GetBool("wired", wired))
+        wired = false;
+    SDL_Event event{};
+    event.type = SDL_EVENT_JOYSTICK_BATTERY_UPDATED;
+    event.jbattery.which = g_virtualId;
+    event.jbattery.state = wired ? SDL_POWERSTATE_CHARGING : SDL_POWERSTATE_ON_BATTERY;
+    event.jbattery.percent = std::clamp(percent, -1, 100);
+    if (!SDL_PushEvent(&event))
+        return Error(request, ErrorCode::Failed, std::string("SDL refused the battery report: ") + SDL_GetError());
+    return StateResult(request);
+#endif
+}
 } // namespace
 
 namespace App::Control::Commands
@@ -214,6 +241,8 @@ std::string Pad(const Request& request, std::unique_ptr<Act>& /*act*/)
         return SetButton(request, action == "down");
     if (action == "axis")
         return SetAxis(request);
+    if (action == "battery")
+        return SetBattery(request);
     // The Options switch without its window: not saved to config.ini.
     if (action == "enable" || action == "disable")
     {
@@ -221,6 +250,6 @@ std::string Pad(const Request& request, std::unique_ptr<Act>& /*act*/)
         return StateResult(request);
     }
     return Error(request, ErrorCode::BadRequest,
-                 "unknown `action` `" + action + "`; known: state attach detach down up axis enable disable");
+                 "unknown `action` `" + action + "`; known: state attach detach down up axis battery enable disable");
 }
 } // namespace App::Control::Commands

@@ -33,17 +33,6 @@ Renamed Rename(std::wstring_view text, const std::vector<std::optional<Span>>& s
     return renamed;
 }
 
-std::size_t KeepLinksWhole(std::size_t split, const std::vector<Span>& spans)
-{
-    for (const Span& span : spans)
-    {
-        if (split <= span.start || split >= span.start + span.length)
-            continue;
-        return span.start > 0 ? span.start : span.start + span.length;
-    }
-    return split;
-}
-
 std::vector<Segment> Segments(std::wstring_view lead, std::wstring_view text, const std::vector<Span>& spans)
 {
     std::vector<Segment> segments;

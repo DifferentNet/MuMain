@@ -81,11 +81,9 @@ extern bool SelectFlag;
 
 namespace
 {
-// Text-area widths the original client gave the Set/Socket option tooltips
-// (CSItemOption::RenderSetOptionList() and CSocketItemMgr::RenderToolTipForSocketSetOption() pass
-// RenderTipTextList() a Tab of 120 and 140 reference pixels, doubled into the width).
+// Text-area width the original client gave the set option tooltip (CSItemOption::RenderSetOptionList() passes
+// RenderTipTextList() a Tab of 120 reference pixels, doubled into the width).
 constexpr float kSetOptionTooltipWidth = 240.0f;
-constexpr float kSocketOptionTooltipWidth = 280.0f;
 } // namespace
 
 using namespace SEASON3B;
@@ -219,9 +217,10 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("jewel_bank_tooltip", &model.jewelBankTooltip);
 
     c.Bind("set_option_label", &model.setOptionLabel);
-    c.Bind("socket_option_label", &model.socketOptionLabel);
     c.Bind("set_option_active", &model.setOptionActive);
-    c.Bind("socket_option_active", &model.socketOptionActive);
+    c.Bind("combat_power_known", &model.combatPowerKnown);
+    c.Bind("combat_power_label", &model.combatPowerLabel);
+    c.Bind("combat_power_hint", &model.combatPowerHint);
     c.RegisterArray<std::vector<Rml::String>>();
     c.Bind("slot_states", &model.slotStates);
     UI::Items::RegisterItemGridCells(c);
@@ -266,16 +265,6 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         {
             m_RmlView.GetModel().setOptionHovered = false;
         });
-    c.BindEventCallback("my_inventory_socket_option_hover",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
-        {
-            m_RmlView.GetModel().socketOptionHovered = true;
-        });
-    c.BindEventCallback("my_inventory_socket_option_unhover",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
-        {
-            m_RmlView.GetModel().socketOptionHovered = false;
-        });
 
     c.BindEventCallback("my_inventory_exit_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
@@ -318,6 +307,7 @@ void CMyInventory::OnRmlBuilt()
 {
     // A fresh document formats its texts on the next sync.
     m_SyncedTextInputs.reset();
+    m_SyncedCombatPower.reset();
     Rml::Element* panelEl = m_RmlView.Document()->GetElementById("panel");
     Rml::Element* titleEl = m_RmlView.Document()->GetElementById("title");
     if (panelEl && titleEl)
@@ -1184,6 +1174,7 @@ void CMyInventory::SyncRmlModel()
 #ifdef __EMSCRIPTEN__
     const Core::FirstOpenTiming::SyncScope firstOpenTiming("Inventory", IsVisible());
 #endif
+    m_CombatPowerWatch.Update(IsVisible());
     m_ItemTarget.Sync(m_RmlView.Document(), "item_view", IsVisible());
     if (!m_RmlView.Document()) return;
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), IsVisible());
@@ -1226,6 +1217,7 @@ void CMyInventory::SyncRmlModel()
     syncBool(&MyInventoryRmlModel::junkMarkShown, "junk_mark_shown", UI::Mobile::ShowsControls());
 
     SyncTexts(locked);
+    SyncCombatPower();
 
     // One flag now covers both visibility and interactivity via RmlUi's data-class-hidden.
     const bool otherWindowOpen = g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP)
@@ -1250,10 +1242,9 @@ void CMyInventory::SyncRmlModel()
     syncBool(&MyInventoryRmlModel::myShopLocked, "myshop_locked", m_bMyShopLocked);
 
     syncBool(&MyInventoryRmlModel::setOptionActive, "set_option_active", g_csItemOption.IsAncientSetEquipped());
-    syncBool(&MyInventoryRmlModel::socketOptionActive, "socket_option_active", g_SocketItemMgr.IsSocketSetOptionEnabled());
 
-    // Shared tooltip -- only one of setOptionHovered/socketOptionHovered is ever true at a time.
-    // BuildXxxTooltipModel() reuses the same content resolution as the old native-drawing code,
+    // The set option's tooltip while its label is hovered (the Combat Power's is a plain hint, data-hint).
+    // BuildSetOptionTooltipModel() reuses the same content resolution as the old native-drawing code,
     // minus the drawing; the destination is now UI::RmlBridge::Tooltip's own shared document, not
     // a per-window RML block, consolidated onto it the same way the item/skill tooltips were.
     auto& model = m_RmlView.GetModel();
@@ -1261,8 +1252,6 @@ void CMyInventory::SyncRmlModel()
     UI::Inventory::Tooltip::Model tooltipModel;
     if (model.setOptionHovered)
         tooltipBuilt = g_csItemOption.BuildSetOptionTooltipModel(tooltipModel);
-    else if (model.socketOptionHovered)
-        tooltipBuilt = g_SocketItemMgr.BuildSocketOptionTooltipModel(tooltipModel);
 
     if (tooltipBuilt)
     {
@@ -1272,7 +1261,7 @@ void CMyInventory::SyncRmlModel()
         {
             const UI::Inventory::Tooltip::Line& src = tooltipModel.lines[i];
             UI::RmlBridge::Tooltip::Line line;
-            // BuildSetOptionTooltipModel()/BuildSocketOptionTooltipModel() reuse the old native
+            // BuildSetOptionTooltipModel() reuses the old native
             // TextList convention of sniffing a leading '\n' (half-height spacer) or a lone ' '
             // (full-height spacer) rather than an explicit field -- the same detection as the
             // shared legacy TextList tooltip conversion. A raw newline inside a
@@ -1312,7 +1301,7 @@ void CMyInventory::SyncRmlModel()
         }
         config.centerHorizontally = true;
         config.textAlign = UI::RmlBridge::Tooltip::Config::TextAlign::Center;
-        config.fixedWidth = model.setOptionHovered ? kSetOptionTooltipWidth : kSocketOptionTooltipWidth;
+        config.fixedWidth = kSetOptionTooltipWidth;
         UI::RmlBridge::Tooltip::Show(config, this);
     }
     else
@@ -1393,9 +1382,34 @@ void CMyInventory::SyncTexts(bool bagLocked)
     wchar_t setOptionLabelBuf[128];
     mu_swprintf(setOptionLabelBuf, L"[%ls]", I18N::Game::SetOption);
     syncWide(&MyInventoryRmlModel::setOptionLabel, "set_option_label", setOptionLabelBuf);
-    wchar_t socketOptionLabelBuf[128];
-    mu_swprintf(socketOptionLabelBuf, L"[%ls]", I18N::Game::SocketOption);
-    syncWide(&MyInventoryRmlModel::socketOptionLabel, "socket_option_label", socketOptionLabelBuf);
+}
+
+void CMyInventory::SyncCombatPower()
+{
+    const CombatPowerInputs inputs{I18N::LocaleIndex(I18N::GetCurrentLocale()),
+                                   GameLogic::AdvancedStats::KnownHeroCombatPower()};
+    if (m_SyncedCombatPower == inputs)
+        return;
+    m_SyncedCombatPower = inputs;
+
+    auto& model = m_RmlView.GetModel();
+    const bool known = inputs.value.has_value();
+    if (model.combatPowerKnown != known)
+    {
+        model.combatPowerKnown = known;
+        m_RmlView.MarkDirty("combat_power_known");
+    }
+    if (!known)
+        return;
+
+    const std::wstring digits = GameLogic::AdvancedStats::FormatCombatPower(*inputs.value);
+    wchar_t text[128] = {};
+    mu_swprintf(text, I18N::Game::InventoryCombatPower, digits.c_str());
+    model.combatPowerLabel = StringUtils::WideToNarrow(text);
+    m_RmlView.MarkDirty("combat_power_label");
+    mu_swprintf(text, I18N::Game::AdvStatsCombatPower, digits.c_str());
+    model.combatPowerHint = StringUtils::WideToNarrow(text);
+    m_RmlView.MarkDirty("combat_power_hint");
 }
 
 // The document draws everything: the grid's Render() computes its cells and shows its tooltip,

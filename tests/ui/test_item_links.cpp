@@ -178,16 +178,6 @@ TEST_CASE("An unattached link keeps its text when renamed")
     CHECK(SameSpan(renamed.spans[1], 2, 3));
 }
 
-TEST_CASE("A row break never cuts a link")
-{
-    const std::vector<Span> spans = {Span{4, 10}};
-    CHECK(ItemLinkAttach::KeepLinksWhole(8, spans) == 4);
-    CHECK(ItemLinkAttach::KeepLinksWhole(4, spans) == 4);
-    CHECK(ItemLinkAttach::KeepLinksWhole(14, spans) == 14);
-    CHECK(ItemLinkAttach::KeepLinksWhole(3, spans) == 3);
-    CHECK(ItemLinkAttach::KeepLinksWhole(5, {Span{0, 10}}) == 10);
-}
-
 TEST_CASE("A row with links comes in pieces")
 {
     const auto segments = ItemLinkAttach::Segments(L"Hero : ", L"see [Helm] and [Ring]!", {Span{4, 6}, Span{15, 6}});
