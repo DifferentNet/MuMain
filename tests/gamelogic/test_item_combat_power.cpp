@@ -37,6 +37,7 @@ constexpr std::uint8_t NoSlot = 255;
 constexpr int Wizard = 0;
 constexpr int Knight = 1;
 constexpr int Elf = 2;
+constexpr int Gladiator = 3;
 constexpr int RageFighterClass = 6;
 
 // Equipment indexes
@@ -234,6 +235,19 @@ TEST_CASE("Power of the Ancients counts the one-handed and shield stances that r
     staffAndShield[1] = shield;
     CHECK(GetEquipmentCombatPower(staffAndShield, Wizard) == points + 2000 + 1500);
     CHECK(GetEquipmentCombatPower(staffAndShield, Knight) == points + 2000);
+
+    // The gladiator's two one-handed staffs, or a staff and a sword (since 2026-11-21); not the wizard's.
+    CombatPowerEquipment twoStaffs = set;
+    twoStaffs[0] = staff;
+    twoStaffs[1] = staff;
+    CHECK(GetEquipmentCombatPower(twoStaffs, Gladiator) == points + 2000 + 1500);
+    CHECK(GetEquipmentCombatPower(twoStaffs, Wizard) == points + 2000);
+    CombatPowerEquipment staffAndSword = twoStaffs;
+    staffAndSword[1] = sword;
+    CHECK(GetEquipmentCombatPower(staffAndSword, Gladiator) == points + 2000 + 1500);
+    CombatPowerEquipment oneStaff = set;
+    oneStaff[0] = staff;
+    CHECK(GetEquipmentCombatPower(oneStaff, Gladiator) == points + 1000);
 
     // A shield alone lowers the damage taken only: no points.
     CombatPowerEquipment shieldOnly = set;
