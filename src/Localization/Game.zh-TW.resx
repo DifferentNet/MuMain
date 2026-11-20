@@ -14499,6 +14499,10 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>已有新版本：請重新整理頁面。</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>請先完成馬龍的任務（220 級起）。</value>
+  </data>
   <!-- Pad round 7 -->
   <data name="PadMapClose" xml:space="preserve">
     <value>{B}：關閉</value>

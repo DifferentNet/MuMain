@@ -14499,6 +14499,10 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>May bagong bersyon: i-reload ang page.</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>Tapusin muna ang quest ni Marlon (mula level 220).</value>
+  </data>
   <!-- Pad round 7 -->
   <data name="PadMapClose" xml:space="preserve">
     <value>{B}: isara</value>

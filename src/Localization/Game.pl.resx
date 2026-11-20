@@ -14520,6 +14520,10 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Jest nowa wersja: odśwież stronę.</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>Najpierw ukończ zadanie Marlona (od poziomu 220).</value>
+  </data>
   <!-- Pad round 7 -->
   <data name="PadMapClose" xml:space="preserve">
     <value>{B}: zamknij</value>
