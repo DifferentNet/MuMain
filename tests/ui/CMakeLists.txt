@@ -58,6 +58,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatFade.cpp
 )
 
+# The chat log's rows of a long message (UI/Chat/ChatRowWrap.h).
+mu_add_test(
+    NAME chat_row_wrap_tests
+    SOURCES
+        test_chat_row_wrap.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatRowWrap.cpp
+)
+
 # The high-water end of the chat plate pool (UI/Chat/ChatPlateBound.h).
 mu_add_test(
     NAME chat_plate_bound_tests

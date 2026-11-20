@@ -51,6 +51,12 @@
 			     data-class-chat-line--pointed="it_index == pointed_index"
 			     data-class-chat-line--faded="line.faded"
 			     data-class-chat-line--lead="line.lead">{{line.text}}</div>
+			<!-- MU Skynet: two rows that are never drawn and take no room, as wide as a row's text may be (the
+			     framed scrollbar's width kept free, chat_log.rcss). A message is measured in their font when it
+			     comes and split into as many rows as it needs (CChatLogWindow::SplitIntoRows()); the GM one is
+			     bold. After the lines, so a line's place among the children stays its index in the model. -->
+			<div id="line_probe" class="chat-line chat-line--chat chat-line-probe"></div>
+			<div id="line_probe_gm" class="chat-line chat-line--gm chat-line-probe"></div>
 		</div>
 	</div>
 </body>
