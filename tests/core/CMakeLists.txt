@@ -228,6 +228,30 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadRumble.cpp
 )
 
+# The pad's low life warning: two pulses as life falls to a quarter, again only after 40 % and 10 s.
+mu_add_test(
+    NAME low_life_pulse_tests
+    SOURCES
+        test_low_life_pulse.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/LowLifePulse.cpp
+)
+
+# The pad's battery line: once at 20 % or less, once more at 10 %, again only after 25 % or a cable.
+mu_add_test(
+    NAME gamepad_battery_tests
+    SOURCES
+        test_gamepad_battery.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadBattery.cpp
+)
+
+# The arrow keys' walk: opposite keys cancel, a diagonal is as long as a straight line.
+mu_add_test(
+    NAME arrow_steer_tests
+    SOURCES
+        test_arrow_steer.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/ArrowSteer.cpp
+)
+
 # The finger that plays the mouse: what a finger landing or lifting does, when a long press comes.
 mu_add_test(
     NAME touch_gesture_tests

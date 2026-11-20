@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Core/Input/GamepadInput.h"
 
+#include "Core/Input/GamepadBattery.h"
 #include "Core/Input/GamepadLayout.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadRumble.h"
@@ -48,6 +49,10 @@ struct Pad
     // SDL's axis values at the last poll: only a change since then counts, so a stick held when the
     // window lost the focus stays let go.
     std::array<Sint16, SDL_GAMEPAD_AXIS_COUNT> polled{};
+#ifndef __EMSCRIPTEN__
+    // When its battery is worth a line (NoteBattery); a browser tells no battery.
+    BatteryWatch battery;
+#endif
 };
 
 std::array<Pad, MaxPads> g_pads{};
@@ -62,6 +67,8 @@ bool g_rumble = true;
 PadKind g_lastKind = PadKind::Xbox;
 // A pad plugged in or out since TakeNews last asked (not the pads open at the start or by the switch).
 PadNews g_news = PadNews::None;
+// A pad's low battery percent since TakeBatteryNews last asked; -1 none.
+int g_batteryNews = -1;
 GlyphChoice g_glyphChoice = GlyphChoice::Auto;
 // The player's button layout (SetLayout): the pads keep their buttons by place, the shared state is
 // the game's buttons through it.
@@ -141,6 +148,19 @@ Pad* FindPad(SDL_JoystickID id)
     }
     return nullptr;
 }
+
+#ifndef __EMSCRIPTEN__
+// The pad's battery as SDL tells it, as the pad opens and as it changes: a low one is news, a fine one
+// again takes back a low line not said yet.
+void NoteBattery(Pad& pad, SDL_PowerState state, int percent)
+{
+    const bool onBattery = state == SDL_POWERSTATE_ON_BATTERY;
+    if (const std::optional<int> low = pad.battery.Note(percent, onBattery))
+        g_batteryNews = *low;
+    else if (BatteryWatch::IsFine(percent, onBattery))
+        g_batteryNews = -1;
+}
+#endif
 
 bool AnyPadHolds(int button)
 {
@@ -285,6 +305,10 @@ void AddPad(SDL_JoystickID id)
     // A pad woken in a background tab (its press meant for another page) taps nothing here.
     if (g_focused)
         TapWakingPress();
+#else
+    int percent = -1;
+    const SDL_PowerState power = SDL_GetGamepadPowerInfo(handle, &percent);
+    NoteBattery(*free, power, percent);
 #endif
 }
 
@@ -505,7 +529,10 @@ void ProcessEvent(const SDL_Event& event)
         RemovePad(event.gdevice.which);
         // One pad of two pulled out leaves one playing: no news.
         if (known && !IsConnected())
+        {
             g_news = PadNews::Disconnected;
+            g_batteryNews = -1;
+        }
         // The last pad unplugged: nothing is left to play, so the off it waited for comes now.
         if (g_offWhenPutDown && !IsConnected())
             SetEnabled(false);
@@ -530,6 +557,12 @@ void ProcessEvent(const SDL_Event& event)
         if (Pad* pad = FindPad(event.gaxis.which))
             SetAxis(*pad, event.gaxis.axis, AxisPosition(event.gaxis.value));
         break;
+#ifndef __EMSCRIPTEN__
+    case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
+        if (Pad* pad = FindPad(event.jbattery.which))
+            NoteBattery(*pad, event.jbattery.state, event.jbattery.percent);
+        break;
+#endif
     default:
         break;
     }
@@ -558,6 +591,11 @@ void Poll()
 PadNews TakeNews()
 {
     return std::exchange(g_news, PadNews::None);
+}
+
+int TakeBatteryNews()
+{
+    return std::exchange(g_batteryNews, -1);
 }
 
 bool IsConnected()

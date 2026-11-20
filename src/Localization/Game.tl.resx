@@ -13408,7 +13408,7 @@
     <value>D-pad o stick: mga key. {A}: pindutin, {X}: burahin, {Y}: espasyo, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: mga simbolo, {VIEW}: Ingles/Ruso, {LB}/{RB}: cursor, {B}: isara</value>
+    <value>{LT}: shift, {RT}: mga simbolo, {VIEW}: Ingles, Ruso, parirala, {LB}/{RB}: cursor, {B}: isara</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Kulang ang mana</value>
@@ -13654,7 +13654,7 @@
     <value>Mapa (hawakan: teleport)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Imbentaryo</value>
+    <value>Imbentaryo (hawakan: isuot ang bagong item)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Atake, kausap, menu ng player</value>
@@ -14498,5 +14498,21 @@
   </data>
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>May bagong bersyon: i-reload ang page.</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: isara</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Mahina na ang baterya ng gamepad: %d%%</value>
+  </data>
+  <data name="PadHintSmallScreen" xml:space="preserve">
+    <value>Maliit ang screen? Options &gt; Display &gt; UI Scale 125% para lumaki ang lahat</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Arrow keys: lakad</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Mas maganda ang bagong item: hawakan ang D-pad pakanan para isuot ito. Sa inventory, {Y} ang nagbubukas ng card ng item (marka ng basura); sa merchant, {A} sa button na Ibenta ang basura ang nagbebenta ng basura. Kusang napupulot ang zen sa ilalim ng paa mo</value>
   </data>
 </root>

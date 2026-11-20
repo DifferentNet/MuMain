@@ -13408,7 +13408,7 @@
     <value>D-pad або стік: клавіші. {A}: натиснути, {X}: стерти, {Y}: пробіл, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: символи, {VIEW}: англійська/російська, {LB}/{RB}: курсор, {B}: закрити</value>
+    <value>{LT}: shift, {RT}: символи, {VIEW}: англійська, російська, фрази, {LB}/{RB}: курсор, {B}: закрити</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Замало мани</value>
@@ -13654,7 +13654,7 @@
     <value>Мапа (утримати: телепорт)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Інвентар</value>
+    <value>Інвентар (утримати: надіти новий предмет)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Атака, розмова, меню гравця</value>
@@ -14498,5 +14498,21 @@
   </data>
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вийшла нова версія: оновіть сторінку.</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: закрити</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Геймпад розряджається: %d%%</value>
+  </data>
+  <data name="PadHintSmallScreen" xml:space="preserve">
+    <value>Маленький екран? Налаштування &gt; Display &gt; UI Scale 125% зробить усе більшим</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Стрілки: ходьба</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Новий предмет кращий за вдягнений: утримуй D-pad праворуч, щоб надіти. В інвентарі {Y} відкриває картку предмета (позначка «мотлох»); у торговця {A} на кнопці «Продати мотлох» продає мотлох. Зен під ногами підбирається сам</value>
   </data>
 </root>

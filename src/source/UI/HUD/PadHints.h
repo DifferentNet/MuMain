@@ -6,23 +6,11 @@
 // the pad is in use: a mouse player never sees them, and they wait for the pad's first such moment.
 #pragma once
 
+// The moments (Hint), their bits and when the small screen hint applies.
+#include "UI/HUD/PadHintBits.h"
+
 namespace UI::HUD::PadHints
 {
-// The moments, one bit each in [UI] GamepadHintsSeen: keep their values, the config file remembers them.
-enum class Hint
-{
-    PickUp = 0,
-    Window = 1,
-    BagFull = 2,
-    Death = 3,
-    // A skill on the pad's RB page (hotkeys 7-9, pad round 6): hold RB and press X, Y or B.
-    SkillsThird = 4,
-};
-
-// Whether `bits` (GamepadHintsSeen) says the hint showed already, and `bits` with it marked shown.
-[[nodiscard]] bool Seen(int bits, Hint hint);
-[[nodiscard]] int Marked(int bits, Hint hint);
-
 // Says the hint in the system messages, if the pad is in use and it never showed before.
 void Show(Hint hint);
 } // namespace UI::HUD::PadHints

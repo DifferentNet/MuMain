@@ -13408,7 +13408,7 @@
     <value>D-pad 或搖桿：按鍵。{A}：按下，{X}：刪除，{Y}：空白，{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}：Shift，{RT}：符號，{VIEW}：英文/俄文，{LB}/{RB}：游標，{B}：關閉</value>
+    <value>{LT}：Shift，{RT}：符號，{VIEW}：英文、俄文、常用語，{LB}/{RB}：游標，{B}：關閉</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>魔力不足</value>
@@ -13654,7 +13654,7 @@
     <value>地圖（按住：傳送）</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>背包</value>
+    <value>背包（按住：穿上新物品）</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>攻擊、對話、玩家選單</value>
@@ -14498,5 +14498,21 @@
   </data>
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>已有新版本：請重新整理頁面。</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}：關閉</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>手把電量低：%d%%</value>
+  </data>
+  <data name="PadHintSmallScreen" xml:space="preserve">
+    <value>螢幕太小？選項 &gt; Display &gt; UI Scale 125% 讓一切變大</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>方向鍵：行走</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>比身上更好的新物品：按住 D-pad 右即可穿上。在背包中按 {Y} 開啟物品卡片（垃圾標記）；在商人處對「出售垃圾」按鈕按 {A} 出售垃圾。腳下的 Zen 會自動撿起</value>
   </data>
 </root>
