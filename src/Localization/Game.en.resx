@@ -14014,6 +14014,9 @@
   <data name="AdvStatsCombatPower" xml:space="preserve">
     <value>Combat Power: %ls</value>
   </data>
+  <data name="InventoryCombatPower" xml:space="preserve">
+    <value>CP: %ls</value>
+  </data>
   <data name="SetItemPieces" xml:space="preserve">
     <value>Set items: %d of %d collected</value>
   </data>

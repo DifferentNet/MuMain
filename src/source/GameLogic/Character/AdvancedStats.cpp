@@ -53,17 +53,18 @@ bool Store::TakeMessage(const std::wstring& text)
     return true;
 }
 
-void Store::Request()
+bool Store::Request()
 {
     const auto now = std::chrono::steady_clock::now();
     if (m_lastRequest != std::chrono::steady_clock::time_point{} && now - m_lastRequest < RequestInterval)
-        return;
+        return false;
     if (SocketClient == nullptr || Hero == nullptr)
-        return;
+        return false;
 
     m_lastRequest = now;
     // Sent as a chat line, as typed commands are; the server takes lines starting with a slash as commands.
     SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(Command));
+    return true;
 }
 
 const double* Store::Find(std::wstring_view key) const

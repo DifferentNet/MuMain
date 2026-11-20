@@ -50,8 +50,10 @@
 		     (.native-fit-small), so no row overlaps another or leaves the frame at any UI scale. The
 		     level line and the points to spend share one row and shrink together: the level on the
 		     left, the points on the right (MU Moldova's "| Resets: N" made it too long for the
-		     original's fixed points column). -->
+		     original's fixed points column). Under it the Combat Power the server counts, "-" until it
+		     answered (GameLogic/Character/HeroCombatPower.h). -->
 		<div class="level-row counter-scaled" data-style-font-size="text_px + 'px'"><div class="native-fit native-fit-small level-row-fit"><span class="level-text">{{level_text}}</span><span class="levelup-point-text" data-class-hidden="!can_level_up">{{levelup_point_text}}</span></div></div>
+		<div class="summary-row cp-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{combat_power_text}}</span></div>
 		<div class="summary-row exp-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{exp_text}}</span></div>
 		<div class="summary-row point-probability-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{point_probability_text}}</span></div>
 		<div class="summary-row point-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{point_text}}</span></div>

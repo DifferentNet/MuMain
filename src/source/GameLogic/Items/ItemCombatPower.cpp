@@ -522,4 +522,14 @@ std::optional<int> GetHeroCombatPowerChange(const ITEM& item)
     return GetCombatPowerChange(DescribeHeroEquipment(), DescribeForCombatPower(item),
                                 gCharacterManager.GetBaseClass(Hero->Class));
 }
+
+std::optional<int> GetHeroEquipmentCombatPower()
+{
+    if (Hero == nullptr || CharacterMachine == nullptr)
+    {
+        return std::nullopt;
+    }
+
+    return GetEquipmentCombatPower(DescribeHeroEquipment(), gCharacterManager.GetBaseClass(Hero->Class));
+}
 } // namespace GameLogic::Items

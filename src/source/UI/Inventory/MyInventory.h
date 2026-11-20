@@ -11,6 +11,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/Inventory/InventoryActionController.h"
 #include "GameLogic/Items/IInventoryActionContext.h"
+#include "GameLogic/Character/HeroCombatPower.h"
 #include "Data/GameData/ItemData/ItemTagSet.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/RmlBridge/RmlKeptElement.h"
@@ -135,14 +136,16 @@ namespace mu::ui::window
             Rml::String exitTooltip;
             Rml::String jewelBankTooltip;
 
-            // Set/Socket option header labels. The shared hover tooltip itself is
+            // The set option header label. The shared hover tooltip itself is
             // UI::RmlBridge::Tooltip, not part of this model -- see SyncRmlModel().
             Rml::String setOptionLabel;
-            Rml::String socketOptionLabel;
             bool setOptionActive = false;    // IsAncientSetEquipped() -- label color
-            bool socketOptionActive = false; // IsSocketSetOptionEnabled() -- label color
             bool setOptionHovered = false;
-            bool socketOptionHovered = false;
+            // The hero's Combat Power where the socket option was (this server has no sockets): "CP: 12,345" and its
+            // hint, hidden until the server told it (GameLogic/Character/HeroCombatPower.h).
+            bool combatPowerKnown = false;
+            Rml::String combatPowerLabel;
+            Rml::String combatPowerHint;
 
             // Per EQUIPMENT_* slot: "no-art", or its tint ("broken", "durability-20/30/50",
             // "unequipable"), and "refused" while the item on the cursor cannot go in.
@@ -197,6 +200,18 @@ namespace mu::ui::window
         void SyncTexts(bool bagLocked);
         // The inputs SyncTexts() last built from; empty until the first sync after a build.
         std::optional<TextInputs> m_SyncedTextInputs;
+
+        // The Combat Power line: asks the server while the window is open and the gear or stats change, and formats
+        // the line again only when the value or the language changed.
+        void SyncCombatPower();
+        GameLogic::AdvancedStats::HeroCombatPowerWatch m_CombatPowerWatch;
+        struct CombatPowerInputs
+        {
+            int locale = -1;
+            std::optional<long long> value;
+            bool operator==(const CombatPowerInputs&) const = default;
+        };
+        std::optional<CombatPowerInputs> m_SyncedCombatPower;
 
         // The bag's shown page (1 or 2). Page 2 shows OpenMU's inventory extensions 1 and 2 (slots 76-139),
         // whose grids belong to the hidden extension window (g_pMyInventoryExt) and are lent to this window

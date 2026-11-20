@@ -22,8 +22,10 @@ public:
     // Takes a server message. True when it was the advanced stats line, which then stays out of the chat.
     bool TakeMessage(const std::wstring& text);
 
-    // Asks the server for the stats; at most once every two seconds.
-    void Request();
+    // Asks the server for the stats; at most once every two seconds. True when it sent the request.
+    bool Request();
+    // When the last request went out; the epoch before the first one and after Reset().
+    std::chrono::steady_clock::time_point LastRequest() const { return m_lastRequest; }
 
     bool HasInfo() const { return m_hasInfo; }
     // The value of a key, or nullptr before the first answer or for a key the server didn't send.
