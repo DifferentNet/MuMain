@@ -17500,9 +17500,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>Gamepad battery low: %d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>Small screen? Options &gt; Display &gt; UI Scale 125% makes everything bigger</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Arrow keys: walk</value>
   </data>

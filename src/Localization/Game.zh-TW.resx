@@ -14506,9 +14506,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>手把電量低：%d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>螢幕太小？選項 &gt; Display &gt; UI Scale 125% 讓一切變大</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>方向鍵：行走</value>
   </data>

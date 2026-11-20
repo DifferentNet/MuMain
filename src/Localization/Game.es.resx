@@ -14506,9 +14506,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>Batería del mando baja: %d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>¿Pantalla pequeña? Opciones &gt; Display &gt; UI Scale 125% lo agranda todo</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Flechas: caminar</value>
   </data>

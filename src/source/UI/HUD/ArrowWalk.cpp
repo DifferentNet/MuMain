@@ -41,6 +41,9 @@ struct State
     // The arrows walk the hero, or wait to be let go after a gate closed on their walk.
     bool steering = false;
     bool waiting = false;
+    // The arrows went down for something else (the chat's caret, a list, a slider) with no walk of
+    // theirs: as that closes they walk only once let go and pressed again.
+    bool heldForOther = false;
 };
 State g_state;
 
@@ -49,11 +52,16 @@ bool IsInWorld()
     return SceneFlag == MAIN_SCENE && LoadingWorld < 30 && Hero != nullptr;
 }
 
-// Whether the arrows may walk now, held as they are: nothing else wants the keys or the hero.
-bool ArrowsMayWalk()
+// The hero may walk by the arrows: in the world, alive, the pad not in use.
+bool HeroMayWalk()
 {
-    if (!IsInWorld() || Hero->Dead != 0 || UI::Mobile::IsGamepadInUse())
-        return false;
+    return IsInWorld() && Hero->Dead == 0 && !UI::Mobile::IsGamepadInUse();
+}
+
+// Nothing else wants the arrows, held as they are: no Ctrl, Alt or Shift, no text field or control
+// holding the keys, no game window or dialog.
+bool KeysFree()
+{
     if (Core::Input::IsKeyDown(VK_CONTROL) || Core::Input::IsKeyDown(VK_MENU) || Core::Input::IsKeyDown(VK_SHIFT))
         return false;
     const RmlUiRuntime& rml = RmlUiRuntime::Instance();
@@ -84,9 +92,11 @@ void UI::HUD::ArrowWalk::Update()
     {
         // All let go: the walk ends, and one that waited past a gate may go again.
         g_state.stop = g_state.steering || g_state.waiting;
+        g_state.heldForOther = false;
         return;
     }
-    if (!ArrowsMayWalk())
+    const bool heroMayWalk = HeroMayWalk();
+    if (!heroMayWalk || !KeysFree())
     {
         if (g_state.steering)
         {
@@ -94,8 +104,12 @@ void UI::HUD::ArrowWalk::Update()
             g_state.steering = false;
             g_state.waiting = true;
         }
+        else if (heroMayWalk && !g_state.waiting)
+            g_state.heldForOther = true;
         return;
     }
+    if (g_state.heldForOther)
+        return;
     // Another device walks the hero (the touch stick, the pad's stick): the arrows leave it be.
     if (!g_state.steering && !g_state.waiting && GameLogic::Touch::IsSteering())
         return;

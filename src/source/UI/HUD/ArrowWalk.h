@@ -6,7 +6,8 @@
 // history on up and down), no game window or dialog open, no control holding the keys (a list, a
 // slider), the pad not in use, no other device walking the hero (the touch stick), the hero alive and
 // no Ctrl, Alt or Shift held. A walk cut short by one of these, or by a gate, waits until the arrows
-// are let go (GameLogic::Touch::PauseSteering). The MU Helper is told the player steers, as with the
+// are let go (GameLogic::Touch::PauseSteering), and arrows pressed for something else (the chat's
+// caret, a list) walk only once let go and pressed again after it closed. The MU Helper is told the player steers, as with the
 // stick. Debug builds keep the arrows for the editor's hero move (ENABLE_EDIT2), the editor's free
 // camera keeps them too.
 #pragma once

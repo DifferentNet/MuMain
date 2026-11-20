@@ -589,14 +589,6 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadTargetPick.cpp
 )
 
-# The one-time pad hints' bits in config.ini, and when the small screen hint applies.
-mu_add_test(
-    NAME pad_hints_tests
-    SOURCES
-        test_pad_hints.cpp
-        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadHintBits.cpp
-)
-
 # mu_swprintf into an array cuts a long text instead of writing past the array (round 10, B1).
 mu_add_test(
     NAME bounded_wide_format_tests

@@ -14506,9 +14506,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>Baterai gamepad lemah: %d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>Layar kecil? Opsi &gt; Display &gt; UI Scale 125% membuat semuanya lebih besar</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Tombol panah: berjalan</value>
   </data>

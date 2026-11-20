@@ -11,6 +11,11 @@ namespace UI::HUD::PadHints
 {
 namespace
 {
+int Bit(Hint hint)
+{
+    return 1 << static_cast<int>(hint);
+}
+
 const wchar_t* TextOf(Hint hint)
 {
     switch (hint)
@@ -25,12 +30,20 @@ const wchar_t* TextOf(Hint hint)
         return I18N::Game::PadHintDeath;
     case Hint::SkillsThird:
         return I18N::Game::PadHintSkillsThird;
-    case Hint::SmallScreen:
-        return I18N::Game::PadHintSmallScreen;
     }
     return nullptr;
 }
 } // namespace
+
+bool Seen(int bits, Hint hint)
+{
+    return (bits & Bit(hint)) != 0;
+}
+
+int Marked(int bits, Hint hint)
+{
+    return bits | Bit(hint);
+}
 
 void Show(Hint hint)
 {

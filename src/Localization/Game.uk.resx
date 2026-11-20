@@ -14506,9 +14506,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>Геймпад розряджається: %d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>Маленький екран? Налаштування &gt; Display &gt; UI Scale 125% зробить усе більшим</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Стрілки: ходьба</value>
   </data>

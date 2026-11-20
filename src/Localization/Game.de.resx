@@ -14604,9 +14604,6 @@
   <data name="PadBatteryLow" xml:space="preserve">
     <value>Gamepad-Akku schwach: %d%%</value>
   </data>
-  <data name="PadHintSmallScreen" xml:space="preserve">
-    <value>Kleiner Bildschirm? Optionen &gt; Display &gt; UI Scale 125% macht alles größer</value>
-  </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Pfeiltasten: laufen</value>
   </data>

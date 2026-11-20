@@ -367,11 +367,6 @@ or back over 25 %, it may say it again, and a line not said yet is dropped. The 
 (`Core/Input/GamepadBattery.{h,cpp}`, tested in `tests/core/test_gamepad_battery.cpp`; the control
 socket's `pad` `battery` action fakes the battery).
 
-A pad on a window 800 pixels tall or less (in the browser the page's pixels, not the screen's), with the interface scale at 100 % or less and not in the
-phone view, says once ever, at the first safe-zone moment with no window open: "Small screen? Options >
-Display > UI Scale 125% makes everything bigger" (pad round 7; `PadHints::Hint::SmallScreen`, the rule
-in `UI/HUD/PadHintBits`, tested in `tests/ui/test_pad_hints.cpp`).
-
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
 X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick pressed and the d-pad's
@@ -419,7 +414,8 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 screen is up, two arrows walk the slant. Only in the world with nothing else wanting the keys: no text
 typed in, no game window or dialog open, no control holding the keys, the pad not in use, no other
 device walking the hero, the hero alive and no Ctrl, Alt or Shift held. A walk cut short by one of
-these waits until the arrows are let go. Debug builds keep the arrows for the editor's hero move, the
+these waits until the arrows are let go, and arrows pressed for something else (the chat's caret, a
+list) walk only once let go and pressed again after it closed. Debug builds keep the arrows for the editor's hero move, the
 editor's free camera keeps them too. Help's key page has its row.
 
 **The hero hub.** Menu with no window open opens the character's windows as tabs: Inventory,

@@ -49,7 +49,6 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/QuickEquip.h"
 #include "UI/Mobile/InterfaceMode.h"
-#include "UI/Scaling/UITransform.h"
 #include "UI/Windows/MsgWin.h"
 #include "UI/Windows/SysMenuWin.h"
 
@@ -643,26 +642,6 @@ bool TellOnce(bool windowOpen)
     config.Save();
     UI::HUD::PadCard::Open();
     return true;
-}
-
-// A small screen with the interface at its normal size or smaller: the system messages name the UI
-// scale row, once ever (the hint's bit), in a safe zone with nothing open and the card closed (pad
-// round 7, B2). Asked at most once a session here: the screen is looked at the first time it could say.
-void TellSmallScreen(bool windowOpen)
-{
-    static bool asked = false;
-    if (asked || Hero == nullptr || !Hero->SafeZone || windowOpen || UI::HUD::PadCard::IsOpen()
-        || Controls::IsMenuOpen() || UI::HUD::PadHub::IsOpen())
-        return;
-    asked = true;
-    // In the page's pixels: the browser's window is in device pixels, so a phone-sized page on a
-    // high-density screen would pass for a large one (LayoutPixelRatio() is 1 on the desktop).
-    const int shownHeight =
-        static_cast<int>(std::lround(static_cast<float>(WindowHeight) / UI::Scaling::LayoutPixelRatio()));
-    if (UI::HUD::PadHints::SmallScreenApplies(shownHeight,
-                                              GameConfig::GetInstance().GetUIScalePercent(),
-                                              UI::Mobile::IsPhoneView()))
-        UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::SmallScreen);
 }
 
 // Presses the Menu control once: the menu of windows opens (or shuts).
@@ -2159,8 +2138,6 @@ void Play()
     const bool cardOpened = TellOnce(gameWindowOpen || UI::Dialogs::Modal::IsOpen());
     if (cardOpened)
         WaitForRelease();
-    else
-        TellSmallScreen(gameWindowOpen || UI::Dialogs::Modal::IsOpen());
     PlayWorld(window, cardOpened ? Presses{} : presses, seconds, now, gameWindowOpen);
 }
 } // namespace
