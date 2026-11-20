@@ -243,6 +243,7 @@ bool HasPowerOfTheAncientsWeapon(const CombatPowerEquipment& equipment, int base
     bool shield = false;
     bool staff = false;
     int handWeapons = 0;
+    int handStaffs = 0;
     for (std::size_t index = 0; index < equipment.size(); ++index)
     {
         const CombatPowerItem& item = equipment[index];
@@ -260,16 +261,20 @@ bool HasPowerOfTheAncientsWeapon(const CombatPowerEquipment& equipment, int base
             shield |= item.Group == ItemGroupShield;
             staff |= item.Group == ItemGroupStaff;
             handWeapons += item.Group >= 0 && item.Group <= ItemGroupSpear ? 1 : 0;
+            handStaffs += item.Group == ItemGroupStaff && !item.IsTwoHanded ? 1 : 0;
         }
     }
 
     const bool weaponAndShield = shield && handWeapons >= 1;
+    // The gladiator's two one-handed staffs, or a staff and a one-handed weapon (since 2026-11-21).
+    const bool staffPair = handStaffs >= 1 && handWeapons + handStaffs >= 2;
     switch (baseClass)
     {
     case CLASS_WIZARD: return twoHandedStaff || (shield && staff);
     case CLASS_KNIGHT: return twoHandedSword || handWeapons >= 2 || weaponAndShield;
     case CLASS_ELF: return bow;
-    case CLASS_DARK: return twoHandedSword || twoHandedStaff || handWeapons >= 2 || weaponAndShield || (shield && staff);
+    case CLASS_DARK:
+        return twoHandedSword || twoHandedStaff || handWeapons >= 2 || staffPair || weaponAndShield || (shield && staff);
     case CLASS_DARK_LORD: return raven;
     default: return false;
     }

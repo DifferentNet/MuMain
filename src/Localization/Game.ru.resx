@@ -13660,6 +13660,9 @@
   <data name="PowerOfTheAncientsWeaponShieldDD" xml:space="preserve">
     <value>С оружием и щитом: итоговый урон +%d%%, получаемый урон -%d%%</value>
   </data>
+  <data name="PowerOfTheAncientsOneHandedStaffD" xml:space="preserve">
+    <value>С двумя одноручными (один из них посох): итоговый урон +%d%%</value>
+  </data>
   <data name="PowerOfTheAncientsStaffShieldDD" xml:space="preserve">
     <value>С посохом и щитом: итоговый урон +%d%%, получаемый урон -%d%%</value>
   </data>
