@@ -241,6 +241,19 @@ bool IsOwnLine(std::wstring_view sender, std::wstring_view text, wchar_t channel
     return text.starts_with(ownName) && text.substr(ownName.size()).starts_with(L": ");
 }
 
+bool HoldsItemName(std::wstring_view text)
+{
+    for (std::size_t open = text.find(L'['); open != std::wstring_view::npos; open = text.find(L'[', open + 1))
+    {
+        const std::size_t close = text.find(L']', open + 1);
+        if (close == std::wstring_view::npos)
+            return false;
+        if (close > open + 1)
+            return true;
+    }
+    return false;
+}
+
 std::wstring ItemRef(wchar_t storage, int slot, int type, int level)
 {
     return std::wstring(1, storage) + std::to_wstring(slot) + L':' + std::to_wstring(type) + L':'

@@ -200,8 +200,10 @@ std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, 
     const auto channel = ItemLinkWire::ChannelOfLine(sender, kind);
     if (!channel)
         return std::nullopt;
-    // The own line answers for the message with items, also when it comes without them.
-    if (Hero != nullptr && ItemLinkWire::IsOwnLine(sender, text, *channel, Hero->ID))
+    // The own line with an item's name answers for the message with items, also when it comes without them; a plain
+    // own line sent meanwhile does not.
+    if (Hero != nullptr && ItemLinkWire::IsOwnLine(sender, text, *channel, Hero->ID)
+        && ItemLinkWire::HoldsItemName(text))
         state.cooldown.OwnLineBack(GetTickCount64(), *channel);
     if (state.pending.Waiting() == 0)
         return std::nullopt;

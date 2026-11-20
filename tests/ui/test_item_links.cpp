@@ -619,6 +619,20 @@ TEST_CASE("The player's own line: by its sender, a shout by the name in its text
     CHECK_FALSE(ItemLinkWire::IsOwnLine(ItemLinkWire::ShoutSender, L"Hero", ItemLinkWire::ShoutChannel, L"Hero"));
 }
 
+TEST_CASE("Only a line with an item's name answers for a message with items")
+{
+    CHECK(ItemLinkWire::HoldsItemName(L"look [Kris]"));
+    CHECK(ItemLinkWire::HoldsItemName(L"Hero: [Kris] and [Bone Blade +9]"));
+    CHECK(ItemLinkWire::HoldsItemName(L"[x]"));
+    // A plain line sent meanwhile.
+    CHECK_FALSE(ItemLinkWire::HoldsItemName(L"hello"));
+    CHECK_FALSE(ItemLinkWire::HoldsItemName(L""));
+    CHECK_FALSE(ItemLinkWire::HoldsItemName(L"a [ b"));
+    CHECK_FALSE(ItemLinkWire::HoldsItemName(L"a ] b ["));
+    CHECK_FALSE(ItemLinkWire::HoldsItemName(L"a [] b"));
+    CHECK(ItemLinkWire::HoldsItemName(L"a [] b [Kris]"));
+}
+
 TEST_CASE("The draft puts items in at the caret and sends them in order")
 {
     ItemLinkDraft draft;

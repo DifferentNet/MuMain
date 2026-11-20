@@ -82,6 +82,10 @@ std::optional<wchar_t> ChannelOfLine(std::wstring_view sender, mu::ui::window::M
 // "Name: line".
 bool IsOwnLine(std::wstring_view sender, std::wstring_view text, wchar_t channel, std::wstring_view ownName);
 
+// Whether a chat line holds an item's name as the server writes it in a message with items ("[name]"), with its
+// notice or without it; a plain line seldom does.
+bool HoldsItemName(std::wstring_view text);
+
 // One item of "/il": "<storage><slot>:<type>:<level>", e.g. "i37:6153:13".
 std::wstring ItemRef(wchar_t storage, int slot, int type, int level);
 
@@ -112,7 +116,7 @@ std::size_t MaxLineLength(std::wstring_view channel);
 // The client's guard against the server's cooldown (one message with items per account every cooldownSeconds of
 // "#ILH"), so a line the server would refuse stays in the chat bar instead of going and being lost. The server
 // counts from when it took the line, which only its answer tells: the guard counts from the sender's own line
-// coming back on its channel (OwnLineBack()), with its items or without them (the server delivers the line alone when
+// with an item's name coming back on its channel (OwnLineBack()), with its items or without them (the server delivers the line alone when
 // it cannot write an item or its notice). Until then it counts from the sending, and a line that has not come back
 // after EchoWaitMs was refused, so the server's cooldown never began: the guard lets go of it. A whisper comes back
 // to no one; it counts from the sending, WhisperMarginMs longer for its way to the server. Times are milliseconds
