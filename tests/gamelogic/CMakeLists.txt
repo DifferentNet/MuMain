@@ -240,3 +240,12 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+# MU Helper's crafting materials option: feathers, the Spirit and the Fenrir materials leave the quest option (2026-11-20).
+mu_add_test(
+    NAME test_helper_craft_pick
+    SOURCES
+        test_helper_craft_pick.cpp
+    LINK_LIBS
+        MuClient
+)

@@ -12585,4 +12585,8 @@
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>先にマーロンのクエストを完了してください（レベル220から）。</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>クラフト</value>
+  </data>
 </root>

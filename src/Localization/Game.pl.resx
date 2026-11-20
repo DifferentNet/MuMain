@@ -14524,4 +14524,8 @@
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Najpierw ukończ zadanie Marlona (od poziomu 220).</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Rzemiosło</value>
+  </data>
 </root>

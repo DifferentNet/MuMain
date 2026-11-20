@@ -14503,4 +14503,8 @@
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Conclua primeiro a missão de Marlon (a partir do nível 220).</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Artesanato</value>
+  </data>
 </root>
