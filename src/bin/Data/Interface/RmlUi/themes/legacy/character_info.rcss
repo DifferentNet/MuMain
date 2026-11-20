@@ -58,30 +58,31 @@
 	left: 12px;
 	right: 18px;
 	top: 48px;
-	height: 66px;
+	height: 79px;
 	background-color: rgba(0, 0, 0, 77);
 	pointer-events: none;
 }
 .summary-corner { position: absolute; width: 14px; height: 14px; pointer-events: none; }
 .corner-tl { left: 12px;  top: 48px; decorator: image(docked-corner-tl); }
 .corner-tr { right: 13px; top: 48px; decorator: image(docked-corner-tr); }
-.corner-bl { left: 12px;  top: 105px; decorator: image(docked-corner-bl); }
-.corner-br { right: 13px; top: 105px; decorator: image(docked-corner-br); }
+.corner-bl { left: 12px;  top: 118px; decorator: image(docked-corner-bl); }
+.corner-br { right: 13px; top: 118px; decorator: image(docked-corner-br); }
 
 /* Edge spans are RenderFrame()'s loop bounds: x 26..163 for top/bottom, 14..173 for the separator
-   under the level line, y 62..105 for left/right. */
+   under the level line, y 62..118 for left/right (the original's 62..105 and the Combat Power line's 13). */
 .summary-edge { position: absolute; pointer-events: none; }
 .edge-top       { left: 26px;  right: 27px; top: 48px;  height: 14px; decorator: image(chainfo-table-top); }
-.edge-bottom    { left: 26px;  right: 27px; top: 105px; height: 14px; decorator: image(chainfo-table-bottom); }
+.edge-bottom    { left: 26px;  right: 27px; top: 118px; height: 14px; decorator: image(chainfo-table-bottom); }
 .edge-separator { left: 14px;  right: 17px; top: 60px;  height: 14px; decorator: image(chainfo-table-bottom); }
-.edge-left      { left: 12px;  top: 62px;  width: 14px;  height: 43px; decorator: image(chainfo-table-left); }
-.edge-right     { right: 13px; top: 62px;  width: 14px;  height: 43px; decorator: image(chainfo-table-right); }
+.edge-left      { left: 12px;  top: 62px;  width: 14px;  height: 56px; decorator: image(chainfo-table-left); }
+.edge-right     { right: 13px; top: 62px;  width: 14px;  height: 56px; decorator: image(chainfo-table-right); }
 
 /* Each row is a box from 18 to 170, the summary box's inside; its text shrinks to it when wider
    (character_info.rml). The level row lays the level out on the left and the points to spend on
    the right; when even the smallest size is too wide, the level is cut at the points instead of
-   running under them. */
-.level-row, .exp-text, .point-probability-text, .point-text {
+   running under them. The Combat Power line under the level moves the lines below it, the attribute rows and the
+   advanced stats boxes 13 down from the original's places. */
+.level-row, .cp-text, .exp-text, .point-probability-text, .point-text {
 	display: block;
 	position: absolute;
 	left: 18px;
@@ -93,13 +94,14 @@
 .level-row .level-row-fit { display: flex; flex-direction: row; justify-content: space-between; }
 .level-text { flex: 0 1 auto; overflow: hidden; color: #e6e600; }
 .levelup-point-text { flex: 0 0 auto; color: #ff8a00; }
-.exp-text { top: 75px; color: token(text-primary); }
-.point-probability-text { top: 88px; color: #4cc5fe; }
-.point-text { top: 101px; color: #4cc5fe; }
+.cp-text { top: 75px; color: rgb(204, 128, 204); }
+.exp-text { top: 88px; color: token(text-primary); }
+.point-probability-text { top: 101px; color: #4cc5fe; }
+.point-text { top: 114px; color: #4cc5fe; }
 
 /* Attribute rows: textbox background (170x21) + centered label/value halves + a variable-length
    block of extra derived-stat lines below. HEIGHT_STRENGTH/DEXTERITY/VITALITY/ENERGY/CHARISMA
-   (CharacterInfoWindow.h) are 120/175/240/295/350. */
+   (CharacterInfoWindow.h) are 133/188/253/308/363. */
 .attr-textbox {
 	position: absolute;
 	left: 11px;
@@ -108,11 +110,11 @@
 	decorator: image(chainfo-textbox);
 	pointer-events: none;
 }
-.attr-textbox-str { top: 120px; }
-.attr-textbox-agi { top: 175px; }
-.attr-textbox-vit { top: 240px; }
-.attr-textbox-ene { top: 295px; }
-.attr-textbox-cmd { top: 350px; }
+.attr-textbox-str { top: 133px; }
+.attr-textbox-agi { top: 188px; }
+.attr-textbox-vit { top: 253px; }
+.attr-textbox-ene { top: 308px; }
+.attr-textbox-cmd { top: 363px; }
 
 /* Label and value share the value's color, as RenderAttribute() set one color for both. */
 .attr-label, .attr-value {
@@ -125,11 +127,11 @@
 }
 .attr-label { left: 12px; width: 74px; color: rgb(230, 230, 0); }
 .attr-value { left: 86px; right: 18px; color: rgb(230, 230, 0); }
-.attr-label-str, .attr-value-str { top: 126px; }
-.attr-label-agi, .attr-value-agi { top: 181px; }
-.attr-label-vit, .attr-value-vit { top: 246px; }
-.attr-label-ene, .attr-value-ene { top: 301px; }
-.attr-label-cmd, .attr-value-cmd { top: 356px; }
+.attr-label-str, .attr-value-str { top: 139px; }
+.attr-label-agi, .attr-value-agi { top: 194px; }
+.attr-label-vit, .attr-value-vit { top: 259px; }
+.attr-label-ene, .attr-value-ene { top: 314px; }
+.attr-label-cmd, .attr-value-cmd { top: 369px; }
 
 /* Extra derived-stat lines: normal block flow, one span per line with a fixed 13 reference px row
    height (bound in the RML, since the block is counter-scaled) -- reproduces RenderAttribute()'s
@@ -139,10 +141,10 @@
    own RenderText() call sites. */
 .attr-lines { position: absolute; transform-origin: left top; pointer-events: none; }
 .attr-lines span { display: block; white-space: nowrap; }
-.attr-lines-str { left: 20px; top: 145px; }
-.attr-lines-agi { left: 20px; top: 199px; }
-.attr-lines-vit { left: 20px; top: 264px; }
-.attr-lines-ene { left: 18px; top: 319px; }
+.attr-lines-str { left: 20px; top: 158px; }
+.attr-lines-agi { left: 20px; top: 212px; }
+.attr-lines-vit { left: 20px; top: 277px; }
+.attr-lines-ene { left: 18px; top: 332px; }
 
 .stat-btn {
 	position: absolute;
@@ -154,11 +156,11 @@
 	pointer-events: auto;
 }
 .stat-btn:hover { filter: brightness(1.25); }
-.stat-btn-str { top: 122px; }
-.stat-btn-agi { top: 177px; }
-.stat-btn-vit { top: 242px; }
-.stat-btn-ene { top: 297px; }
-.stat-btn-cmd { top: 352px; }
+.stat-btn-str { top: 135px; }
+.stat-btn-agi { top: 190px; }
+.stat-btn-vit { top: 255px; }
+.stat-btn-ene { top: 310px; }
+.stat-btn-cmd { top: 365px; }
 
 /* Exit is fully shared now (docked_panel_frame.rcss's #btn_exit) -- only Quest/Pet/MasterLevel
    (this window's own extra shortcuts, not part of the shared frame) stay local. */
@@ -220,7 +222,7 @@
 #classname { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 #servername { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 .level-row { width: calc(152px * var(--root-scale)); }
-.exp-text, .point-probability-text, .point-text { width: calc(152px * var(--root-scale)); }
+.cp-text, .exp-text, .point-probability-text, .point-text { width: calc(152px * var(--root-scale)); }
 .levelup-point-text { margin-left: calc(6px * var(--root-scale)); }
 /* The extra lines and the advanced stats end at 170 too, inside the frame's right edge, and shrink
    to it (character_info.rml). */
@@ -242,8 +244,8 @@
    The fourth button sits where the master level button was. Its sprite, a golden bar chart in the stone square
    of the quest and pet buttons, comes from scripts/chainfo-stats-button.py (main repo). While #panel has
    .adv-view (the model's advanced_view), two boxes take the place of the attribute rows, each in the summary
-   box's 8-piece frame with a yellow title over the separator like the level line: box 1 at 120 (8 lines, 136
-   high), box 2 at 260 (7 lines, 123 high: six stats and Combat Power). */
+   box's 8-piece frame with a yellow title over the separator like the level line: box 1 at 133 (8 lines, 136
+   high), box 2 at 273 (6 lines, 110 high; the Combat Power is in the summary box now). */
 @spritesheet chainfo-btn-advstats-sheet { src: "../../../newui_chainfo_btn_stats.tga"; chainfo-btn-advstats: 0px 0px 36px 29px; }
 .info-btn-advstats { left: 124px; decorator: image(chainfo-btn-advstats); }
 
@@ -280,33 +282,33 @@
 #panel.adv-view .attr-lines, #panel.adv-view .stat-btn { display: none; }
 
 .adv-fill { position: absolute; left: 12px; right: 18px; background-color: rgba(0, 0, 0, 77); pointer-events: none; }
-.adv-fill-1 { top: 120px; height: 136px; }
-.adv-fill-2 { top: 260px; height: 123px; }
-.adv-corner-tl-1 { left: 12px;  top: 120px; decorator: image(docked-corner-tl); }
-.adv-corner-tr-1 { right: 13px; top: 120px; decorator: image(docked-corner-tr); }
-.adv-corner-bl-1 { left: 12px;  top: 242px; decorator: image(docked-corner-bl); }
-.adv-corner-br-1 { right: 13px; top: 242px; decorator: image(docked-corner-br); }
-.adv-corner-tl-2 { left: 12px;  top: 260px; decorator: image(docked-corner-tl); }
-.adv-corner-tr-2 { right: 13px; top: 260px; decorator: image(docked-corner-tr); }
+.adv-fill-1 { top: 133px; height: 136px; }
+.adv-fill-2 { top: 273px; height: 110px; }
+.adv-corner-tl-1 { left: 12px;  top: 133px; decorator: image(docked-corner-tl); }
+.adv-corner-tr-1 { right: 13px; top: 133px; decorator: image(docked-corner-tr); }
+.adv-corner-bl-1 { left: 12px;  top: 255px; decorator: image(docked-corner-bl); }
+.adv-corner-br-1 { right: 13px; top: 255px; decorator: image(docked-corner-br); }
+.adv-corner-tl-2 { left: 12px;  top: 273px; decorator: image(docked-corner-tl); }
+.adv-corner-tr-2 { right: 13px; top: 273px; decorator: image(docked-corner-tr); }
 .adv-corner-bl-2 { left: 12px;  top: 369px; decorator: image(docked-corner-bl); }
 .adv-corner-br-2 { right: 13px; top: 369px; decorator: image(docked-corner-br); }
-.adv-edge-top-1       { left: 26px; right: 27px; top: 120px; height: 14px; decorator: image(chainfo-table-top); }
-.adv-edge-bottom-1    { left: 26px; right: 27px; top: 242px; height: 14px; decorator: image(chainfo-table-bottom); }
-.adv-edge-separator-1 { left: 14px; right: 17px; top: 132px; height: 14px; decorator: image(chainfo-table-bottom); }
-.adv-edge-left-1      { left: 12px;  top: 134px; width: 14px; height: 108px; decorator: image(chainfo-table-left); }
-.adv-edge-right-1     { right: 13px; top: 134px; width: 14px; height: 108px; decorator: image(chainfo-table-right); }
-.adv-edge-top-2       { left: 26px; right: 27px; top: 260px; height: 14px; decorator: image(chainfo-table-top); }
+.adv-edge-top-1       { left: 26px; right: 27px; top: 133px; height: 14px; decorator: image(chainfo-table-top); }
+.adv-edge-bottom-1    { left: 26px; right: 27px; top: 255px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-separator-1 { left: 14px; right: 17px; top: 145px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-left-1      { left: 12px;  top: 147px; width: 14px; height: 108px; decorator: image(chainfo-table-left); }
+.adv-edge-right-1     { right: 13px; top: 147px; width: 14px; height: 108px; decorator: image(chainfo-table-right); }
+.adv-edge-top-2       { left: 26px; right: 27px; top: 273px; height: 14px; decorator: image(chainfo-table-top); }
 .adv-edge-bottom-2    { left: 26px; right: 27px; top: 369px; height: 14px; decorator: image(chainfo-table-bottom); }
-.adv-edge-separator-2 { left: 14px; right: 17px; top: 272px; height: 14px; decorator: image(chainfo-table-bottom); }
-.adv-edge-left-2      { left: 12px;  top: 274px; width: 14px; height: 95px; decorator: image(chainfo-table-left); }
-.adv-edge-right-2     { right: 13px; top: 274px; width: 14px; height: 95px; decorator: image(chainfo-table-right); }
+.adv-edge-separator-2 { left: 14px; right: 17px; top: 285px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-left-2      { left: 12px;  top: 287px; width: 14px; height: 82px; decorator: image(chainfo-table-left); }
+.adv-edge-right-2     { right: 13px; top: 287px; width: 14px; height: 82px; decorator: image(chainfo-table-right); }
 
 .adv-title { position: absolute; left: 18px; width: calc(152px * var(--root-scale)); transform-origin: left top; white-space: nowrap; color: #e6e600; font-weight: bold; pointer-events: none; }
-.adv-title-1 { top: 130px; }
-.adv-title-2 { top: 270px; }
+.adv-title-1 { top: 143px; }
+.adv-title-2 { top: 283px; }
 .adv-lines { position: absolute; left: 18px; width: calc(152px * var(--root-scale)); transform-origin: left top; pointer-events: none; }
-.adv-lines-1 { top: 147px; }
-.adv-lines-2 { top: 287px; }
+.adv-lines-1 { top: 160px; }
+.adv-lines-2 { top: 300px; }
 .adv-lines span { display: block; white-space: nowrap; color: #ffffff; height: calc(13px * var(--root-scale)); }
 .adv-lines span.boosted { color: rgb(100, 150, 255); }
 
@@ -323,7 +325,7 @@
 	.levelup-point-text { left: auto; right: 22px; transform-origin: right top; }
 	/* The summary and description lines span the wider window (18 to 270), so the text is not shrunk to the
 	   190-wide window's boxes. */
-	.level-row, .exp-text, .point-probability-text, .point-text { width: calc(252px * var(--root-scale)); }
+	.level-row, .cp-text, .exp-text, .point-probability-text, .point-text { width: calc(252px * var(--root-scale)); }
 	.adv-title, .adv-lines { width: calc(252px * var(--root-scale)); }
 	.attr-lines.attr-lines-str, .attr-lines.attr-lines-agi, .attr-lines.attr-lines-vit { width: calc(250px * var(--root-scale)); }
 	.attr-lines.attr-lines-ene { width: calc(252px * var(--root-scale)); }
@@ -339,11 +341,12 @@
 		padding: 14.5px 13px;
 		decorator: image(chainfo-stat-btn) content-box;
 	}
-	.stat-btn-str { top: 120px; }
-	.stat-btn-agi { top: 175px; }
-	.stat-btn-vit { top: 240px; }
-	.stat-btn-ene { top: 295px; }
-	.stat-btn-cmd { top: 350px; }
+	.stat-btn-str { top: 133px; }
+	.stat-btn-agi { top: 188px; }
+	.stat-btn-vit { top: 253px; }
+	.stat-btn-ene { top: 308px; }
+	/* Its box short at the bottom (5, not 14.5), so it ends where the bottom buttons start (y 389). */
+	.stat-btn-cmd { top: 363px; padding-bottom: 5px; }
 	#panel #btn_exit, #panel .info-btn { width: 44px; height: 34px; bottom: 6px; }
 	#panel #btn_exit { left: 23px; decorator: image(docked-exit-btn) content-box; }
 	#panel .info-btn-quest { left: 73px; }

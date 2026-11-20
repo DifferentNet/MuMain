@@ -1010,9 +1010,13 @@ if (DOTNET_EXECUTABLE)
   if (DOTNET_CAN_BUILD_CLIENT_LIBRARY)
     target_compile_definitions(MuClient PRIVATE MU_HAS_DOTNET_AOT)
 
+    # DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false: the first dotnet run in each fresh DOTNET_CLI_HOME
+    # otherwise appends "<home>\.dotnet\tools" to the user's PATH, one entry per build folder,
+    # until the PATH is too long for VsDevCmd to find the Windows SDK.
     set(DOTNET_PUBLISH_ENV
       "NUGET_PACKAGES=${DOTNET_NUGET_DIR_NATIVE}"
       "DOTNET_CLI_HOME=${DOTNET_TEMP_DIR_NATIVE}"
+      "DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false"
       "TEMP=${DOTNET_TEMP_DIR_NATIVE}"
       "TMP=${DOTNET_TEMP_DIR_NATIVE}"
     )
@@ -1144,6 +1148,7 @@ if (DOTNET_EXECUTABLE)
               --unset=Platform
               "NUGET_PACKAGES=${DOTNET_NUGET_DIR_NATIVE}"
               "DOTNET_CLI_HOME=${DOTNET_TEMP_DIR_NATIVE}"
+              "DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false"
               "${DOTNET_EXECUTABLE}" run --project "${RESXGEN_PROJ_NATIVE}" -c Release
               -- --input "${RESX_INPUT_DIR_NATIVE}" --output "${RESX_OUTPUT_DIR_NATIVE}"
               --wide-groups Game,Dialog,PhantomGuide,MiniGameEntry
@@ -1210,6 +1215,7 @@ if (DOTNET_EXECUTABLE)
               --unset=Platform
               "NUGET_PACKAGES=${DOTNET_NUGET_DIR_NATIVE}"
               "DOTNET_CLI_HOME=${DOTNET_TEMP_DIR_NATIVE}"
+              "DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false"
               "${DOTNET_EXECUTABLE}" publish "${IN_GAME_TESTS_PROJ_NATIVE}" -c Release --use-current-runtime
               -o "${IN_GAME_TESTS_PUBLISH_NATIVE}" --nologo
       COMMAND ${CMAKE_COMMAND} -E copy "${IN_GAME_TESTS_PUBLISH}/${IN_GAME_TESTS_NAME}" "${IN_GAME_TESTS_EXE}"

@@ -57,6 +57,11 @@
 				<div class="corner corner-br"></div>
 				<div class="hit"></div>
 				<div class="close" data-event-click="minimap_close" data-attr-data-hint="close_hint"></div>
+				<!-- With a pad in use the close hint stands beside the cross (the tooltip needs a pointer);
+				     the box is this screen's reference px, the text is scaled back out of its stretch. -->
+				<div class="pad-close" data-if="pad_close_visible">
+					<div class="pad-close-text" data-style-font-size="text_px + 'px'">{{close_hint}}</div>
+				</div>
 			</div>
 			<div class="hint" data-if="hint_visible" data-style-left="hint_left + 'px'" data-style-top="hint_top + 'px'"
 			     data-style-width="hint_width + 'px'" data-style-height="hint_height + 'px'">

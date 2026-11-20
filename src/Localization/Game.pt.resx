@@ -13408,7 +13408,7 @@
     <value>D-pad ou analógico: teclas. {A}: apertar, {X}: apagar, {Y}: espaço, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: maiúsc., {RT}: símbolos, {VIEW}: inglês/russo, {LB}/{RB}: cursor, {B}: fechar</value>
+    <value>{LT}: maiúsc., {RT}: símbolos, {VIEW}: inglês, russo, frases, {LB}/{RB}: cursor, {B}: fechar</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Mana insuficiente</value>
@@ -13654,7 +13654,7 @@
     <value>Mapa (segurar: teleporte)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Inventário</value>
+    <value>Inventário (segurar: equipar o item novo)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Atacar, falar, menu do jogador</value>
@@ -14502,6 +14502,19 @@
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Conclua primeiro a missão de Marlon (a partir do nível 220).</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: fechar</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Bateria do controle fraca: %d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Setas: andar</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Um item novo é melhor: segure D-pad direita para equipá-lo. No inventário {Y} abre a ficha do item (marca de lixo); num mercador, {A} no botão Vender lixo vende o lixo. O zen sob os seus pés é pego sozinho</value>
   </data>
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">

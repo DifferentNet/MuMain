@@ -170,6 +170,7 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
 
     c.Bind("level_text", &model.levelText);
     c.Bind("levelup_point_text", &model.levelUpPointText);
+    c.Bind("combat_power_text", &model.combatPowerText);
     c.Bind("exp_text", &model.expText);
     c.Bind("point_probability_text", &model.pointProbabilityText);
     c.Bind("point_text", &model.pointText);
@@ -542,6 +543,7 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
 #ifdef __EMSCRIPTEN__
     const Core::FirstOpenTiming::SyncScope firstOpenTiming("Character", m_RmlView.Document() && IsVisible());
 #endif
+    m_combatPowerWatch.Update(m_RmlView.Document() && IsVisible());
     if (!m_RmlView.Document() || !IsVisible())
         return;
 
@@ -564,8 +566,26 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
         BuildTableTexts();
         BuildAttributeLines();
     }
+    SyncCombatPowerText();
     if (model.advancedView)
         BuildAdvancedStatsLines();
+}
+
+void mu::ui::window::CCharacterInfoWindow::SyncCombatPowerText()
+{
+    const std::optional<long long> value = GameLogic::AdvancedStats::KnownHeroCombatPower();
+    const int locale = I18N::LocaleIndex(I18N::GetCurrentLocale());
+    if (value == m_combatPowerTextValue && locale == m_combatPowerTextLocale
+        && !m_RmlView.GetModel().combatPowerText.empty())
+        return;
+    m_combatPowerTextValue = value;
+    m_combatPowerTextLocale = locale;
+
+    const std::wstring digits = value ? GameLogic::AdvancedStats::FormatCombatPower(*value) : std::wstring(L"-");
+    wchar_t line[256];
+    mu_swprintf(line, I18N::Game::AdvStatsCombatPower, digits.c_str());
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::combatPowerText, "combat_power_text",
+              StringUtils::WideToNarrow(line));
 }
 
 namespace
@@ -694,17 +714,8 @@ void mu::ui::window::CCharacterInfoWindow::BuildAdvancedStatsLines()
         { I18N::Game::AdvStatsManaRecovery, L"mprec", false },
         { I18N::Game::AdvStatsShieldAbsorb, L"sdabs", false },
     });
-
-    // Combat Power, the Tier Maps' entry rule (server add-on, 2026-10-23): a whole number, the defense box's last line.
-    if (const double* combatPower = stats.Find(L"cp"))
-    {
-        std::wstring digits = std::to_wstring(static_cast<long long>(*combatPower));
-        for (int i = static_cast<int>(digits.size()) - 3; i > 0; i -= 3)
-            digits.insert(static_cast<size_t>(i), L",");
-        wchar_t line[256];
-        mu_swprintf(line, I18N::Game::AdvStatsCombatPower, digits.c_str());
-        model.advancedDefenseLines.push_back({ StringUtils::WideToNarrow(line), "boosted" });
-    }
+    // The Combat Power, which used to close the defense box, is the summary's line under the level now
+    // (SyncCombatPowerText()).
     m_RmlView.MarkDirty("advanced_attack_lines");
     m_RmlView.MarkDirty("advanced_defense_lines");
 }

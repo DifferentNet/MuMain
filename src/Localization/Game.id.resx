@@ -13408,7 +13408,7 @@
     <value>D-pad atau stik: tombol. {A}: tekan, {X}: hapus, {Y}: spasi, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: simbol, {VIEW}: Inggris/Rusia, {LB}/{RB}: kursor, {B}: tutup</value>
+    <value>{LT}: shift, {RT}: simbol, {VIEW}: Inggris, Rusia, frasa, {LB}/{RB}: kursor, {B}: tutup</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Mana tidak cukup</value>
@@ -13654,7 +13654,7 @@
     <value>Peta (tahan: teleport)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Inventaris</value>
+    <value>Inventaris (tahan: pakai item baru)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Serang, bicara, menu pemain</value>
@@ -14502,6 +14502,19 @@
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Selesaikan dulu misi Marlon (mulai level 220).</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: tutup</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Baterai gamepad lemah: %d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Tombol panah: berjalan</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Item baru lebih baik: tahan D-pad kanan untuk memakainya. Di inventaris {Y} membuka kartu item (tanda sampah); di pedagang, {A} pada tombol Jual sampah menjual sampahnya. Zen di bawah kakimu terambil sendiri</value>
   </data>
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">

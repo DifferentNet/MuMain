@@ -11487,7 +11487,7 @@
     <value>D-padまたはスティック：キー。{A}：押す、{X}：消す、{Y}：スペース、{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}：シフト、{RT}：記号、{VIEW}：英語/ロシア語、{LB}/{RB}：カーソル、{B}：閉じる</value>
+    <value>{LT}：シフト、{RT}：記号、{VIEW}：英語・ロシア語・定型文、{LB}/{RB}：カーソル、{B}：閉じる</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>マナが足りません</value>
@@ -11733,7 +11733,7 @@
     <value>マップ（長押し：テレポート）</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>インベントリ</value>
+    <value>インベントリ（長押し：新しいアイテムを装備）</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>攻撃、会話、プレイヤーメニュー</value>
@@ -12584,6 +12584,19 @@
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>先にマーロンのクエストを完了してください（レベル220から）。</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}：閉じる</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>ゲームパッドのバッテリー残量低下：%d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>矢印キー：歩く</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>装備中より良い新しいアイテム：D-pad右を長押しで装備。インベントリでは{Y}でアイテムカードを開く（不用品マーク）。商人では「不用品を売る」ボタンで{A}を押すと不用品を売る。足元のゼンは自動で拾う</value>
   </data>
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">

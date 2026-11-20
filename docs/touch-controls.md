@@ -356,6 +356,16 @@ tick (sound on or off), and a target picked with the right stick with a 40 ms li
 shake that would end while a stronger one still runs is dropped, so a pick's tick does not cut a
 blow's shake short; a weaker one that runs on past it (a level up after a blow) plays. A shake the pad
 refused (no motors) does not count as under way (`Core/Input/GamepadRumble.{h,cpp}`, tested in `tests/core/test_gamepad_rumble.cpp`).
+Life falling to a quarter or less (life alone, the shield not counted) gives two short pulses 0.18 s
+apart (pad round 7), not in a safe zone and not when dead; when the blow that took it there shakes the
+pad, the first pulse waits until that shake ended and 80 ms more, so the two do not run together; again only once life went back over 40 % and
+10 s passed (`Core/Input/LowLifePulse.{h,cpp}`, tested in `tests/core/test_low_life_pulse.cpp`).
+
+On a PC (the browser's Gamepad API tells no battery) a pad on its own battery at 20 % or less says
+"Gamepad battery low: N%" once in the system messages, and again at 10 % (pad round 7); on the cable,
+or back over 25 %, it may say it again, and a line not said yet is dropped. The line waits until the hero is in the world
+(`Core/Input/GamepadBattery.{h,cpp}`, tested in `tests/core/test_gamepad_battery.cpp`; the control
+socket's `pad` `battery` action fakes the battery).
 
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
@@ -391,13 +401,22 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | RB held + X, Y, B | The skill buttons 7, 8 and 9 (hotkeys 7 to 9, pad round 6): a pad's alone, as the sixth (no finger on the screen, the lower hotkey set; `UI::Mobile::SlotCount` is 9). While RB is held (no window open) they stand in the places of X, Y and B (`TouchControls::SetPadThird`, body class `pad-third`); RB wins over RT's page for the skills, the potions still follow RT. A press keeps the page it began on (`GamepadPageLatch`), so letting RB go mid-hold does not switch a held skill. As soon as a pad alone has a skill on 7 to 9 (set in the picker or carried over), the system messages say how to cast it, once ever (`PadHints::Hint::SkillsThird`, remembered in `[UI] GamepadHintsSeen`) |
 | LB, LT | The potions Q and W (E and R are on the keyboard only: no layout shows their buttons now) |
 | RB (a tap) | The party member heals and buffs go on (ghinzuro 2026-11-04, `TouchActions::ChooseNextFriend`): since pad round 6 on the release of a tap (under 0.4 s, no X, Y or B pressed meanwhile; `GamepadControls` `RbTapTime`), each tap the next member near, their card lit and their name in the chat; past the last, back to the character itself. With no member near, it says so. A heal, a buff or Teleport Ally on the chosen member walks up to them while they are in sight (`FriendSightRange`, 14 tiles); out of sight the chat says "Too far away: <name>" (`FriendTooFar`) and nothing is cast |
-| D-pad left | A tap: the map (Tab). Held half a second: the Teleport window (M) |
+| D-pad left | A tap: the map (Tab). Held half a second: the Teleport window (M). With the map up, B closes it and casts nothing, and the windows the d-pad and Menu open close it first (pad round 7: the map keeps every key but Tab to itself); its close hint names the pad's B while the pad is in use and then stands beside the cross too (its tooltip needs a pointer) |
 | D-pad right | The inventory (I). With the quick equip offer up (What the player gets, above), a tap opens the inventory and held half a second it puts the offered item on |
 | D-pad up | A tap: MU Helper on and off. Held half a second: its settings (Z) |
 | D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC. The drop it would take first shows its name and, under it, the d-pad glyph with "Pick up" |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | Social: trade, party, guild with the players around |
 | Menu | A tap: the hero hub (below). In the hub, or over another window, the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
+
+**The arrow keys** (pad round 7, `UI/HUD/ArrowWalk`, the way in `Core/Input/ArrowSteer`, tested in
+`tests/core/test_arrow_steer.cpp`) walk the hero on a keyboard as the left stick does: up on the
+screen is up, two arrows walk the slant. Only in the world with nothing else wanting the keys: no text
+typed in, no game window or dialog open, no control holding the keys, the pad not in use, no other
+device walking the hero, the hero alive and no Ctrl, Alt or Shift held. A walk cut short by one of
+these waits until the arrows are let go, and arrows pressed for something else (the chat's caret, a
+list) walk only once let go and pressed again after it closed. Debug builds keep the arrows for the editor's hero move, the
+editor's free camera keeps them too. Help's key page has its row.
 
 **The hero hub.** Menu with no window open opens the character's windows as tabs: Inventory,
 Character, Skills (the skill picker), Quests, Guild, Settings, Controls. The strip of tabs stands at the top
@@ -448,7 +467,7 @@ tabs:
 | RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |
 | B | Back: closes the window on top; with an item on the cursor, puts it back where it was taken from instead |
 | Y with an item on the cursor | Drops it to the ground under the hero (refused, as with the mouse, for expensive, bound and reinforced items) |
-| LB, RB | The hub's tabs (the help's pages with the help open) |
+| LB, RB | The hub's tabs (the help's pages with the help open; over the help the legend hides, the help's last row says its keys) |
 | RB (no hub, two or more windows open) | The frame goes to the next window, left to right and round, back to where it was in it (`PadFrame::NextWindow`); the legend says so |
 | RT | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so, in the hub too when the hub's window has pages (the bag's tabs) |
 | Menu | The menu of every window |

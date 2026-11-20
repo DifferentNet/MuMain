@@ -142,6 +142,26 @@ body { pointer-events: none; }
 	cursor: pointer;
 }
 
+/* MU Skynet, pad round 7: with a pad in use the close hint ("B: close") stands left of the cross,
+   as the pad has no pointer to hover the cross's tooltip with. The box is this screen's reference px,
+   its right edge clear of the top right corner's art; the text is scaled back out of the screen's
+   stretch around its right middle (as base.rcss's .counter-scaled-xy), drawn at the native text size,
+   white on the hint's dark backing so it reads over any map. */
+.pad-close { position: absolute; left: 300px; right: 37px; top: 3px; height: 25px; pointer-events: none; }
+.pad-close-text {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform-origin: right center;
+	transform: translateY(-50%) scale(calc(1 / var(--overlay-scale-x, 1)), calc(1 / var(--overlay-scale-y, 1)));
+	padding: 2px 6px;
+	background-color: #000000b4;
+	font-family: "token(font-body)";
+	color: #ffffff;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
 /* Check_Btn(): the marker's name, white on 70% black, centred in its box. */
 .hint {
 	position: absolute;
@@ -193,6 +213,8 @@ body { pointer-events: none; }
    (UI::Mobile::InterfaceMode): with the PC layout on a phone there is no Back button to close the map. */
 @media (theme: mobile) {
 	.close { left: 540px; top: 6px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
+	/* The pad's close hint left of the moved cross's tap area (532 to 578). */
+	.pad-close { right: 112px; top: 6px; }
 }
 /* On a phone or tablet the cross also stands under the touch controls' top row (its band ends about
    47 units down this space), on a dark round backing that shows it over any map, and the tap area is
@@ -211,4 +233,6 @@ body { pointer-events: none; }
 		background-color: rgba(0, 0, 0, 170);
 		decorator: image(mm-close) content-box;
 	}
+	/* The pad's close hint left of the cross's backing (530 to 592), on its middle. */
+	.pad-close { right: 114px; top: 54px; height: 56px; }
 }

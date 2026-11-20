@@ -14014,6 +14014,9 @@
   <data name="AdvStatsCombatPower" xml:space="preserve">
     <value>Combat Power: %ls</value>
   </data>
+  <data name="InventoryCombatPower" xml:space="preserve">
+    <value>CP: %ls</value>
+  </data>
   <data name="SetItemPieces" xml:space="preserve">
     <value>Set items: %d of %d collected</value>
   </data>
@@ -15799,7 +15802,7 @@
     <value>D-pad or stick: keys. {A}: press, {X}: erase, {Y}: space, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: symbols, {VIEW}: English/Russian, {LB}/{RB}: cursor, {B}: close</value>
+    <value>{LT}: shift, {RT}: symbols, {VIEW}: English, Russian, phrases, {LB}/{RB}: cursor, {B}: close</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
@@ -16357,7 +16360,7 @@
     <value>Map (hold: teleport)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Inventory</value>
+    <value>Inventory (hold: put on the new item)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Attack, talk, player menu</value>
@@ -17496,5 +17499,18 @@
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Complete Marlon's quest first (from level 220).</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: close</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Gamepad battery low: %d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Arrow keys: walk</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>A new item that is better: hold D-pad right to put it on. In the bag {Y} opens the item card (junk mark); at a merchant {A} on the Sell junk button sells the junk. Zen under your feet is picked up by itself</value>
   </data>
 </root>
