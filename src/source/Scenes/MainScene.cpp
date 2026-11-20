@@ -837,8 +837,9 @@ bool RenderMainScene()
     // terrain and sprites assembled, the interface laid out. Several minimized clients (MU Helper
     // farming) loaded the PC almost like visible ones. Packets, movement, animation timing and MU Helper
     // run in MoveMainScene(), which this does not touch; the camera above keeps following the hero, and
-    // the selection below is still refreshed.
-    if (g_bWindowMinimized && !mu::GetRenderer().IsFrameActive())
+    // the selection below is still refreshed. The same goes for a browser page nobody sees (a tab in
+    // the background, a phone held upright): the renderer starts no frame there (IsDrawingPaused()).
+    if ((g_bWindowMinimized || mu::GetRenderer().IsDrawingPaused()) && !mu::GetRenderer().IsFrameActive())
     {
         // Draws nothing, and is the one place that drops the attack selection once its target is dead:
         // without it MU Helper kept casting at the corpse's slot.

@@ -1225,6 +1225,8 @@ static Render::DrawCommandHistory s_previousDrawCommands;
 // True between BeginFrame/EndFrame — replaces s_renderPass as the "frame active" guard
 // during the collection phase (render pass is only opened in EndFrame now).
 static bool s_frameActive = false;
+// Browser build: the page isn't seen (IMuRenderer::SetDrawingPaused), BeginFrame starts no frame.
+static bool s_drawingPaused = false;
 
 // RmlUi-behind-3D-icons seam (FlushRenderCommands): lets a caller open a real render pass
 // mid-recording instead of waiting for EndFrame's single one. s_replayedCmdCount is how far
@@ -2738,6 +2740,17 @@ public:
         if (!s_device || !s_window)
         {
             FailPendingFrameReadback();
+            return;
+        }
+
+        // Nobody sees the page: no frame, as for a minimized window's missing swapchain texture
+        // below (no command buffer; every draw returns while no frame is active). A requested
+        // readback stays pending for the next frame that renders. Nothing may record while
+        // paused (every recorder checks s_frameActive); the clear keeps a stray command from
+        // piling up frame after frame until the page is seen again.
+        if (s_drawingPaused)
+        {
+            s_renderCmds.clear();
             return;
         }
 
@@ -4483,6 +4496,13 @@ public:
     // -----------------------------------------------------------------------
     void Begin2DPass() override
     {
+        // Outside a frame (minimized, a page nobody sees) nothing replays these; the loading,
+        // login and character scenes still call BeginBitmap then.
+        if (!s_frameActive)
+        {
+            return;
+        }
+
         // Reset viewport to full swapchain dimensions for 2D UI rendering.
         // The original OpenGL BeginBitmap() called glViewport(0, 0, WindowWidth, WindowHeight)
         // before setting up the orthographic projection. Without this, 2D UI elements
@@ -4642,6 +4662,16 @@ public:
     [[nodiscard]] bool IsFrameActive() const override
     {
         return s_frameActive;
+    }
+
+    void SetDrawingPaused(bool paused) override
+    {
+        s_drawingPaused = paused;
+    }
+
+    [[nodiscard]] bool IsDrawingPaused() const override
+    {
+        return s_drawingPaused;
     }
 
     void SetStatsEnabled(bool enabled) override

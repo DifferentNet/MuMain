@@ -18,6 +18,8 @@ struct PageDisplay
 
 // The size the page wants while "Auto" is on; nothing while the player has a size from Options.
 std::optional<PageDisplay> GetAutoDisplay();
+// Only its serial (-1 for nothing): one call instead of four, for a check every frame.
+int GetAutoDisplaySerial();
 bool IsAutoDisplay();
 // Options: "Auto" (true) or a size of the player's own (false). The page remembers it.
 void SetAutoDisplay(bool enabled);
