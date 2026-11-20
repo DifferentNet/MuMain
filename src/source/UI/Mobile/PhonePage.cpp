@@ -44,23 +44,31 @@ bool IsPlayedByHand()
     return UI::Mobile::IsPhoneView() || UI::Mobile::IsTouchControls();
 }
 
-// A pad's button pressed since the last frame, or a stick out of its dead zone.
+// A pad's button pressed since the last frame or still held (a trigger pulled past half way counts
+// as one), or a stick out of its dead zone. The pad lets go of everything when the page loses the
+// focus or the pad goes (Core::Input::Gamepad), so nothing stays held from there.
 bool PadUsed()
 {
     std::uint32_t presses = 0;
+    bool held = false;
     for (int button = 0; button < Pad::ButtonCount; ++button)
-        presses += Pad::GetButton(static_cast<Pad::Button>(button)).presses;
+    {
+        const Pad::ButtonState& state = Pad::GetButton(static_cast<Pad::Button>(button));
+        presses += state.presses;
+        held = held || state.held;
+    }
     const bool pressed = presses != g_page.padPresses;
     g_page.padPresses = presses;
     const Pad::StickPosition left = Pad::LeftStick();
     const Pad::StickPosition right = Pad::RightStick();
-    return pressed || left.x != 0.f || left.y != 0.f || right.x != 0.f || right.y != 0.f;
+    return pressed || held || left.x != 0.f || left.y != 0.f || right.x != 0.f || right.y != 0.f;
 }
 
 bool IsIdle(Clock::time_point now)
 {
-    // Both read every frame, so neither keeps an old input for the next one.
-    const bool page = mu::web::TakePageInputs() > 0;
+    // Both read every frame, so neither keeps an old input for the next one. A control held down is
+    // input all along, however still: a finger on Attack, a skill or the joystick, a pad button.
+    const bool page = mu::web::TakePageInputs() > 0 || mu::web::IsPageContactDown();
     const bool pad = PadUsed();
     if (page || pad || g_page.inputAt == Clock::time_point{})
         g_page.inputAt = now;

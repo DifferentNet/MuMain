@@ -1566,7 +1566,8 @@ enum class BrowserFrameNotDrawn : int
 };
 
 // A phone in the world nobody touched (screen, keys, pad) for this long is held to IdleFps: the
-// picture of a standing hero needs no 60, and the battery lasts. The first touch brings the cap back.
+// picture of a standing hero needs no 60, and the battery lasts. The first touch brings the cap back;
+// a finger or pad button held down, however still, is a touch all along (UI::Mobile::PhonePage).
 constexpr double IdleAfterSeconds = 30.0;
 constexpr int IdleFps = 30;
 
