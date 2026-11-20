@@ -201,6 +201,7 @@ namespace MUHelper
 		netData.bFallbackBasicAttack = gameData.bFallbackBasicAttack ? 1 : 0;
 		netData.bPickContainers = gameData.bPickContainers ? 1 : 0;
 		netData.bPickQuestItems = gameData.bPickQuestItems ? 1 : 0;
+		netData.bPickCraftItems = gameData.bPickCraftItems ? 1 : 0;
 		netData.bNoStrongTargetFirst = gameData.bStrongTargetFirst ? 0 : 1;
 	}
 
@@ -310,6 +311,7 @@ namespace MUHelper
 		gameData.bFallbackBasicAttack = (bool)netData.bFallbackBasicAttack;
 		gameData.bPickContainers = (bool)netData.bPickContainers;
 		gameData.bPickQuestItems = (bool)netData.bPickQuestItems;
+		gameData.bPickCraftItems = (bool)netData.bPickCraftItems;
 		gameData.bStrongTargetFirst = !netData.bNoStrongTargetFirst;
 	}
 
