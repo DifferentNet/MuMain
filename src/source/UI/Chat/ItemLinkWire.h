@@ -121,6 +121,8 @@ class Cooldown
 public:
     static constexpr std::uint64_t EchoWaitMs = 2'000;
     static constexpr std::uint64_t WhisperMarginMs = 1'000;
+    // How long a refused line is still offered back to the chat bar (Refused()).
+    static constexpr std::uint64_t RefusedKeepMs = 60'000;
 
     // A message with items went; `comesBack`: its line comes back to the sender (all but a whisper).
     void Sent(std::uint64_t nowMs, bool comesBack);
@@ -129,6 +131,9 @@ public:
     // The whole seconds before the next message with items may go, rounded up as the server counts them
     // (PostRules.WaitSeconds); 0 when it may go now.
     int Wait(std::uint64_t nowMs, int cooldownSeconds) const;
+    // The last message with items should have come back and has not after EchoWaitMs: the server refused it (and
+    // said why). False once RefusedKeepMs passed since it went, for a whisper, and once it came back.
+    bool Refused(std::uint64_t nowMs) const;
 
 private:
     std::optional<std::uint64_t> m_fromMs;

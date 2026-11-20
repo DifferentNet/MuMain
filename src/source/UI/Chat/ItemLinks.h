@@ -33,6 +33,9 @@ int CooldownWait();
 // A message with items went to the server; `comesBack`: its line comes back to the sender (all but a whisper),
 // which tells the server took it (TakeFor()).
 void NoteSent(bool comesBack);
+// The last message with items did not come back: the server refused it (ItemLinkWire::Cooldown::Refused()), so the
+// chat bar may offer it again.
+bool LastLineRefused();
 
 // A chat line with its items: the text the log shows (each name in the reader's language) and the links in it.
 struct Linked

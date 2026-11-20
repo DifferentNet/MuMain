@@ -48,7 +48,7 @@ namespace
 {
 // MU Moldova, items in the chat line: a token counts as long as it shows within what the channel's line takes
 // (UI::Chat::ItemLinkWire::MaxLineLength). The server names the items in English and judges the length of the line
-// it writes.
+// it writes: a line it finds too long comes back to the bar (CChatInputBox::m_refusedLine).
 static_assert(MAX_CHAT_SIZE == UI::Chat::ItemLinkWire::MaxChatLength);
 constexpr std::size_t RefusalLineSize = 256;
 
@@ -70,6 +70,11 @@ UI::Chat::ItemLinkWire::InputChannel InputChannelOf(int inputMsgType)
 
 void PostLinkRefusal(UI::Chat::ItemLinkDraft::Refusal refusal)
 {
+    if (refusal == UI::Chat::ItemLinkDraft::Refusal::AlreadyIn)
+    {
+        UI::Chat::PostSystem(I18N::Game::ItemLinkAlreadyIn, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
     if (refusal == UI::Chat::ItemLinkDraft::Refusal::TooManyItems)
     {
         wchar_t text[RefusalLineSize] = { L'\0' };
@@ -120,6 +125,7 @@ void mu::ui::window::CChatInputBox::Init()
     m_linkDraft.Clear();
     m_linkSeenText.clear();
     m_linkCaretPending.reset();
+    m_refusedLine.reset();
 }
 
 bool mu::ui::window::CChatInputBox::Create(
@@ -411,11 +417,13 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
     UI::Chat::ItemLinks::NoteSent(!whisper);
     if (whisper)
     {
+        m_refusedLine.reset();
         EchoWhisperWithItems(target, text);
         AddWhsprIDHistory(target);
     }
     else
     {
+        m_refusedLine = m_linkDraft;
         PlayChatWords(text);
     }
     AddChatHistory(text);
@@ -460,6 +468,17 @@ bool mu::ui::window::CChatInputBox::InsertItemLink(UI::Chat::ItemLinkDraft::Item
     const std::size_t after = m_linkDraft.Insert(text, caret, std::move(item));
     PutChatField(text, after);
     return true;
+}
+
+void mu::ui::window::CChatInputBox::RestoreRefusedLine()
+{
+    // Kept while the server may still answer: the bar opened sooner than that stays empty.
+    if (!m_refusedLine || !UI::Chat::ItemLinks::LastLineRefused())
+        return;
+    const type_string text = m_refusedLine->Text();
+    m_linkDraft = std::move(*m_refusedLine);
+    m_refusedLine.reset();
+    PutChatField(text, text.size());
 }
 
 bool mu::ui::window::CChatInputBox::OpenForItemLink()
@@ -1135,6 +1154,7 @@ void mu::ui::window::CChatInputBox::OpenningProcess()
     SetFieldText("chat_field", L"");
     m_chatHistory.ResetBrowsing();
     m_bFocusPending = true;
+    RestoreRefusedLine();
     // A phone opens the chat on its history: the frame is what lets a finger scroll the lines and tap one to whisper
     // (CChatLogWindow::OnLinesTapped). ClosingProcess() hides it again, as on a PC.
     if (UI::Mobile::ReplacesPcHud() && m_pNewUIChatLogWnd != nullptr)

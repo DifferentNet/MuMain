@@ -12597,6 +12597,9 @@
   <data name="ItemLinkWait" xml:space="preserve">
     <value>次のアイテム付きメッセージまで%d秒お待ちください。</value>
   </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>このアイテムはすでにメッセージに入っています。</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>先にマーロンのクエストを完了してください（レベル220から）。</value>

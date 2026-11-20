@@ -499,9 +499,26 @@ TEST_CASE("The draft refuses a fourth item and an item that does not fit")
     const auto helm = DraftItem(L"[Helm]", L"i12:1:0");
     REQUIRE(draft.CanInsert(text, helm, 3, 20) == ItemLinkDraft::Refusal::None);
     draft.Insert(text, text.size(), helm);
-    draft.Insert(text, text.size(), helm);
-    CHECK(draft.CanInsert(text, helm, 2, 20) == ItemLinkDraft::Refusal::TooManyItems);
-    CHECK(draft.CanInsert(text, DraftItem(L"[Very long name]", L"i1:1:0"), 3, 20) == ItemLinkDraft::Refusal::TooLong);
+    draft.Insert(text, text.size(), DraftItem(L"[Boots]", L"i13:1:0"));
+    CHECK(draft.CanInsert(text, DraftItem(L"[Ring]", L"i14:1:0"), 2, 30) == ItemLinkDraft::Refusal::TooManyItems);
+    CHECK(draft.CanInsert(text, DraftItem(L"[Very long name]", L"i1:1:0"), 3, 30) == ItemLinkDraft::Refusal::TooLong);
+}
+
+TEST_CASE("The draft takes an item once, as the server shows it once a message")
+{
+    ItemLinkDraft draft;
+    std::wstring text = L"look ";
+    draft.Insert(text, text.size(), DraftItem(L"[Helm]", L"i12:1:0"));
+    // The same slot, even read again at another level (it was upgraded meanwhile).
+    CHECK(draft.CanInsert(text, DraftItem(L"[Helm +1]", L"i12:1:1"), 3, 90) == ItemLinkDraft::Refusal::AlreadyIn);
+    // The same slot number in the vault, and another bag slot, are other items.
+    CHECK(draft.CanInsert(text, DraftItem(L"[Helm]", L"v12:1:0"), 3, 90) == ItemLinkDraft::Refusal::None);
+    CHECK(draft.CanInsert(text, DraftItem(L"[Helm]", L"i120:1:0"), 3, 90) == ItemLinkDraft::Refusal::None);
+
+    // Once its token is gone from the field, it can go in again.
+    const std::wstring cleared = L"look ";
+    draft.Follow(cleared, cleared.size());
+    CHECK(draft.CanInsert(cleared, DraftItem(L"[Helm]", L"i12:1:0"), 3, 90) == ItemLinkDraft::Refusal::None);
 }
 
 TEST_CASE("A party or guild line has one character less for its items")
@@ -550,6 +567,29 @@ TEST_CASE("A line that never comes back was refused, and the cooldown lets go of
     cooldown.Confirmed(4000);
     CHECK(cooldown.Wait(4000, 5) == 5);
     CHECK(cooldown.Wait(9000, 5) == 0);
+}
+
+TEST_CASE("A line that did not come back is offered back to the bar for a minute")
+{
+    using ItemLinkWire::Cooldown;
+    Cooldown cooldown;
+    CHECK_FALSE(cooldown.Refused(1000));
+
+    cooldown.Sent(1000, true);
+    // The server may still answer.
+    CHECK_FALSE(cooldown.Refused(1000 + Cooldown::EchoWaitMs - 1));
+    CHECK(cooldown.Refused(1000 + Cooldown::EchoWaitMs));
+    CHECK(cooldown.Refused(1000 + Cooldown::RefusedKeepMs - 1));
+    CHECK_FALSE(cooldown.Refused(1000 + Cooldown::RefusedKeepMs));
+
+    // It came back: taken, not refused.
+    cooldown.Sent(100'000, true);
+    cooldown.Confirmed(100'500);
+    CHECK_FALSE(cooldown.Refused(100'000 + Cooldown::EchoWaitMs));
+
+    // A whisper comes back to no one: it never counts as refused.
+    cooldown.Sent(200'000, false);
+    CHECK_FALSE(cooldown.Refused(200'000 + Cooldown::EchoWaitMs));
 }
 
 TEST_CASE("A whisper never comes back: its cooldown counts from the sending, a margin longer")

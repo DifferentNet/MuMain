@@ -151,6 +151,12 @@ namespace mu::ui::window
         Rml::String m_linkSeenText;
         // The caret (in characters) to put after an item once the bar that just opened takes the focus.
         std::optional<std::size_t> m_linkCaretPending;
+        // The last line with items that went to the channel, until the bar opens again after the server refused it
+        // (UI::Chat::ItemLinks::LastLineRefused()): it then comes back, items and all, so the player loses no line
+        // to a refusal (two of one item, a line the server finds too long with the items' English names, its
+        // cooldown). A whisper never comes back to its sender, so it is not kept.
+        std::optional<UI::Chat::ItemLinkDraft> m_refusedLine;
+        void RestoreRefusedLine();
         // Follows the player's edits of a line holding items: a token at the caret's edge goes out whole.
         void FollowChatField();
         // Shows `text` in the chat field with the caret at `caret` (an index into it), keeping the items.

@@ -189,6 +189,11 @@ void NoteSent(bool comesBack)
     Links().cooldown.Sent(GetTickCount64(), comesBack);
 }
 
+bool LastLineRefused()
+{
+    return Links().cooldown.Refused(GetTickCount64());
+}
+
 std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, mu::ui::window::MESSAGE_TYPE kind)
 {
     State& state = Links();

@@ -14515,6 +14515,9 @@
   <data name="ItemLinkWait" xml:space="preserve">
     <value>請等待 %d 秒後再傳送含物品的訊息。</value>
   </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>這件物品已在訊息中。</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>請先完成馬龍的任務（220 級起）。</value>

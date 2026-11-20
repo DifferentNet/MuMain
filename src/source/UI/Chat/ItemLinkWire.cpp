@@ -307,6 +307,14 @@ int Cooldown::Wait(std::uint64_t nowMs, int cooldownSeconds) const
     return static_cast<int>((lastsMs - passed + MillisecondsPerSecond - 1) / MillisecondsPerSecond);
 }
 
+bool Cooldown::Refused(std::uint64_t nowMs) const
+{
+    if (!m_fromMs || !m_awaitingEcho)
+        return false;
+    const std::uint64_t passed = nowMs > *m_fromMs ? nowMs - *m_fromMs : 0;
+    return passed >= EchoWaitMs && passed < RefusedKeepMs;
+}
+
 std::optional<std::wstring> BuildCommand(std::wstring_view channel, std::wstring_view text, std::size_t bodyStart,
                                          const std::vector<PlacedRef>& placed)
 {

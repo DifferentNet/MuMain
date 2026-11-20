@@ -14515,6 +14515,9 @@
   <data name="ItemLinkWait" xml:space="preserve">
     <value>Aguarde %d s antes da próxima mensagem com itens.</value>
   </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Este item já está na mensagem.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Conclua primeiro a missão de Marlon (a partir do nível 220).</value>

@@ -14515,6 +14515,9 @@
   <data name="ItemLinkWait" xml:space="preserve">
     <value>Maghintay ng %d segundo bago ang susunod na mensaheng may mga item.</value>
   </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Nasa mensahe na ang item na ito.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Tapusin muna ang quest ni Marlon (mula level 220).</value>

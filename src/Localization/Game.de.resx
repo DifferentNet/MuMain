@@ -14613,6 +14613,9 @@
   <data name="ItemLinkWait" xml:space="preserve">
     <value>Warte %d s bis zur nächsten Nachricht mit Gegenständen.</value>
   </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Dieser Gegenstand ist schon in der Nachricht.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Schließe zuerst Marlons Quest ab (ab Level 220).</value>

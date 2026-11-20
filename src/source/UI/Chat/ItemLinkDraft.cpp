@@ -4,6 +4,15 @@
 
 namespace UI::Chat
 {
+namespace
+{
+// "i37" of "i37:6153:13": the storage and the slot, whatever the item's type and level.
+std::wstring_view SlotOf(std::wstring_view ref)
+{
+    return ref.substr(0, ref.find(L':'));
+}
+} // namespace
+
 void ItemLinkDraft::Clear()
 {
     m_tokens.clear();
@@ -14,6 +23,13 @@ void ItemLinkDraft::Clear()
 ItemLinkDraft::Refusal ItemLinkDraft::CanInsert(std::wstring_view fieldText, const Item& item, int maxItems,
                                                 std::size_t maxChars) const
 {
+    const bool alreadyIn = std::any_of(m_tokens.begin(), m_tokens.end(), [this, &item](const ItemLinkTokens::Token& token)
+                                       {
+                                           const Item* placed = ItemOf(token.key);
+                                           return placed != nullptr && SlotOf(placed->ref) == SlotOf(item.ref);
+                                       });
+    if (alreadyIn)
+        return Refusal::AlreadyIn;
     if (static_cast<int>(m_tokens.size()) >= maxItems)
         return Refusal::TooManyItems;
     const std::size_t shown = ItemLinkTokens::CharacterOfIndex(fieldText, fieldText.size());
