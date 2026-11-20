@@ -47,7 +47,7 @@ void AddSkynetKeyLines(std::vector<UI::Help::PageLine>& lines)
 
     const wchar_t* const keyLines[] = {
         I18N::Game::HelpSkynetKeysEvents, I18N::Game::HelpSkynetKeysPass,    I18N::Game::HelpSkynetKeysMap,
-        I18N::Game::HelpSkynetKeysHelper, I18N::Game::HelpSkynetKeysCommand,
+        I18N::Game::HelpSkynetKeysHelper, I18N::Game::HelpSkynetKeysCommand, I18N::Game::HelpArrowKeys,
     };
     for (const wchar_t* line : keyLines)
         AddText(lines, line);
@@ -151,6 +151,7 @@ void AddGamepadPage(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices de
         I18N::Game::PadHelpSkillList,
         I18N::Game::PadHelpBack,
         I18N::Game::PadHelpPickUp,
+        I18N::Game::PadHelpItems,
         I18N::Game::PadHelpAuto,
         I18N::Game::PadHelpPotions,
         I18N::Game::PadHelpClick,

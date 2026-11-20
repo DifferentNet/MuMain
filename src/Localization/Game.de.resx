@@ -13506,7 +13506,7 @@
     <value>D-pad oder Stick: Tasten. {A}: drücken, {X}: löschen, {Y}: Leerzeichen, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: Umschalt, {RT}: Symbole, {VIEW}: Englisch/Russisch, {LB}/{RB}: Cursor, {B}: schließen</value>
+    <value>{LT}: Umschalt, {RT}: Symbole, {VIEW}: Englisch, Russisch, Sätze, {LB}/{RB}: Cursor, {B}: schließen</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Nicht genug Mana</value>
@@ -13752,7 +13752,7 @@
     <value>Karte (halten: Teleport)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Inventar</value>
+    <value>Inventar (halten: neuen Gegenstand anlegen)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Angriff, Gespräch, Spielermenü</value>
@@ -14596,6 +14596,19 @@
   </data>
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Neue Version da: Seite neu laden.</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: schließen</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Gamepad-Akku schwach: %d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Pfeiltasten: laufen</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Ein neuer Gegenstand ist besser: D-pad rechts halten, um ihn anzulegen. Im Inventar öffnet {Y} die Karte des Gegenstands (Ramsch-Markierung); beim Händler verkauft {A} auf der Schaltfläche Ramsch verkaufen den Ramsch. Zen unter deinen Füßen wird von selbst aufgehoben</value>
   </data>
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">

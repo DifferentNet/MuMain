@@ -91,8 +91,10 @@ private:
     std::vector<LiveHint> m_LiveHints;
     // The screen the border tiles' matrices were built for (SyncScreen()).
     UI::MiniMap::Screen m_SideLinesScreen;
-    // The close hint's language text the narrow copy was made from (SyncScreen()).
+    // The close hint's language text the narrow copy was made from (SyncScreen()), and the pad glyphs
+    // it named (Core::Input::Gamepad::PadKind; -1 the keyboard's text).
     const wchar_t* m_pCloseHintSource = nullptr;
+    int m_CloseHintKind = -1;
 
     // Everything SyncMap() builds the map, its markers, the labels, the live and party dots and the
     // hint boxes from: rebuilt only when one of these changed (per-frame cost while the map shows).
