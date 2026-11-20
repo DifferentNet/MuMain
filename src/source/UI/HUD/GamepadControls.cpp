@@ -1042,7 +1042,8 @@ void FollowPageToggle(const Presses& presses, Clock::time_point now)
 // RB in the world: held, X, Y and B cast the third page of skills (HoldMappedControls); a tap, let go
 // within RbTapTime with no X, Y or B pressed meanwhile, chooses whom the heals and buffs go to
 // (ghinzuro, 2026-11-04; on the release since pad round 6, as the press may start the third page).
-void FollowFriendTap(const Presses& presses, Clock::time_point now)
+// bTaken: B was pressed this frame but taken before (it closed the map), so presses no longer has it.
+void FollowFriendTap(const Presses& presses, Clock::time_point now, bool bTaken)
 {
     if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
     {
@@ -1053,7 +1054,7 @@ void FollowFriendTap(const Presses& presses, Clock::time_point now)
     // X, Y or B make it no tap only while they cast the third page: with fewer buttons (touch, the upper
     // set) RB does nothing to them, and a tap of it beside a skill still chooses.
     if (g_state.rbTapping && Controls::SkillButtonsInPlay() >= ThirdPageButtons
-        && (Pressed(presses, Button::X) || Pressed(presses, Button::Y) || Pressed(presses, Button::B)))
+        && (Pressed(presses, Button::X) || Pressed(presses, Button::Y) || Pressed(presses, Button::B) || bTaken))
         g_state.rbUsed = true;
     if (!g_state.rbTapping || Held(Button::RightShoulder))
         return;
@@ -1581,11 +1582,13 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     {
         // B closes the map (pad round 7, A1), taken before the attack toggle and the skills read it: a
         // latched attack goes on, and the press casts nothing.
+        bool bClosedMap = false;
         if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP) && Take(presses, Button::B))
         {
             CloseMap();
             PlayBuffer(SOUND_CLICK01);
             g_state.waitForRelease[static_cast<int>(Button::B)] = true;
+            bClosedMap = true;
         }
         // Asked again only when the stick chose anew: it looks at every character.
         if (PickTargets())
@@ -1593,8 +1596,9 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
         PlayAttackToggle(presses, now);
-        // RB: a tap chooses whom the heals and buffs go to, held it shows the third page of skills.
-        FollowFriendTap(presses, now);
+        // RB: a tap chooses whom the heals and buffs go to, held it shows the third page of skills. B
+        // that closed the map still counts there: RB with it was no tap.
+        FollowFriendTap(presses, now, bClosedMap);
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
         if (g_state.promptDrop != -1)
             UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::PickUp);
