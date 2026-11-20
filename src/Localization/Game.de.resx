@@ -14430,7 +14430,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Sätze</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Handel mit einem Spieler: /trade Name, wenn er in Sicht ist, sonst mit dem gewählten Spieler auf jede Entfernung oder mit dem, der dir gegenübersteht.</value>

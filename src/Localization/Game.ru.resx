@@ -17329,7 +17329,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Фразы</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Обмен с игроком: /trade Имя, если он рядом; иначе с выбранным игроком на любом расстоянии или с тем, кто стоит напротив.</value>

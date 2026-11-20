@@ -14353,7 +14353,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Zwroty</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Handel z graczem: /trade Imię, gdy jest w zasięgu wzroku; inaczej z wybranym graczem z dowolnej odległości lub z tym, kto stoi naprzeciw.</value>
