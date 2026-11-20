@@ -544,9 +544,9 @@ TEST_CASE("The cooldown counts whole seconds up from the server's answer, as the
     CHECK(cooldown.Wait(1000, 5) == 0);
 
     // Sent, then the own line came back: counted from its coming back.
-    cooldown.Sent(1000, true);
+    cooldown.Sent(1000, L'n');
     CHECK(cooldown.Wait(1000, 5) == 5);
-    cooldown.Confirmed(1200);
+    cooldown.OwnLineBack(1200, L'n');
     CHECK(cooldown.Wait(1201, 5) == 5);
     CHECK(cooldown.Wait(2200, 5) == 4);
     CHECK(cooldown.Wait(6199, 5) == 1);
@@ -560,11 +560,11 @@ TEST_CASE("The cooldown counts whole seconds up from the server's answer, as the
 TEST_CASE("A line that never comes back was refused, and the cooldown lets go of it")
 {
     ItemLinkWire::Cooldown cooldown;
-    cooldown.Sent(1000, true);
+    cooldown.Sent(1000, L'p');
     CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs - 1, 5) == 4);
     CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs, 5) == 0);
     // It came back late after all: the server took it then.
-    cooldown.Confirmed(4000);
+    cooldown.OwnLineBack(4000, L'p');
     CHECK(cooldown.Wait(4000, 5) == 5);
     CHECK(cooldown.Wait(9000, 5) == 0);
 }
@@ -575,27 +575,33 @@ TEST_CASE("A line that did not come back is offered back to the bar for a minute
     Cooldown cooldown;
     CHECK_FALSE(cooldown.Refused(1000));
 
-    cooldown.Sent(1000, true);
+    cooldown.Sent(1000, L'g');
     // The server may still answer.
     CHECK_FALSE(cooldown.Refused(1000 + Cooldown::EchoWaitMs - 1));
     CHECK(cooldown.Refused(1000 + Cooldown::EchoWaitMs));
     CHECK(cooldown.Refused(1000 + Cooldown::RefusedKeepMs - 1));
     CHECK_FALSE(cooldown.Refused(1000 + Cooldown::RefusedKeepMs));
 
-    // It came back: taken, not refused.
-    cooldown.Sent(100'000, true);
-    cooldown.Confirmed(100'500);
+    // It came back: taken, not refused. Also without its items (the server could not write them).
+    cooldown.Sent(100'000, L'n');
+    cooldown.OwnLineBack(100'500, L'n');
     CHECK_FALSE(cooldown.Refused(100'000 + Cooldown::EchoWaitMs));
 
+    // An own line on another channel is not its answer.
+    cooldown.Sent(150'000, L's');
+    cooldown.OwnLineBack(150'500, L'n');
+    CHECK(cooldown.Refused(150'000 + Cooldown::EchoWaitMs));
+    CHECK(cooldown.Wait(150'000 + Cooldown::EchoWaitMs, 5) == 0);
+
     // A whisper comes back to no one: it never counts as refused.
-    cooldown.Sent(200'000, false);
+    cooldown.Sent(200'000, ItemLinkWire::WhisperChannel);
     CHECK_FALSE(cooldown.Refused(200'000 + Cooldown::EchoWaitMs));
 }
 
 TEST_CASE("A whisper never comes back: its cooldown counts from the sending, a margin longer")
 {
     ItemLinkWire::Cooldown cooldown;
-    cooldown.Sent(1000, false);
+    cooldown.Sent(1000, ItemLinkWire::WhisperChannel);
     CHECK(cooldown.Wait(1000, 5) == 6);
     CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs, 5) == 4);
     CHECK(cooldown.Wait(6999, 5) == 1);

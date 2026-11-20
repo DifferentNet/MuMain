@@ -414,7 +414,7 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
     SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command->c_str()));
     // The server sends a whisper to its target only: the own one shows here, as a plain whisper does.
     const bool whisper = route->channel.front() == Wire::WhisperChannel;
-    UI::Chat::ItemLinks::NoteSent(!whisper);
+    UI::Chat::ItemLinks::NoteSent(route->channel.front());
     if (whisper)
     {
         m_refusedLine.reset();

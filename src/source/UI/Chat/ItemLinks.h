@@ -30,9 +30,9 @@ int MaxItems();
 // The whole seconds before the next message with items may go: the server takes one every cooldownSeconds of
 // "#ILH" per account and refuses one sooner (ItemLinkWire::Cooldown). 0 when it may go now.
 int CooldownWait();
-// A message with items went to the server; `comesBack`: its line comes back to the sender (all but a whisper),
-// which tells the server took it (TakeFor()).
-void NoteSent(bool comesBack);
+// A message with items went to the server on `channel` (the "/il" channel's letter); the sender's own line coming
+// back there tells the server took it (TakeFor()), a whisper's never does.
+void NoteSent(wchar_t channel);
 // The last message with items did not come back: the server refused it (ItemLinkWire::Cooldown::Refused()), so the
 // chat bar may offer it again.
 bool LastLineRefused();

@@ -279,15 +279,19 @@ std::size_t MaxLineLength(std::wstring_view channel)
     return prefixed ? MaxChatLength - PrefixLength : MaxChatLength;
 }
 
-void Cooldown::Sent(std::uint64_t nowMs, bool comesBack)
+void Cooldown::Sent(std::uint64_t nowMs, wchar_t channel)
 {
+    const bool comesBack = channel != WhisperChannel;
     m_fromMs = nowMs;
     m_marginMs = comesBack ? 0 : WhisperMarginMs;
     m_awaitingEcho = comesBack;
+    m_channel = channel;
 }
 
-void Cooldown::Confirmed(std::uint64_t nowMs)
+void Cooldown::OwnLineBack(std::uint64_t nowMs, wchar_t channel)
 {
+    if (!m_awaitingEcho || channel != m_channel)
+        return;
     m_fromMs = nowMs;
     m_marginMs = 0;
     m_awaitingEcho = false;

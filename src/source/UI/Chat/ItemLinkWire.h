@@ -112,7 +112,8 @@ std::size_t MaxLineLength(std::wstring_view channel);
 // The client's guard against the server's cooldown (one message with items per account every cooldownSeconds of
 // "#ILH"), so a line the server would refuse stays in the chat bar instead of going and being lost. The server
 // counts from when it took the line, which only its answer tells: the guard counts from the sender's own line
-// coming back with its items (Confirmed()). Until then it counts from the sending, and a line that has not come back
+// coming back on its channel (OwnLineBack()), with its items or without them (the server delivers the line alone when
+// it cannot write an item or its notice). Until then it counts from the sending, and a line that has not come back
 // after EchoWaitMs was refused, so the server's cooldown never began: the guard lets go of it. A whisper comes back
 // to no one; it counts from the sending, WhisperMarginMs longer for its way to the server. Times are milliseconds
 // of one monotonic clock.
@@ -124,10 +125,12 @@ public:
     // How long a refused line is still offered back to the chat bar (Refused()).
     static constexpr std::uint64_t RefusedKeepMs = 60'000;
 
-    // A message with items went; `comesBack`: its line comes back to the sender (all but a whisper).
-    void Sent(std::uint64_t nowMs, bool comesBack);
-    // The sender's own line with items came back: the server took it just now.
-    void Confirmed(std::uint64_t nowMs);
+    // A message with items went on `channel` (the "/il" channel's letter); its line comes back to the sender on every
+    // channel but the whisper.
+    void Sent(std::uint64_t nowMs, wchar_t channel);
+    // The sender's own line came back on `channel`: the server took the message with items it waits for there just
+    // now. Nothing while none waits there (a plain line on another channel, one after the answer).
+    void OwnLineBack(std::uint64_t nowMs, wchar_t channel);
     // The whole seconds before the next message with items may go, rounded up as the server counts them
     // (PostRules.WaitSeconds); 0 when it may go now.
     int Wait(std::uint64_t nowMs, int cooldownSeconds) const;
@@ -139,6 +142,7 @@ private:
     std::optional<std::uint64_t> m_fromMs;
     std::uint64_t m_marginMs = 0;
     bool m_awaitingEcho = false;
+    wchar_t m_channel = L'\0';
 };
 
 // An item's token in the typed text.

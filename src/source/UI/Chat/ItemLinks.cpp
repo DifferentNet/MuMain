@@ -184,9 +184,9 @@ int CooldownWait()
     return state.cooldown.Wait(GetTickCount64(), state.cooldownSeconds);
 }
 
-void NoteSent(bool comesBack)
+void NoteSent(wchar_t channel)
 {
-    Links().cooldown.Sent(GetTickCount64(), comesBack);
+    Links().cooldown.Sent(GetTickCount64(), channel);
 }
 
 bool LastLineRefused()
@@ -197,16 +197,17 @@ bool LastLineRefused()
 std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, mu::ui::window::MESSAGE_TYPE kind)
 {
     State& state = Links();
-    if (state.pending.Waiting() == 0)
-        return std::nullopt;
     const auto channel = ItemLinkWire::ChannelOfLine(sender, kind);
     if (!channel)
+        return std::nullopt;
+    // The own line answers for the message with items, also when it comes without them.
+    if (Hero != nullptr && ItemLinkWire::IsOwnLine(sender, text, *channel, Hero->ID))
+        state.cooldown.OwnLineBack(GetTickCount64(), *channel);
+    if (state.pending.Waiting() == 0)
         return std::nullopt;
     const auto line = state.pending.Take(sender, *channel, GetTickCount64());
     if (!line)
         return std::nullopt;
-    if (Hero != nullptr && ItemLinkWire::IsOwnLine(sender, text, *channel, Hero->ID))
-        state.cooldown.Confirmed(GetTickCount64());
     return Build(text, line->links);
 }
 
