@@ -13782,6 +13782,42 @@
     <value>Fate 100 %; камни и zen уходят.</value>
     <comment>legacy_id=3922</comment>
   </data>
+  <data name="KundunBoxUpgradeName2" xml:space="preserve">
+    <value>Улучшение Box +1 до +2</value>
+    <comment>legacy_id=3923</comment>
+  </data>
+  <data name="KundunBoxUpgradeName3" xml:space="preserve">
+    <value>Улучшение Box +2 до +3</value>
+    <comment>legacy_id=3924</comment>
+  </data>
+  <data name="KundunBoxUpgradeName4" xml:space="preserve">
+    <value>Улучшение Box +3 до +4</value>
+    <comment>legacy_id=3925</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems2" xml:space="preserve">
+    <value>5 Box +1 + Jewel of Chaos.</value>
+    <comment>legacy_id=3926</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems3" xml:space="preserve">
+    <value>4 Box +2 + Jewel of Chaos.</value>
+    <comment>legacy_id=3927</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems4" xml:space="preserve">
+    <value>6 Box +3 + Jewel of Chaos.</value>
+    <comment>legacy_id=3928</comment>
+  </data>
+  <data name="KundunBoxUpgradeSuccess" xml:space="preserve">
+    <value>Успех 100 %.</value>
+    <comment>legacy_id=3929</comment>
+  </data>
+  <data name="KundunBoxUpgradeNoPlus5" xml:space="preserve">
+    <value>Box of Kundun +5 так не получить.</value>
+    <comment>legacy_id=3930</comment>
+  </data>
+  <!-- MU Moldova: a line of the Chaos Goblin menu's regular mix button: the Box of Kundun upgrades (recipes 59-61) -->
+  <data name="KundunBoxUpgradeMenuLine" xml:space="preserve">
+    <value>Box of Kundun +1, +2, +3: на плюс выше</value>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
   </data>
