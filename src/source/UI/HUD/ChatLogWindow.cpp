@@ -630,7 +630,7 @@ bool mu::ui::window::CChatLogWindow::Render()
 {
     // RmlUi owns the fill, every message line and the scrollbar. Only an item's tooltip is native, drawn every
     // frame while it shows (it hides itself in a frame it isn't drawn).
-    const std::optional<ItemLinkTip>& tip = m_PinnedLink ? m_PinnedLink : m_HoveredLink;
+    const std::optional<ItemLinkTip>& tip = m_PinnedLink && !m_bPointerOnOtherUi ? m_PinnedLink : m_HoveredLink;
     if (tip && tip->item)
         ::RenderItemInfoAboveRowAtPx(TipSpot(*tip), tip->item.get());
     return true;
@@ -1231,8 +1231,9 @@ void mu::ui::window::CChatLogWindow::FollowItemLinks()
         m_PinnedLink = LinkAgain(*m_PinnedLink);
 
     // A phone has no pointer to hover with: its last tap stays where it was. Nor is a name under another window.
+    m_bPointerOnOtherUi = !UI::Mobile::IsPhoneView() && OtherUiUnderPointer();
     m_HoveredLink.reset();
-    if (!UI::Mobile::IsPhoneView() && !OtherUiUnderPointer())
+    if (!UI::Mobile::IsPhoneView() && !m_bPointerOnOtherUi)
         m_HoveredLink = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
 }
 

@@ -303,6 +303,9 @@ namespace mu::ui::window
         std::optional<ItemLinkTip> m_HoveredLink;
         // This frame's left press went to an item's name (TakeLinkPointer()).
         bool m_bLinkPressTaken = false;
+        // The pointer is over another window this frame (OtherUiUnderPointer()): a bag or vault item's tooltip there
+        // takes the one item tooltip, and the pinned one steps aside until the pointer leaves it.
+        bool m_bPointerOnOtherUi = false;
         // #panel of the current document, the right edge a tooltip with no room above goes beside.
         Rml::ObserverPtr<Rml::Element> m_PanelElement;
         // Phone: the tooltip this tap's press closed, which the tap itself must not open again (OnLinesTapped()).
