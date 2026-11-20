@@ -14,7 +14,7 @@
 // | RT held | X and Y cast the skill buttons 4 and 5, shown in their places while it is held |
 // | LB, LT | The potions Q and W |
 // | RB | The next party member near for heals and buffs; past the last, the character itself |
-// | D-pad left | A tap: the map (Tab); held half a second: the Teleport window (M) |
+// | D-pad left | A tap: the map (Tab); held half a second: the Teleport window (M). With the map up B closes it, and the windows the d-pad and Menu open close it first |
 // | D-pad right | The inventory (I) |
 // | D-pad up | A tap: MU Helper on and off; held half a second: its settings (Z) |
 // | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC. The drop it would take shows its name and a prompt (UI/HUD/PadOverlay) |
@@ -44,8 +44,9 @@
 // has the pad and nothing else acts.
 //
 // The pad shakes as the hero takes a hard blow (as hard as it hurt), long on the death, softly on a level
-// up and lightly on a drop the loot filter highlights near the hero, unless the player chose "On, no
-// vibration" (Options -> Interface -> Gamepad). A weaker shake never cuts a stronger one short.
+// up and lightly on a drop the loot filter highlights near the hero, with two short pulses as life falls
+// to a quarter, unless the player chose "On, no vibration" (Options -> Interface -> Gamepad). A weaker
+// shake never cuts a stronger one short.
 #pragma once
 
 namespace UI::HUD::GamepadControls

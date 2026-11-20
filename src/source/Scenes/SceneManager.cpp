@@ -72,6 +72,7 @@ ControlsTiming g_controlsTiming;
 #include "Network/Server/ServerListManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "UI/HUD/ArrowWalk.h"
 #include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/Notices.h"
 #include "UI/HUD/PadTargets.h"
@@ -532,6 +533,7 @@ void UpdateSceneState()
     const bool timed = FrameProfiler::g_TimingWanted;
     const auto padFrom = timed ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
     UI::HUD::GamepadControls::Update();
+    UI::HUD::ArrowWalk::Update();
     const auto touchFrom = timed ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
     UI::HUD::TouchControls::Update();
     if (timed)
@@ -541,8 +543,9 @@ void UpdateSceneState()
         g_controlsTiming.touchMs += std::chrono::duration<double, std::milli>(touchTo - touchFrom).count();
         ++g_controlsTiming.frames;
     }
-    // The pad's walk once its buttons acted, as the touch stick's.
+    // The pad's walk once its buttons acted, as the touch stick's; the arrow keys' walk the same way.
     UI::HUD::GamepadControls::LateUpdate();
+    UI::HUD::ArrowWalk::LateUpdate();
     UI::Notices::Move();
     Scenes::LoginOverlay::HideOutsideLoginScene();
     HandleScreenshotCapture();

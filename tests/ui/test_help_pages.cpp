@@ -71,8 +71,8 @@ TEST_CASE("help key page: heading, F1-F4, engine hotkeys, the shipped keys, then
     const auto lines = UI::Help::BuildPage(0, {});
 
     // Spacer, heading, spacer, 4 + 6 + 15 key rows (the original's TextList), then spacer, MU Skynet
-    // heading, 5 key rows, spacer, the F1 hint, spacer.
-    REQUIRE(lines.size() == 38);
+    // heading, 6 key rows (the arrow keys' row last), spacer, the F1 hint, spacer.
+    REQUIRE(lines.size() == 39);
     CHECK(lines.front().halfSpacer);
     CHECK(lines[2].halfSpacer);
     CHECK(lines.back().halfSpacer);
@@ -93,9 +93,10 @@ TEST_CASE("help key page: heading, F1-F4, engine hotkeys, the shipped keys, then
     CHECK(lines[29].text == I18N::Game::HelpSkynetKeysHeading);
     CHECK(lines[30].text == I18N::Game::HelpSkynetKeysEvents);
     CHECK(lines[34].text == I18N::Game::HelpSkynetKeysCommand);
-    CHECK(lines[35].halfSpacer);
-    CHECK(lines[36].hint);
-    CHECK(lines[36].text == I18N::Game::HelpNextPageHint);
+    CHECK(lines[35].text == I18N::Game::HelpArrowKeys);
+    CHECK(lines[36].halfSpacer);
+    CHECK(lines[37].hint);
+    CHECK(lines[37].text == I18N::Game::HelpNextPageHint);
 }
 
 TEST_CASE("help chat page: heading, the sixteen chat rows, then MU Skynet's commands [ui][help]")
@@ -185,9 +186,9 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
 {
     const auto lines = UI::Help::BuildPage(0, kPad);
 
-    // Spacer, heading, spacer, 25 pad rows (nine skill buttons: the RB page's row too), spacer, the
+    // Spacer, heading, spacer, 26 pad rows (nine skill buttons: the RB page's row too), spacer, the
     // LB/RB hint, spacer.
-    REQUIRE(lines.size() == 31);
+    REQUIRE(lines.size() == 32);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::PadHelpTitle);
     CHECK(CountHeadings(lines) == 1);
@@ -198,8 +199,10 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
     CHECK(lines[10].text == Xbox(I18N::Game::PadHelpSkills));
     CHECK(lines[11].text == Xbox(I18N::Game::PadHelpSkillsThird));
     CHECK(lines[14].text == Xbox(I18N::Game::PadHelpSkillList));
-    CHECK(lines[23].text == I18N::Game::PadHelpKeyboard);
-    CHECK(lines[27].text == Xbox(I18N::Game::PadHelpScreensKeys));
+    CHECK(lines[16].text == Xbox(I18N::Game::PadHelpPickUp));
+    CHECK(lines[17].text == Xbox(I18N::Game::PadHelpItems));
+    CHECK(lines[24].text == I18N::Game::PadHelpKeyboard);
+    CHECK(lines[28].text == Xbox(I18N::Game::PadHelpScreensKeys));
     CHECK(Hint(lines).text == Xbox(I18N::Game::PadHelpPagesHint));
     // No brace is left for the player to read.
     for (const UI::Help::PageLine& line : lines)
@@ -215,7 +218,7 @@ TEST_CASE("help with a PlayStation pad and five skill buttons: its button names,
     devices.skillButtons = 5;
     const auto lines = UI::Help::BuildPage(0, devices);
 
-    REQUIRE(lines.size() == 30);
+    REQUIRE(lines.size() == 31);
     UI::HUD::PadButtonNames::Names names;
     names.a = I18N::Game::PadNameCross;
     names.b = I18N::Game::PadNameCircle;

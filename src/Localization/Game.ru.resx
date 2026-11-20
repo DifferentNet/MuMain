@@ -15376,7 +15376,7 @@
     <value>Крестовина или стик: клавиши. {A}: нажать, {X}: стереть, {Y}: пробел, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: заглавные, {RT}: символы, {VIEW}: англ./рус., {LB}/{RB}: курсор, {B}: закрыть</value>
+    <value>{LT}: заглавные, {RT}: символы, {VIEW}: английский, русский, фразы, {LB}/{RB}: курсор, {B}: закрыть</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Чтобы очистить ячейку навыка, удерживайте её (R3 на геймпаде)</value>
@@ -15973,7 +15973,7 @@
     <value>Карта (удержание: телепорт)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Инвентарь</value>
+    <value>Инвентарь (удержание: надеть новый предмет)</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Атака, разговор, меню игрока</value>
@@ -17492,5 +17492,18 @@
   </data>
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вышла новая версия: обновите страницу.</value>
+  </data>
+  <!-- Pad round 7 -->
+  <data name="PadMapClose" xml:space="preserve">
+    <value>{B}: закрыть</value>
+  </data>
+  <data name="PadBatteryLow" xml:space="preserve">
+    <value>Геймпад разряжается: %d%%</value>
+  </data>
+  <data name="HelpArrowKeys" xml:space="preserve">
+    <value>Стрелки: ходьба</value>
+  </data>
+  <data name="PadHelpItems" xml:space="preserve">
+    <value>Новый предмет лучше надетого: удерживайте крестовину вправо, чтобы надеть. В сумке {Y} открывает карточку предмета (метка «хлам»); у торговца {A} на кнопке «Продать хлам» продаёт хлам. Зен под ногами подбирается сам</value>
   </data>
 </root>

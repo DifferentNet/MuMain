@@ -10,6 +10,7 @@
 #include "Core/Input/GamepadStickClick.h"
 #include "Core/Input/GamepadStickWheel.h"
 #include "Core/Input/KeyBindingsRuntime.h"
+#include "Core/Input/LowLifePulse.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
@@ -1020,7 +1021,8 @@ void FollowPageToggle(const Presses& presses, Clock::time_point now)
 // RB in the world: held, X, Y and B cast the third page of skills (HoldMappedControls); a tap, let go
 // within RbTapTime with no X, Y or B pressed meanwhile, chooses whom the heals and buffs go to
 // (ghinzuro, 2026-11-04; on the release since pad round 6, as the press may start the third page).
-void FollowFriendTap(const Presses& presses, Clock::time_point now)
+// bTaken: B was pressed this frame but taken before (it closed the map), so presses no longer has it.
+void FollowFriendTap(const Presses& presses, Clock::time_point now, bool bTaken)
 {
     if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
     {
@@ -1031,7 +1033,7 @@ void FollowFriendTap(const Presses& presses, Clock::time_point now)
     // X, Y or B make it no tap only while they cast the third page: with fewer buttons (touch, the upper
     // set) RB does nothing to them, and a tap of it beside a skill still chooses.
     if (g_state.rbTapping && Controls::SkillButtonsInPlay() >= ThirdPageButtons
-        && (Pressed(presses, Button::X) || Pressed(presses, Button::Y) || Pressed(presses, Button::B)))
+        && (Pressed(presses, Button::X) || Pressed(presses, Button::Y) || Pressed(presses, Button::B) || bTaken))
         g_state.rbUsed = true;
     if (!g_state.rbTapping || Held(Button::RightShoulder))
         return;
@@ -1174,6 +1176,16 @@ bool IsGameWindowOpen()
     return false;
 }
 
+// Closes the map if it is up; true if it was. The map keeps every key but Tab to itself (HotKey), so
+// the windows the d-pad and Menu open close it first (pad round 7, A1).
+bool CloseMap()
+{
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP))
+        return false;
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_MINI_MAP);
+    return true;
+}
+
 // Menu tapped: with no window open the hero hub opens; in the hub, or over another window, the menu of
 // every window.
 void TapMenu(Clock::time_point now)
@@ -1182,6 +1194,7 @@ void TapMenu(Clock::time_point now)
         UI::HUD::PadHub::Close();
     else if (!g_state.windowOpen)
     {
+        CloseMap();
         UI::HUD::PadHub::Open(now);
         return;
     }
@@ -1369,7 +1382,10 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
         break;
     case PressKind::Hold:
         if (!g_state.windowOpen)
+        {
+            CloseMap();
             Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::MuHelperSettings));
+        }
         break;
     default:
         break;
@@ -1378,6 +1394,7 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
 
 void OpenInventory()
 {
+    CloseMap();
     Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
 }
 
@@ -1419,6 +1436,7 @@ void PlayDpadSides(const Presses& presses, Clock::time_point now)
         Core::Input::Touch::TapKey(VK_TAB);
         break;
     case PressKind::Hold:
+        CloseMap();
         Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Move));
         break;
     default:
@@ -1541,14 +1559,25 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     }
     else
     {
+        // B closes the map (pad round 7, A1), taken before the attack toggle and the skills read it: a
+        // latched attack goes on, and the press casts nothing.
+        bool bClosedMap = false;
+        if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP) && Take(presses, Button::B))
+        {
+            CloseMap();
+            PlayBuffer(SOUND_CLICK01);
+            g_state.waitForRelease[static_cast<int>(Button::B)] = true;
+            bClosedMap = true;
+        }
         // Asked again only when the stick chose anew: it looks at every character.
         if (PickTargets())
             g_state.meet = GameLogic::Touch::MeetIndex();
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
         PlayAttackToggle(presses, now);
-        // RB: a tap chooses whom the heals and buffs go to, held it shows the third page of skills.
-        FollowFriendTap(presses, now);
+        // RB: a tap chooses whom the heals and buffs go to, held it shows the third page of skills. B
+        // that closed the map still counts there: RB with it was no tap.
+        FollowFriendTap(presses, now, bClosedMap);
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
         if (g_state.promptDrop != -1)
             UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::PickUp);
@@ -1737,38 +1766,69 @@ struct Health
 };
 Health g_health;
 
+// Life falling to a quarter or less is felt as two short pulses (Core/Input/LowLifePulse.h, pad round
+// 7), life alone without the shield; not in a safe zone. A blow that shakes the pad in the frame life
+// crosses holds the first beat until its shake ended and this gap passed, so the beats stay apart.
+constexpr float LowLifeLow = 0.7f;
+constexpr float LowLifeHigh = 0.3f;
+constexpr int LowLifeMilliseconds = 120;
+constexpr std::chrono::milliseconds LowLifeAfterShake{80};
+Pad::LowLifePulse g_lowLife;
+
+// `shakeEnds`: when the shake a blow started this frame ends, a time past with none.
+void FeelLowLife(Clock::time_point now, Clock::time_point shakeEnds)
+{
+    const long long most = CharacterAttribute->LifeMax;
+    const float share = most > 0 ? static_cast<float>(CharacterAttribute->Life) / static_cast<float>(most) : 1.f;
+    const Clock::time_point busyUntil = shakeEnds > now ? shakeEnds + LowLifeAfterShake : Clock::time_point{};
+    const Pad::LowLifePulse::Pulse pulse = g_lowLife.Note(share, Hero->Dead != 0, now, busyUntil);
+    if (pulse != Pad::LowLifePulse::Pulse::None && !Hero->SafeZone)
+        Pad::Rumble(LowLifeLow, LowLifeHigh, LowLifeMilliseconds);
+}
+
+// A blow shakes the pad as hard as it hurt, the death long: when that shake ends, a time past with none.
+Clock::time_point FeelHits(Clock::time_point now)
+{
+    Health current;
+    current.known = true;
+    current.dead = Hero->Dead != 0;
+    current.life = CharacterAttribute->Life;
+    current.shield = CharacterAttribute->Shield;
+    const Health before = std::exchange(g_health, current);
+    if (!before.known)
+        return {};
+    if (current.dead && !before.dead)
+    {
+        Pad::Rumble(1.f, 0.6f, DeathMilliseconds);
+        return now + std::chrono::milliseconds(DeathMilliseconds);
+    }
+    const long long most = static_cast<long long>(CharacterAttribute->LifeMax) + CharacterAttribute->ShieldMax;
+    const long long lost =
+        std::max(before.life - current.life, 0LL) + std::max(before.shield - current.shield, 0LL);
+    if (current.dead || most <= 0 || lost <= 0)
+        return {};
+    const float share = static_cast<float>(lost) / static_cast<float>(most);
+    if (share < FeltBlowShare)
+        return {};
+    const float strength = std::min(share / FullBlowShare, 1.f);
+    Pad::Rumble(0.25f + 0.75f * strength, 0.4f + 0.6f * strength, BlowMilliseconds);
+    return now + std::chrono::milliseconds(BlowMilliseconds);
+}
+
 // Compares the hero's life and shield with the last frame's, while the pad plays the world: a blow
-// shakes it as hard as it hurt, the death long. Out of the world (or the pad put down) it only forgets
-// them, so a heal or a map change since is no blow.
+// shakes it (FeelHits), life low pulses after it (FeelLowLife). Out of the world (or the pad put down)
+// it only forgets them, so a heal or a map change since is no blow.
 void FeelBlows(bool playing)
 {
     if (!playing || Hero == nullptr || CharacterAttribute == nullptr)
     {
         g_health.known = false;
+        g_lowLife.Forget();
         return;
     }
-    Health now;
-    now.known = true;
-    now.dead = Hero->Dead != 0;
-    now.life = CharacterAttribute->Life;
-    now.shield = CharacterAttribute->Shield;
-    const Health before = std::exchange(g_health, now);
-    if (!before.known)
-        return;
-    if (now.dead && !before.dead)
-    {
-        Pad::Rumble(1.f, 0.6f, DeathMilliseconds);
-        return;
-    }
-    const long long most = static_cast<long long>(CharacterAttribute->LifeMax) + CharacterAttribute->ShieldMax;
-    const long long lost = std::max(before.life - now.life, 0LL) + std::max(before.shield - now.shield, 0LL);
-    if (now.dead || most <= 0 || lost <= 0)
-        return;
-    const float share = static_cast<float>(lost) / static_cast<float>(most);
-    if (share < FeltBlowShare)
-        return;
-    const float strength = std::min(share / FullBlowShare, 1.f);
-    Pad::Rumble(0.25f + 0.75f * strength, 0.4f + 0.6f * strength, BlowMilliseconds);
+    const Clock::time_point now = Clock::now();
+    const Clock::time_point shakeEnds = FeelHits(now);
+    FeelLowLife(now, shakeEnds);
 }
 
 // A level up is felt as one soft swell of both motors.
@@ -1826,13 +1886,22 @@ void FeelGains(bool playing)
 
 // A pad plugged in or pulled out says so in the system log, in the world only: a pad lost mid-fight
 // otherwise just leaves the hero standing. Before the world (the pads found at the start) it is no news.
+// A pad's battery running low says so too (PC only); that line waits for the world, so a pad found low
+// at the start says it once the hero is in.
 void SayPadNews(bool inWorld)
 {
     const Pad::PadNews news = Pad::TakeNews();
-    if (!inWorld || news == Pad::PadNews::None)
+    if (!inWorld)
         return;
-    UI::Chat::PostSystem(news == Pad::PadNews::Connected ? I18N::Game::PadConnected : I18N::Game::PadDisconnected,
-                         mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    if (news != Pad::PadNews::None)
+        UI::Chat::PostSystem(news == Pad::PadNews::Connected ? I18N::Game::PadConnected : I18N::Game::PadDisconnected,
+                             mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    const int battery = Pad::TakeBatteryNews();
+    if (battery < 0)
+        return;
+    wchar_t line[128] = {};
+    mu_swprintf(line, I18N::Game::PadBatteryLow, battery);
+    UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
 // What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
@@ -1865,6 +1934,11 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legend = false;
         view.frame = false;
     }
+    // The help window (F1) says its own keys: its yellow last row names LB/RB and B, and LB/RB turn
+    // its pages here (TurnHelpPages()), so the legend's page and window hints would be wrong over it
+    // anyway. The legend would also cover it (/play, 800x570).
+    if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_HELP))
+        view.legend = false;
     if (view.legend)
     {
         // In the hub RB turns the hub's own tabs, so the next window is not said there; RT turns a page

@@ -89,6 +89,10 @@ enum class PadNews : std::uint8_t
     Disconnected,
 };
 [[nodiscard]] PadNews TakeNews();
+// A pad on its battery fell to 20 % or less, or to 10 % or less, since the last call (its percent),
+// else -1: the game says it in the system log (Core/Input/GamepadBattery.h). PC only: a browser tells
+// no battery, so there it is always -1.
+[[nodiscard]] int TakeBatteryNews();
 // Whether a pad pressed a button or pushed a stick half way out since the last key, mouse button or
 // finger press. A worn stick drifting near its centre does not take the game from the mouse. A key
 // pressed while a pad button is held or a stick pushed half way out does not take the game from the
