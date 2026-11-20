@@ -1072,12 +1072,21 @@
   // startup.json (tools/web/make_startup_pack.py): the startup pack's parts and the hashes of Main.js
   // and Main.wasm. Asked for at once, while the page checks the graphics card. Its ETag is kept: the new
   // version check reads startup.json (432 KB) again only when the server's ETag is another.
+  // Its text goes to the game's file system too (Module.muReleaseIndexText, fetch-backend.js), which
+  // takes its files' hashes from it instead of asking the server again: those are the release this
+  // page's code belongs to, and a game this device keeps, opened while the server refused the second
+  // ask, read every file without its hash from the busy server, 3 s each, instead of from the device.
   let releaseIndexEtag = null;
+  let releaseIndexText = null;
   const releaseIndexLoad = fetchWhenFree("startup.json", { cache: "no-cache" })
     .then((response) => {
       if (!response.ok) return null;
       releaseIndexEtag = response.headers.get("ETag");
-      return response.json();
+      return response.text().then((text) => {
+        const index = JSON.parse(text);
+        releaseIndexText = text;
+        return index;
+      });
     }).catch(() => null);
 
   // The service worker (sw.js) keeps the game's files on the device and shows a note of its own when
@@ -2625,6 +2634,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       // The deferred parts' files (paths), and the next part that came or failed, handed over once; else null.
       muDeferredFiles: () => deferredEntries.flatMap((entry) => entry.files.map(([path]) => path)),
       muDeferredPart: () => deferredSettled.shift() || null,
+      // startup.json as this page read it (releaseIndexLoad), handed over once; null where it didn't come.
+      muReleaseIndexText: () => { const text = releaseIndexText; releaseIndexText = null; return text; },
       muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
       muDepthClamp: gpuCheck.depthClamp,
