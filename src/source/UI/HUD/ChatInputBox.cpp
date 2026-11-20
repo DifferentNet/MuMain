@@ -457,7 +457,10 @@ bool mu::ui::window::CChatInputBox::InsertItemLink(UI::Chat::ItemLinkDraft::Item
     const auto route = UI::Chat::ItemLinkWire::RouteOf(text, InputChannelOf(m_iInputMsgType), ItemLinkWhisperTarget());
     const std::size_t maxChars =
         route ? UI::Chat::ItemLinkWire::MaxLineLength(route->channel) : UI::Chat::ItemLinkWire::MaxChatLength;
-    const auto refusal = m_linkDraft.CanInsert(text, item, UI::Chat::ItemLinks::MaxItems(), maxChars);
+    // The line the channel takes, as SendLineWithItems() counts it: without a "/shout " or "/post " in front.
+    const std::wstring_view field(text);
+    const std::wstring_view line = route ? field.substr(std::min(route->bodyStart, field.size())) : field;
+    const auto refusal = m_linkDraft.CanInsert(line, item, UI::Chat::ItemLinks::MaxItems(), maxChars);
     if (refusal != UI::Chat::ItemLinkDraft::Refusal::None)
     {
         PostLinkRefusal(refusal);
@@ -1231,10 +1234,15 @@ void mu::ui::window::CChatInputBox::SendLineKeepingDraft(const type_string& line
     SendChatLine();
     if (draft.empty())
         return;
+    // The bar opens again for the draft, not for the player: a refused line it would bring back stays kept for
+    // their next opening (RestoreRefusedLine()).
+    std::optional<UI::Chat::ItemLinkDraft> refused = std::move(m_refusedLine);
+    m_refusedLine.reset();
     g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
     SetFieldText("chat_field", StringUtils::NarrowToWide(draft));
     m_linkDraft = links;
     m_linkSeenText = draft;
+    m_refusedLine = std::move(refused);
 }
 
 void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
