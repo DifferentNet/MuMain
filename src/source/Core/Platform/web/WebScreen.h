@@ -24,6 +24,10 @@ void KeepScreenOn(bool on);
 // Touches, pointer moves, keys and wheel turns on the page since the last call; the first call starts
 // counting. A pad's buttons are no page events (Core::Input::Gamepad has them).
 [[nodiscard]] int TakePageInputs();
+// Whether a finger, a pen or a mouse button is down on the page now, held still or not. Leaving the page
+// (blur, hidden) lifts them all; one with no event for 10 minutes counts as lifted. False until the
+// first TakePageInputs().
+[[nodiscard]] bool IsPageContactDown();
 
 // While armed, the page keeps a history entry of its own on top for the back gesture (or a phone's
 // back button) to step back from: the page stays, and the step counts as a press.

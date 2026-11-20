@@ -3,6 +3,7 @@ client's own MapFileDecrypt gives, and every other file as it is."""
 import gzip
 import importlib.util
 import io
+import json
 import random
 import sys
 import tempfile
@@ -70,5 +71,36 @@ assert parts == {"startup-data-sound": [["Data/Sound/a.wav", 10]], "startup-data
                  "startup-misc": [["fonts/c.ttf", 10], ["Data/Logo/d.ozt", 10]]}, parts
 assert pack.is_deferred("Data/Sound/a.wav") and pack.is_deferred("Data/Music/b.mp3")
 assert not pack.is_deferred("Data/Logo/d.ozt") and not pack.is_deferred("Data/SoundX/e.wav")
+
+# The Modern theme is a part of its own, however small, which phones and tablets leave out; the files
+# the theme list reads stay with the interface.
+modern = "Data/Interface/RmlUi/themes/modern/"
+parts = pack.startup_parts([[modern + "theme.ini", 10], [modern + "login.rml", 10], [modern + "img/a.png", 10]])
+assert parts == {pack.DESKTOP_PART: [[modern + "login.rml", 10], [modern + "img/a.png", 10]],
+                 "startup-misc": [[modern + "theme.ini", 10]]}, parts
+assert not pack.is_desktop_only(modern + "base.rcss") and not pack.is_desktop_only(modern + "tokens.ini")
+
+# startup.json's index marks that part "desktop" (index.html leaves it out on a phone), also when its
+# pack is kept from the last build; no other part carries the mark.
+with tempfile.TemporaryDirectory() as folder:
+    Path(folder, pack.PACKS).mkdir()
+    contents = {modern + "theme.ini": b"[theme]\n", modern + "login.rml": b"<rml></rml>", "fonts/c.ttf": b"font"}
+    for path, data in contents.items():
+        Path(folder, path).parent.mkdir(parents=True, exist_ok=True)
+        Path(folder, path).write_bytes(data)
+    listed = [[path, pack.packed_size(str(Path(folder, path)))] for path in contents]
+    desktop_name = f"{pack.PACKS}/{pack.DESKTOP_PART}.pack"
+    previous_index = None
+    for build in ("first", "again"):
+        entries, written = pack.write_startup_parts(folder, listed, previous_index)
+        index = json.loads(json.dumps({"parts": entries}))  # as main() writes startup.json
+        assert written == (2 if build == "first" else 0), (build, written)
+        assert [part["name"] for part in index["parts"] if part.get("desktop") is True] == [desktop_name], index
+        assert all("desktop" not in part for part in index["parts"] if part["name"] != desktop_name), index
+        previous_index = index
+    desktop_part = next(part for part in index["parts"] if part["name"] == desktop_name)
+    assert desktop_part["files"] == [[modern + "login.rml", len(contents[modern + "login.rml"])]], desktop_part
+    unpacked = gzip.decompress(Path(folder, pack.PACKS, pack.DESKTOP_PART + ".pack.gz").read_bytes())
+    assert unpacked == contents[modern + "login.rml"]
 
 print("startup pack models: ok")

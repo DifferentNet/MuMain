@@ -37,7 +37,6 @@ Data/Interface/RmlUi/option_window.rml
 Data/Interface/RmlUi/themes/legacy/window_shell.rml
 Data/Interface/RmlUi/themes/legacy/window_shell.rcss
 Data/Interface/RmlUi/themes/legacy/option_window.rcss
-Data/Interface/RmlUi/themes/legacy-inherited-test/theme.ini
 Data/Interface/RmlUi/themes/modern/theme.ini
 Data/Interface/RmlUi/themes/modern/tokens.ini
 Data/Interface/RmlUi/themes/modern/base.rcss
@@ -2445,7 +2444,6 @@ Data/Interface/RmlUi/themes/legacy/remember_password_prompt.rcss
 Data/Interface/RmlUi/themes/legacy/tooltip.rcss
 Data/Interface/RmlUi/themes/legacy/tooltip.rml
 Data/Interface/RmlUi/themes/legacy/touch_controls.rcss
-Data/Interface/RmlUi/themes/modern/README.md
 Data/Interface/RmlUi/themes/modern/auction.rcss
 Data/Interface/RmlUi/themes/modern/battle_pass.rcss
 Data/Interface/RmlUi/themes/modern/battle_soccer_score.rcss
