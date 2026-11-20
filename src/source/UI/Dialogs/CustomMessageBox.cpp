@@ -672,6 +672,9 @@ void mu::ui::window::ShowChaosMixMenuDialog()
     btnGeneralMix.lines.push_back({ szText, false });
     mu_swprintf(szText, I18N::Game::FenrirSHornScrollOfBloodCondorSFeather, Hero->ID);
     btnGeneralMix.lines.push_back({ szText, false });
+    // MU Moldova: the Box of Kundun upgrades (recipes 59-61, +1 -> +4) are regular recipes, so this button's lines say
+    // so instead of a button of their own (ghinzuro, 2026-11-20: «Строка в обычном»).
+    btnGeneralMix.lines.push_back({ I18N::Game::KundunBoxUpgradeMenuLine, false });
     btnGeneralMix.onClick = [] { g_MixRecipeMgr.SetMixType(0); };
     cfg.buttons.push_back(std::move(btnGeneralMix));
 

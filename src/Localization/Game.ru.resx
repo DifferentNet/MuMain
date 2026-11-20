@@ -13814,6 +13814,10 @@
     <value>Box of Kundun +5 так не получить.</value>
     <comment>legacy_id=3930</comment>
   </data>
+  <!-- MU Moldova: a line of the Chaos Goblin menu's regular mix button: the Box of Kundun upgrades (recipes 59-61) -->
+  <data name="KundunBoxUpgradeMenuLine" xml:space="preserve">
+    <value>Box of Kundun +1, +2, +3: на плюс выше</value>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
   </data>
