@@ -1044,7 +1044,13 @@
   // rebuild its frame buffers.
   const PHONE_RESIZE_DELAY_MS = 200;
   // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
+  // Nobody sees the game then: it runs at its reference rate and draws nothing (Module.muCovered,
+  // Winmain.cpp WaitForBrowserFrameJs) until the phone turns sideways again.
   const portrait = matchMedia("(orientation: portrait)");
+  const coveredByRotate = () => phone && portrait.matches;
+  portrait.addEventListener("change", () => {
+    if (window.Module) window.Module.muCovered = coveredByRotate();
+  });
   if (pageParams.has("reset")) {
     try {
       for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/quality-auto", "mu-web/effects-before-lowest"]) {
@@ -1126,15 +1132,21 @@
     if (canvas.style.height !== cssH) canvas.style.height = cssH;
   }
 
+  // A computer's window being dragged to a new size resizes the page at every step: the canvas follows
+  // at once there too, the game's size once the drag pauses. Entering or leaving fullscreen takes the
+  // new size at once.
+  const PC_RESIZE_DELAY_MS = 120;
   let displayTimer = 0;
+  let fullscreenAtResize = inFullscreen();
   function stageResized() {
-    if (!phone) {
+    fitCanvas();
+    clearTimeout(displayTimer);
+    if (!phone && inFullscreen() !== fullscreenAtResize) {
+      fullscreenAtResize = inFullscreen();
       updateDisplay();
       return;
     }
-    fitCanvas();
-    clearTimeout(displayTimer);
-    displayTimer = setTimeout(updateDisplay, PHONE_RESIZE_DELAY_MS);
+    displayTimer = setTimeout(updateDisplay, phone ? PHONE_RESIZE_DELAY_MS : PC_RESIZE_DELAY_MS);
   }
   const stageObserver = new ResizeObserver((entries) => {
     const box = entries[0].devicePixelContentBoxSize && entries[0].devicePixelContentBoxSize[0];
@@ -1207,11 +1219,18 @@
   // the player hasn't picked a quality in the footer. Measured over 20 s while the page is shown, from
   // 45 s after the character enters the world and 20 s after a step, not while a map loads; two slow
   // measures in a row step down. A player who capped the game below 50 frames (Options, FPS Limit)
-  // gets 70 % of the cap as the bar. index.html?noautoquality turns it off.
+  // gets 70 % of the cap as the bar. index.html?noautoquality turns it off. A measure that took in a
+  // time the game drew fewer frames on purpose doesn't count: the page hidden or just back, the phone
+  // upright under "Turn your phone sideways", or nobody touching it (30 frames, Module.muFramePace.idle
+  // and pausedAt, Winmain.cpp WaitForBrowserFrameJs).
   const AUTO_QUALITY = { afterWorldMs: 45000, afterStepMs: 20000, windowMs: 20000, minFps: 40, slowInRow: 2 };
   const LOWER_QUALITY = { high: "medium", medium: "low" };
   const QUALITY_NAMES = { high: "High", medium: "Medium", low: "Low", lowest: "Lowest" };
   let worldEnteredAt = 0;      // performance.now() the character entered the world, 0: not in it
+  let pageShownAt = -Infinity; // performance.now() the page last came back on screen
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") pageShownAt = performance.now();
+  });
   const autoQuality = {
     windowStart: 0, windowFrames: 0, slow: 0, quietUntil: 0,
     playerPicked() {
@@ -1232,7 +1251,9 @@
       const now = performance.now();
       const lower = LOWER_QUALITY[display.quality];
       if (!lower || this.playerPicked()) return;
-      if (busy || document.visibilityState !== "visible" || !worldEnteredAt ||
+      const pace = (window.Module && window.Module.muFramePace) || {};
+      const heldBack = coveredByRotate() || pace.idle || Math.max(pageShownAt, pace.pausedAt || 0) >= this.windowStart;
+      if (busy || document.visibilityState !== "visible" || heldBack || !worldEnteredAt ||
           now < worldEnteredAt + AUTO_QUALITY.afterWorldMs || now < this.quietUntil) {
         this.restart(now);
         this.slow = 0;
@@ -1279,6 +1300,7 @@
   // key. The game says when its character enters and leaves the world (Core/Platform/web/WebPageView.h).
   // Not once the game stopped, where Reload just reloads.
   function askBeforeLeaving(event) {
+    if (reloadingPage) return;
     event.preventDefault();
     event.returnValue = "";
   }
@@ -1358,10 +1380,52 @@
     statusEl.appendChild(box);
     console.error("The game stopped:", error);
   }
+  // The WebGPU device lost while nobody looked (the page in the background, or back for under 2 s: a
+  // phone frees a hidden page's GPU) reloads the page once it is seen again, at once if it is, with
+  // config.ini saved first; the game runs on meanwhile, drawing nothing while hidden. At most once in
+  // 2 minutes per tab (sessionStorage): lost again so soon, or without the storage, it says so as below.
+  const DEVICE_LOST_RELOAD = { key: "mu-web/device-lost-reload", afterShownMs: 2000, gapMs: 120000 };
+  let reloadingPage = false;
+  function mayReloadForLostDevice() {
+    const now = Date.now();
+    try {
+      const last = Number(sessionStorage.getItem(DEVICE_LOST_RELOAD.key)) || 0;
+      if (Math.abs(now - last) < DEVICE_LOST_RELOAD.gapMs) return false;
+      sessionStorage.setItem(DEVICE_LOST_RELOAD.key, String(now));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function reloadForLostDevice() {
+    saveConfig();
+    // Stamped again: a page shown minutes after the loss counts its 2 minutes from this reload.
+    try {
+      sessionStorage.setItem(DEVICE_LOST_RELOAD.key, String(Date.now()));
+    } catch (e) {}
+    reloadingPage = true;
+    removeEventListener("beforeunload", askBeforeLeaving);
+    location.reload();
+  }
+  function reloadWhenSeen() {
+    if (!document.hidden) {
+      reloadForLostDevice();
+      return;
+    }
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) reloadForLostDevice(); });
+  }
   // The WebGPU device lost (a GPU or driver reset, or the browser freed it, on phones mostly): the
   // picture stays black or frozen, so say so. Not when the page destroyed it or is going away.
   function gpuDeviceLost(info) {
-    if (!info || info.reason === "destroyed" || pageGone || crashed) return;
+    if (!info || info.reason === "destroyed" || pageGone || crashed || reloadingPage) return;
+    const unseen = document.hidden || performance.now() - pageShownAt < DEVICE_LOST_RELOAD.afterShownMs;
+    if (unseen && mayReloadForLostDevice()) {
+      appendLog(`Graphics device lost while the page was not seen (${info.message || info.reason}): ` +
+                (document.hidden ? "reloading when it is shown" : "reloading"));
+      saveConfig();
+      reloadWhenSeen();
+      return;
+    }
     gameCrashed(String(info.message || "").slice(0, 200),
                 ["The graphics device was lost (GPU reset or the browser freed it). Reload to continue.",
                  "Связь с видеокартой потеряна (сброс драйвера, или браузер её освободил). Обновите страницу, чтобы продолжить."]);
@@ -1871,11 +1935,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     // The startup pack's parts the game waits for, each a promise of its files and bytes (WebFileSystem.cpp
     // takes them in order as they come), or null where startup.json has none. Not the deferred ones
-    // (deferredSettled below), but this keeps them in the storage too.
+    // (deferredSettled below), but this keeps them in the storage too. Not the desktop one (the Modern
+    // theme, make_startup_pack.py) on a phone or tablet, which always plays the legacy theme
+    // (UI/RmlBridge/RmlTheme.cpp, by the same device check: Module.muDevice).
     async function startupPack() {
       const allParts = releaseIndex && releaseIndex.parts;
       if (!allParts) return null;
-      const parts = allParts.filter((part) => !part.deferred);
+      const parts = allParts.filter((part) => !part.deferred && !(phone && part.desktop));
       const store = await openStore(STARTUP_STORE);
       const kept = await Promise.all(parts.map((part) => store && store.match(packKey(part)).catch(() => undefined)));
       if (store) {
@@ -2493,6 +2559,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muDepthClamp: gpuCheck.depthClamp,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
+      // "Turn your phone sideways" covers the game (kept current by its matchMedia, above).
+      muCovered: coveredByRotate(),
       print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
       printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },

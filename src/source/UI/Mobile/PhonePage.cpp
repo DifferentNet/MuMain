@@ -99,6 +99,18 @@ void UI::Mobile::PhonePage::Update()
     SyncScreen();
     SyncBack();
 }
+
+double UI::Mobile::PhonePage::SecondsSinceInput()
+{
+    if (g_page.inputAt == Clock::time_point{})
+        return 0.0;
+    return std::chrono::duration<double>(Clock::now() - g_page.inputAt).count();
+}
 #else
 void UI::Mobile::PhonePage::Update() {}
+
+double UI::Mobile::PhonePage::SecondsSinceInput()
+{
+    return 0.0;
+}
 #endif

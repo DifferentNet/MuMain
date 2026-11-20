@@ -51,6 +51,11 @@ std::optional<mu::web::PageDisplay> mu::web::GetAutoDisplay()
     return display;
 }
 
+int mu::web::GetAutoDisplaySerial()
+{
+    return MuWeb_DisplaySerial();
+}
+
 bool mu::web::IsAutoDisplay()
 {
     return MuWeb_DisplayAuto() != 0;

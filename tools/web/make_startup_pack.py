@@ -30,6 +30,13 @@ loads and the music it plays, and loads them a few a frame once the files are he
 the game reads its files one by one. So they get versions, which keep those files on the device; the page's
 background download on a computer leaves them out (they come in their parts).
 
+The desktop part: the Modern theme (DESKTOP_ONLY_FOLDER), 1 MB of interface files a phone or tablet never
+reads, as they always play the legacy theme (UI/RmlBridge/RmlTheme.cpp), is its own part, whatever its size,
+marked "desktop" in startup.json. A computer downloads it with the other parts and waits for it as before;
+the page on a phone or tablet leaves it out. The few files the theme list reads on every device
+(DESKTOP_ONLY_KEPT) stay in the interface's part. Without versions: where a phone reads one all the same
+(the debug command $theme modern), it comes one by one, as a file outside the packs.
+
 A pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/ObjectN (the map's ground
 and objects) that aren't in the startup pack, and packs/worldN.json, their paths and sizes and a hash.
 Entering Lorencia opened about 250 of them one after another, a minute on a phone (2026-10-29); the
@@ -54,7 +61,7 @@ output for the next build. The files' sizes in the index are the packed ones.
 
 startup.json, which the page reads first:
   parts     the startup pack's parts: [{name, hash, packed (bytes to download), files: [[path, size]]}],
-            the deferred ones with "deferred": true
+            the deferred ones with "deferred": true, the desktop one with "desktop": true
   late      the late pack, the same way (absent without one)
   code      the hashes of Main.js and Main.wasm: the page asks for Main.js?v=<hash> ...
   versions  {path: hash} of the files the game downloads one by one when it first reads them
@@ -103,6 +110,12 @@ PART_MIN_BYTES = 2_000_000
 # The folders whose files the game starts without (the deferred parts, the module's docstring): each
 # its own part, whatever its size.
 DEFERRED_FOLDERS = ("Data/Sound/", "Data/Music/")
+# The Modern theme's files, which phones and tablets never read (the desktop part, the module's
+# docstring), but those the theme list reads on every device (UI/RmlBridge/RmlTheme.cpp ThemeExists,
+# GetThemeDisplayName): they stay in the interface's part.
+DESKTOP_ONLY_FOLDER = "Data/Interface/RmlUi/themes/modern/"
+DESKTOP_ONLY_KEPT = ("theme.ini", "tokens.ini", "base.rcss")
+DESKTOP_PART = "startup-modern-theme"
 # Changes every pack's hash when what the packs hold changes, not only the files.
 PACK_FORMAT = b"plain-models"
 # Added for a pack with sounds, so that the packs without any keep their hashes (and the players'
@@ -274,16 +287,21 @@ def is_deferred(path):
     return path.startswith(DEFERRED_FOLDERS)
 
 
+def is_desktop_only(path):
+    """Whether the file goes in the desktop part (the module's docstring)."""
+    return path.startswith(DESKTOP_ONLY_FOLDER) and path[len(DESKTOP_ONLY_FOLDER):] not in DESKTOP_ONLY_KEPT
+
+
 def startup_parts(files):
     """{part name: [[path, size], ...]} in the list's order (part_name; small folders share
-    startup-misc, but not the deferred ones)."""
+    startup-misc, but not the deferred ones nor the desktop part)."""
     folders = {}
     for path, size in files:
-        folders.setdefault(part_name(path), []).append([path, size])
+        folders.setdefault(DESKTOP_PART if is_desktop_only(path) else part_name(path), []).append([path, size])
     parts, misc = {}, []
     for name, folder_files in folders.items():
-        deferred = is_deferred(folder_files[0][0])
-        if not deferred and sum(size for _, size in folder_files) < PART_MIN_BYTES:
+        own_part = is_deferred(folder_files[0][0]) or name == DESKTOP_PART
+        if not own_part and sum(size for _, size in folder_files) < PART_MIN_BYTES:
             misc.extend(folder_files)
         else:
             parts[name] = folder_files
@@ -300,6 +318,8 @@ def write_startup_parts(root, files, previous_index):
         entry, wrote = write_pack(root, name, part_files, previous.get(f"{PACKS}/{name}.pack"))
         if is_deferred(part_files[0][0]):
             entry["deferred"] = True
+        if name == DESKTOP_PART:
+            entry["desktop"] = True
         entries.append(entry)
         written += wrote
     return entries, written
@@ -474,6 +494,10 @@ def main():
         deferred_packed = sum(part["packed"] for part in deferred)
         print(f"  of them deferred (after the start): {', '.join(part['name'] for part in deferred)}, "
               f"{deferred_packed / 1e6:.1f} MB packed; before the start: {(packed - deferred_packed) / 1e6:.1f} MB")
+    for part in parts:
+        if part.get("desktop"):
+            print(f"  of them for computers only (phones and tablets skip it): {part['name']}, "
+                  f"{len(part['files'])} files, {part['packed'] / 1e6:.2f} MB packed")
     if late:
         print(f"Late pack: {len(late_files)} files, {sum(size for _, size in late_files) / 1e6:.1f} MB "
               f"({late['packed'] / 1e6:.1f} MB packed)")

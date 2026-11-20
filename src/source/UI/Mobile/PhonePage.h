@@ -8,4 +8,7 @@ namespace UI::Mobile::PhonePage
 {
 // Once a frame, between frames.
 void Update();
+// Seconds since the last touch, key or pad press on the page (as of the last Update()); 0 before the
+// first Update() and outside the web build.
+[[nodiscard]] double SecondsSinceInput();
 } // namespace UI::Mobile::PhonePage
