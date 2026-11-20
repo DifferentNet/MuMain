@@ -138,3 +138,14 @@
    in the list and takes no space, so the newest lines still sit at the bottom; the first line on
    screen is .chat-line--lead, not :first-child, because the first child may be gone. */
 .chat-line.chat-line--faded { display: none; }
+
+/* MU Moldova, items in the chat (UI/Chat/ItemLinks.h): an item's "[name]" in a line, in the item tooltip's colour
+   for its kind (white, gold from +7, green excellent, violet socket, green on blue ancient), on a darker ground than
+   the line's. No side padding: the chat breaks a long line by its measured text (CChatLogWindow::SeparateText()).
+   The names take no pointer either; C++ finds the one under the pointer (CChatLogWindow::LinkAt()). */
+.chat-link           { background-color: rgba(0, 0, 0, 170); pointer-events: none; }
+.chat-link--normal   { color: rgb(255, 255, 255); }
+.chat-link--high     { color: rgb(255, 204, 26); }
+.chat-link--excellent { color: rgb(26, 255, 128); }
+.chat-link--socket   { color: rgb(179, 102, 255); }
+.chat-link--ancient  { color: rgb(0, 255, 0); background-color: rgba(60, 60, 200, 200); }

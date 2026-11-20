@@ -2,6 +2,9 @@
 #include "UI/Chat/ChatInput.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/ChatPhraseTexts.h"
+#include "UI/Chat/ItemLinks.h"
+#include "UI/Chat/ItemLinkTokens.h"
+#include "UI/Chat/ItemLinkWire.h"
 #include "UI/Chat/PartyInviteCommand.h"
 #include "UI/HUD/ChatInputBox.h"
 #include "Core/Input/SyntheticInput.h"
@@ -41,7 +44,55 @@
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
+namespace
+{
+// MU Moldova, items in the chat line: a token counts as long as it shows within what the field takes. The server
+// names the items in English and judges the length of the line it writes.
+constexpr std::size_t ItemLinkCharBudget = MAX_CHAT_SIZE;
+constexpr std::size_t RefusalLineSize = 256;
+
+UI::Chat::ItemLinkWire::InputChannel InputChannelOf(int inputMsgType)
+{
+    using UI::Chat::ItemLinkWire::InputChannel;
+    switch (inputMsgType)
+    {
+    case CChatInputBox::INPUT_PARTY_MESSAGE:
+        return InputChannel::Party;
+    case CChatInputBox::INPUT_GUILD_MESSAGE:
+        return InputChannel::Guild;
+    case CChatInputBox::INPUT_GENS_MESSAGE:
+        return InputChannel::Gens;
+    default:
+        return InputChannel::Normal;
+    }
+}
+
+void PostLinkRefusal(UI::Chat::ItemLinkDraft::Refusal refusal)
+{
+    if (refusal == UI::Chat::ItemLinkDraft::Refusal::TooManyItems)
+    {
+        wchar_t text[RefusalLineSize] = { L'\0' };
+        mu_swprintf(text, I18N::Game::ItemLinkTooManyItems, UI::Chat::ItemLinks::MaxItems());
+        UI::Chat::PostSystem(text, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
+    UI::Chat::PostSystem(I18N::Game::ItemLinkTooLong, mu::ui::window::TYPE_ERROR_MESSAGE);
+}
+
+// The emotes and ring moves a public line's words start (UI/Chat/ChatInput.h), as for a line without items.
+void PlayChatWords(const std::wstring& line)
+{
+    if (!Hero->SafeZone && GameLogic::Items::IsRideableMountModel(Hero->Helper.Type))
+        return;
+    wchar_t text[MAX_CHAT_SIZE + 1] = { L'\0' };
+    wcsncpy(text, line.c_str(), MAX_CHAT_SIZE);
+    text[MAX_CHAT_SIZE] = L'\0';
+    UI::Chat::CheckChatText(text);
+}
+} // namespace
+
 mu::ui::window::CChatInputBox::CChatInputBox()
+    : m_linkDraft(ItemLinkCharBudget)
 {
     Init();
 }
@@ -65,6 +116,10 @@ void mu::ui::window::CChatInputBox::Init()
     m_bWhisperSend = true;
 
     m_bShowMessageElseNormal = false;
+
+    m_linkDraft.Clear();
+    m_linkSeenText.clear();
+    m_linkCaretPending.reset();
 }
 
 bool mu::ui::window::CChatInputBox::Create(
@@ -199,6 +254,17 @@ bool mu::ui::window::CChatInputBox::UpdateMouseEvent()
 
 void mu::ui::window::CChatInputBox::SendChatLine()
 {
+    // MU Moldova: a line holding items goes as "/il …"; one too long for the packet stays in the bar.
+    FollowChatField();
+    const LinkedSend linked = SendLineWithItems();
+    if (linked == LinkedSend::Refused)
+        return;
+    if (linked == LinkedSend::Sent)
+    {
+        CloseSentLine();
+        return;
+    }
+
     wchar_t	szChatText[MAX_CHAT_SIZE + 1] = { '\0' };
     wchar_t	szWhisperID[MAX_USERNAME_SIZE + 1] = { '\0' };
 
@@ -294,6 +360,11 @@ void mu::ui::window::CChatInputBox::SendChatLine()
             }
         }
     }
+    CloseSentLine();
+}
+
+void mu::ui::window::CChatInputBox::CloseSentLine()
+{
     SetFieldText("chat_field", L"");
     m_chatHistory.ResetBrowsing();
     m_iCurWhisperIDHistory = 0;
@@ -301,6 +372,137 @@ void mu::ui::window::CChatInputBox::SendChatLine()
     SaveIMEStatus();
 
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_CHATINPUTBOX);
+}
+
+mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLineWithItems()
+{
+    namespace Wire = UI::Chat::ItemLinkWire;
+    if (m_linkDraft.Empty() || !UI::Chat::ItemLinks::IsOffered())
+        return LinkedSend::NotLinked;
+
+    const type_string text = m_linkDraft.Text();
+    type_string whisperId;
+    GetWhsprID(whisperId);
+    const type_string target = m_bWhisperSend ? whisperId : type_string();
+    const auto route = Wire::RouteOf(text, InputChannelOf(m_iInputMsgType), target);
+    if (!route)
+        return LinkedSend::NotLinked;
+    const auto command = Wire::BuildCommand(route->channel, text, route->bodyStart, m_linkDraft.Placed());
+    if (!command)
+        return LinkedSend::NotLinked;
+    if (Wire::Utf8Bytes(*command) > Wire::MaxCommandBytes)
+    {
+        UI::Chat::PostSystem(I18N::Game::ItemLinkCommandTooLong, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return LinkedSend::Refused;
+    }
+
+    SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command->c_str()));
+    // The server sends a whisper to its target only: the own one shows here, as a plain whisper does.
+    if (route->channel.front() == Wire::WhisperChannel)
+    {
+        EchoWhisperWithItems(target, text);
+        AddWhsprIDHistory(target);
+    }
+    else
+    {
+        PlayChatWords(text);
+    }
+    AddChatHistory(text);
+    return LinkedSend::Sent;
+}
+
+void mu::ui::window::CChatInputBox::EchoWhisperWithItems(const type_string& whisperId, const type_string& text)
+{
+    const type_string echo = WhisperEchoText(whisperId.c_str(), text.c_str());
+    g_pChatListBox->AddLinkedText(L"", echo, mu::ui::window::TYPE_WHISPER_MESSAGE, m_linkDraft.LinksIn(echo));
+}
+
+bool mu::ui::window::CChatInputBox::InsertItemLink(UI::Chat::ItemLinkDraft::Item item)
+{
+    const bool wasOpen = IsVisible();
+    if (!OpenForItemLink())
+        return false;
+
+    FollowChatField();
+    type_string text;
+    GetChatText(text);
+    const auto refusal = m_linkDraft.CanInsert(text, item, UI::Chat::ItemLinks::MaxItems());
+    if (refusal != UI::Chat::ItemLinkDraft::Refusal::None)
+    {
+        PostLinkRefusal(refusal);
+        return true;
+    }
+    // The bar that just opened is empty: the item goes at its end.
+    const std::size_t caret = wasOpen ? ChatCaret(text) : text.size();
+    const std::size_t after = m_linkDraft.Insert(text, caret, std::move(item));
+    PutChatField(text, after);
+    return true;
+}
+
+bool mu::ui::window::CChatInputBox::OpenForItemLink()
+{
+    if (IsVisible())
+        return true;
+    // Where Enter opens the bar (UpdateKeyEvent()).
+    if (gMapManager.InChaosCastle() && g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHAOSCASTLE_TIME))
+        return false;
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+    RestoreIMEStatus();
+    return true;
+}
+
+void mu::ui::window::CChatInputBox::FollowChatField()
+{
+    if (m_linkDraft.Empty())
+        return;
+    const Rml::String& shown = m_RmlView.GetModel().chatText;
+    if (shown == m_linkSeenText)
+        return;
+    m_linkSeenText = shown;
+    const type_string text = StringUtils::NarrowToWide(shown);
+    if (const auto fix = m_linkDraft.Follow(text, ChatCaret(text)))
+        PutChatField(fix->text, fix->caret);
+}
+
+void mu::ui::window::CChatInputBox::PutChatField(const type_string& text, std::size_t caret)
+{
+    ChatInputRmlModel& model = m_RmlView.GetModel();
+    model.chatText = StringUtils::WideToNarrow(text.c_str());
+    m_RmlView.MarkDirty("chat_text");
+    m_linkSeenText = model.chatText;
+
+    auto* input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(GetField("chat_field"));
+    if (input == nullptr)
+        return;
+    // Now rather than at the model's next update, so the caret can go after the item at once.
+    input->SetValue(model.chatText);
+    const std::size_t characters = UI::Chat::ItemLinkTokens::CharacterOfIndex(text, caret);
+    // The bar that just opened takes the focus once its document shows (m_bFocusPending).
+    if (m_bFocusPending)
+    {
+        m_linkCaretPending = characters;
+        return;
+    }
+    if (!IsFieldFocused("chat_field"))
+        FocusField("chat_field");
+    SetChatCaret(characters);
+}
+
+void mu::ui::window::CChatInputBox::SetChatCaret(std::size_t characters)
+{
+    if (auto* input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(GetField("chat_field")))
+        input->SetSelectionRange(static_cast<int>(characters), static_cast<int>(characters));
+}
+
+std::size_t mu::ui::window::CChatInputBox::ChatCaret(const type_string& text) const
+{
+    auto* input = rmlui_dynamic_cast<Rml::ElementFormControlInput*>(GetField("chat_field"));
+    if (input == nullptr)
+        return text.size();
+    int start = 0;
+    int end = 0;
+    input->GetSelection(&start, &end, nullptr);
+    return UI::Chat::ItemLinkTokens::IndexOfCharacter(text, static_cast<std::size_t>(std::max(end, 0)));
 }
 
 bool mu::ui::window::CChatInputBox::TrySendReply(const wchar_t* chatText)
@@ -705,7 +907,13 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
     {
         m_bFocusPending = false;
         FocusField("chat_field");
+        if (m_linkCaretPending)
+        {
+            SetChatCaret(*m_linkCaretPending);
+            m_linkCaretPending.reset();
+        }
     }
+    FollowChatField();
     if (IsFieldFocused("chat_field"))
         m_lastFocusedField = "chat_field";
     else if (IsFieldFocused("whisper_field"))
@@ -865,6 +1073,9 @@ void mu::ui::window::CChatInputBox::SetFieldText(const char* id, const type_stri
 
     if (strcmp(id, "chat_field") == 0)
     {
+        // A line put in whole (the history, a phrase, the bar opening or closing) holds no items.
+        m_linkDraft.Clear();
+        m_linkCaretPending.reset();
         if (model.chatText == narrow) return;
         model.chatText = narrow;
         m_RmlView.MarkDirty("chat_text");
@@ -912,6 +1123,7 @@ void mu::ui::window::CChatInputBox::ClosingProcess()
     m_pNewUIChatLogWnd->HideFrame();
 
     m_bFocusPending = false;
+    m_linkCaretPending.reset();
     m_sendGate.Cancel();
     if (Rml::Element* field = GetField("chat_field")) field->Blur();
     if (Rml::Element* field = GetField("whisper_field")) field->Blur();
@@ -968,13 +1180,18 @@ bool mu::ui::window::CChatInputBox::SendPhrase(int id)
 
 void mu::ui::window::CChatInputBox::SendLineKeepingDraft(const type_string& line)
 {
+    // The half-typed line's items come back with it.
+    FollowChatField();
     const Rml::String draft = m_RmlView.GetModel().chatText;
+    const UI::Chat::ItemLinkDraft links = m_linkDraft;
     SetFieldText("chat_field", line);
     SendChatLine();
     if (draft.empty())
         return;
     g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
     SetFieldText("chat_field", StringUtils::NarrowToWide(draft));
+    m_linkDraft = links;
+    m_linkSeenText = draft;
 }
 
 void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
@@ -987,6 +1204,12 @@ void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
 // retarget the whisper to the player's own name.
 void mu::ui::window::CChatInputBox::EchoSentWhisper(const wchar_t* whisperId, const wchar_t* text)
 {
+    g_pChatListBox->AddText(L"", WhisperEchoText(whisperId, text), mu::ui::window::TYPE_WHISPER_MESSAGE);
+}
+
+mu::ui::window::CChatInputBox::type_string mu::ui::window::CChatInputBox::WhisperEchoText(const wchar_t* whisperId,
+                                                                                        const wchar_t* text)
+{
     // A quick chat phrase shows in the player's own language, as the one it goes to reads it.
     wchar_t shown[MAX_CHAT_SIZE + 1] = { L'\0' };
     wcsncpy(shown, text, MAX_CHAT_SIZE);
@@ -995,7 +1218,7 @@ void mu::ui::window::CChatInputBox::EchoSentWhisper(const wchar_t* whisperId, co
 
     wchar_t echo[MAX_USERNAME_SIZE + MAX_CHAT_SIZE + 32] = { L'\0' };
     mu_swprintf_s(echo, I18N::Game::WhisperEchoTo, whisperId, shown);
-    g_pChatListBox->AddText(L"", echo, mu::ui::window::TYPE_WHISPER_MESSAGE);
+    return echo;
 }
 
 void mu::ui::window::CChatInputBox::UpdateWhisperTargetFromRightClick()

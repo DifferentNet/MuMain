@@ -35,7 +35,12 @@
 
 			     MU Moldova: `faded` is a line a closed chat has let go after 30 s (UI/Chat/ChatFade.h);
 			     it stays in the list so indices still match, but takes no space. `lead` is the first
-			     line on screen, which carries the bottom-up stacking margin. -->
+			     line on screen, which carries the bottom-up stacking margin.
+
+			     MU Moldova, items in the chat (UI/Chat/ItemLinks.h): a line that shows items leaves `text`
+			     empty and comes as `segs`, plain pieces and each item's [name] (.chat-link--<rarity>; its
+			     `link` attribute is what CChatLogWindow::LinkAt() finds it by). Nothing between the parts:
+			     a space there would show. -->
 			<div data-for="line : lines"
 			     class="chat-line"
 			     data-class-chat-line--chat="line.kind == 'chat'"
@@ -50,7 +55,14 @@
 			     data-class-chat-line--has-id="line.has_id"
 			     data-class-chat-line--pointed="it_index == pointed_index"
 			     data-class-chat-line--faded="line.faded"
-			     data-class-chat-line--lead="line.lead">{{line.text}}</div>
+			     data-class-chat-line--lead="line.lead">{{line.text}}<span data-for="seg : line.segs"
+				       data-class-chat-link="seg.link >= 0"
+				       data-class-chat-link--normal="seg.rarity == 'normal'"
+				       data-class-chat-link--high="seg.rarity == 'high'"
+				       data-class-chat-link--excellent="seg.rarity == 'excellent'"
+				       data-class-chat-link--socket="seg.rarity == 'socket'"
+				       data-class-chat-link--ancient="seg.rarity == 'ancient'"
+				       data-attr-link="seg.link">{{seg.text}}</span></div>
 		</div>
 	</div>
 </body>

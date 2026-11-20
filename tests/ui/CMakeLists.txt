@@ -79,6 +79,18 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/PartyInviteCommand.cpp
 )
 
+# Items shown in the chat: the "#ILH"/"#ILK" lines, links in the shown text, the chat line's tokens and "/il".
+mu_add_test(
+    NAME item_link_tests
+    SOURCES
+        test_item_links.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ItemLinkWire.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ItemLinkAttach.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ItemLinkPending.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ItemLinkTokens.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ItemLinkDraft.cpp
+)
+
 mu_add_test(
     NAME skill_resources_tests
     SOURCES

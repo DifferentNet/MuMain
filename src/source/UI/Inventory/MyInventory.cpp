@@ -48,6 +48,8 @@ extern bool SelectFlag;
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "GameLogic/Items/FieldRepair.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/ItemLinks.h"
+#include "UI/Chat/ItemLinkWire.h"
 
 // RmlUi migration -- see this class's header comment.
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -828,6 +830,8 @@ bool CMyInventory::UpdateMouseEvent()
 {
     if (PutClickedItemOnHotKey())
         return false;
+    if (PutClickedItemInChat())
+        return false;
     for (int i = 0; i < 2; i++)
     {
         if (CInventoryCtrl* grid = BagGrid(i); grid != nullptr && !grid->UpdateMouseEvent())
@@ -987,6 +991,28 @@ bool CMyInventory::PutClickedItemOnHotKey()
         PlayBuffer(SOUND_CLICK01);
     }
 
+    ResetMouseLButton();
+    return true;
+}
+
+// MU Moldova, items in the chat (UI/Chat/ItemLinks.h): Shift + click on an item in the bag or on a worn one puts its
+// name into the chat line. Taken on the release, before the grid or the slot picks the item up.
+bool CMyInventory::PutClickedItemInChat()
+{
+    if (!IsVisible() || m_RepairMode == SEASON3B::REPAIR_MODE_ON || !UI::Chat::ItemLinks::IsLinkClick())
+        return false;
+
+    if (m_iPointedSlot == -1)
+    {
+        CInventoryCtrl* grid = PointedBagGrid();
+        return grid != nullptr && UI::Chat::ItemLinks::GridItemToChat(UI::Chat::ItemLinkWire::InventoryStorage, *grid);
+    }
+
+    // The worn items' slots are the server's slots 0 to 11.
+    const ITEM& worn = CharacterMachine->Equipment[m_iPointedSlot];
+    if (worn.Type < 0 || !UI::Chat::ItemLinks::ToChat(UI::Chat::ItemLinkWire::InventoryStorage, m_iPointedSlot, worn))
+        return false;
+    m_iLeftPressSlot = -1;
     ResetMouseLButton();
     return true;
 }
@@ -2172,6 +2198,16 @@ bool CMyInventory::ShowWornItemCard()
         }
         TakeOffToBag(equipmentSlot);
     };
+    // MU Moldova: its name into the chat line (UI/Chat/ItemLinks.h), unless the gear changed while the card was open.
+    if (UI::Chat::ItemLinks::IsOffered())
+    {
+        card.toChat = [equipmentSlot, itemKey = worn.Key]
+        {
+            const ITEM& linked = CharacterMachine->Equipment[equipmentSlot];
+            if (linked.Type >= 0 && linked.Key == itemKey)
+                UI::Chat::ItemLinks::ToChat(UI::Chat::ItemLinkWire::InventoryStorage, equipmentSlot, linked);
+        };
+    }
     UI::Mobile::ItemCard::Show(std::move(card));
     return true;
 }

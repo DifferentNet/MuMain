@@ -345,6 +345,8 @@ namespace mu::ui::window
         bool IsPointerOverPanel() const;
         // Ctrl + click on a potion: on a free quick slot instead of in the hand. Whether it took the click.
         bool PutClickedItemOnHotKey();
+        // MU Moldova: Shift + click on an own item puts it into the chat line. Whether it took the click.
+        bool PutClickedItemInChat();
         // Whether the item in equipmentSlot may be taken off here; tells the
         // player why not.
         bool CheckTakeOff(int equipmentSlot) const;

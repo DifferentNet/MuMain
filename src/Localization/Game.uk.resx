@@ -14499,4 +14499,17 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вийшла нова версія: оновіть сторінку.</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>To chat</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>Up to %d items in one message.</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>No room for another item in this message.</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>The message with items is too long.</value>
+  </data>
 </root>

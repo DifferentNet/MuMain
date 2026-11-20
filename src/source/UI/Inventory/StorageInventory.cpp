@@ -32,6 +32,8 @@
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/ItemCard.h"
+#include "UI/Chat/ItemLinks.h"
+#include "UI/Chat/ItemLinkWire.h"
 #include <RmlUi/Core/ElementDocument.h>
 
 using namespace SEASON3B;
@@ -403,6 +405,12 @@ bool CStorageInventory::IsPointerOverPanel()
 
 bool CStorageInventory::UpdateMouseEvent()
 {
+    // MU Moldova: Shift + click on a vault item puts it into the chat line (UI/Chat/ItemLinks.h), before the grid
+    // picks it up.
+    if (m_pNewInventoryCtrl && UI::Chat::ItemLinks::IsLinkClick()
+        && UI::Chat::ItemLinks::GridItemToChat(UI::Chat::ItemLinkWire::VaultStorage, *m_pNewInventoryCtrl))
+        return false;
+
     if (m_pNewInventoryCtrl && false == m_pNewInventoryCtrl->UpdateMouseEvent())
         return false;
 
@@ -745,6 +753,15 @@ bool CStorageInventory::ShowItemCard()
         if (IsVisible() && m_pNewInventoryCtrl != nullptr)
             MoveToBag(m_pNewInventoryCtrl->FindItemByKey(itemKey));
     };
+    // MU Moldova: its name into the chat line (UI/Chat/ItemLinks.h), while the vault is open.
+    if (UI::Chat::ItemLinks::IsOffered())
+    {
+        card.toChat = [this, itemKey = pItemObj->Key]
+        {
+            if (IsVisible() && m_pNewInventoryCtrl != nullptr)
+                UI::Chat::ItemLinks::GridItemToChatByKey(UI::Chat::ItemLinkWire::VaultStorage, *m_pNewInventoryCtrl, itemKey);
+        };
+    }
     UI::Mobile::ItemCard::Show(std::move(card));
     return true;
 }

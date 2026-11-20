@@ -32,7 +32,14 @@
 			     data-class-chat-line--pointed="it_index == pointed_index"
 			     data-class-chat-line--faded="line.faded"
 			     data-class-chat-line--lead="line.lead"
-			     data-style-font-size="text_px + 'px'">{{line.text}}</div>
+			     data-style-font-size="text_px + 'px'">{{line.text}}<span data-for="seg : line.segs"
+				       data-class-chat-link="seg.link >= 0"
+				       data-class-chat-link--normal="seg.rarity == 'normal'"
+				       data-class-chat-link--high="seg.rarity == 'high'"
+				       data-class-chat-link--excellent="seg.rarity == 'excellent'"
+				       data-class-chat-link--socket="seg.rarity == 'socket'"
+				       data-class-chat-link--ancient="seg.rarity == 'ancient'"
+				       data-attr-link="seg.link">{{seg.text}}</span></div>
 		</div>
 	</div>
 </body>

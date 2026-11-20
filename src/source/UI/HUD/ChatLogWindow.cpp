@@ -28,8 +28,12 @@
 #include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Chat/ChatFade.h"
+#include "UI/Chat/ItemLinkAttach.h"
+#include "UI/RmlBridge/RmlElementBox.h"
+#include "Engine/Object/ZzzInventory.h"
 
 #include <chrono>
+#include <utility>
 
 using namespace SEASON3B;
 
@@ -127,6 +131,19 @@ void mu::ui::window::CChatLogWindow::Release()
 
 void mu::ui::window::CChatLogWindow::AddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType /*= TYPE_ALL_MESSAGE*/)
 {
+    AddWithLinks(strID, strText, MsgType, ErrMsgType, {});
+}
+
+void mu::ui::window::CChatLogWindow::AddLinkedText(const type_string& strID, const type_string& strText,
+                                                   MESSAGE_TYPE MsgType, std::vector<UI::Chat::ChatItemLink> links)
+{
+    AddWithLinks(strID, strText, MsgType, TYPE_ALL_MESSAGE, links);
+}
+
+void mu::ui::window::CChatLogWindow::AddWithLinks(const type_string& strID, const type_string& strText,
+                                                  MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
+                                                  const std::vector<UI::Chat::ChatItemLink>& links)
+{
     if (strID.empty() && strText.empty())
     {
         return;
@@ -144,17 +161,17 @@ void mu::ui::window::CChatLogWindow::AddText(const type_string& strID, const typ
 
     if (m_vecFilters.empty())
     {
-        ProcessAddText(strID, strText, MsgType, ErrMsgType);
+        ProcessAddText(strID, strText, MsgType, ErrMsgType, links);
     }
     else
     {
         if (MsgType != TYPE_CHAT_MESSAGE)
         {
-            ProcessAddText(strID, strText, MsgType, ErrMsgType);
+            ProcessAddText(strID, strText, MsgType, ErrMsgType, links);
         }
         else if (CheckFilterText(strID) || CheckFilterText(strText))
         {
-            ProcessAddText(strID, strText, MsgType, ErrMsgType);
+            ProcessAddText(strID, strText, MsgType, ErrMsgType, links);
 
             if (g_pOption->IsWhisperSound())
             {
@@ -164,7 +181,74 @@ void mu::ui::window::CChatLogWindow::AddText(const type_string& strID, const typ
     }
 }
 
-void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType)
+namespace
+{
+    using ItemLinkList = std::vector<UI::Chat::ChatItemLink>;
+
+    // MU Moldova, items in the chat: a long line breaks before an item's name it would cut (or after it, when the
+    // line starts with it), so a name stays whole in one row.
+    void KeepItemLinksWhole(const std::wstring& text, const ItemLinkList& links, std::wstring& row1, std::wstring& row2)
+    {
+        if (links.empty() || row1.empty())
+            return;
+        std::vector<UI::Chat::ItemLinkAttach::Span> spans;
+        spans.reserve(links.size());
+        for (const UI::Chat::ChatItemLink& link : links)
+            spans.push_back({link.start, link.length});
+        const std::size_t split = UI::Chat::ItemLinkAttach::KeepLinksWhole(row1.size(), spans);
+        if (split == row1.size())
+            return;
+        row1 = text.substr(0, split);
+        row2 = text.substr(split);
+    }
+
+    // The links standing wholly in the row text[from, to), counted from the row's start.
+    ItemLinkList LinksBetween(const ItemLinkList& links, std::size_t from, std::size_t to)
+    {
+        ItemLinkList row;
+        for (const UI::Chat::ChatItemLink& link : links)
+        {
+            if (link.start < from || link.start + link.length > to)
+                continue;
+            row.push_back(link);
+            row.back().start -= from;
+        }
+        return row;
+    }
+}
+
+bool mu::ui::window::CChatLogWindow::AddRow(type_vector_msgs& msgs, const type_string& strID, const type_string& strRow,
+                                            MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType, const ItemLinkList& links)
+{
+    const auto addTo = [&](type_vector_msgs& to)
+    {
+        const auto pMsgText = new CMessageText;
+        if (!pMsgText->Create(strID, strRow, MsgType))
+        {
+            delete pMsgText;
+            return;
+        }
+        pMsgText->SetLinks(links);
+        to.push_back(pMsgText);
+    };
+
+    addTo(msgs);
+    addTo(m_vecAllMsgs);
+    if ((MsgType == TYPE_ERROR_MESSAGE) && (ErrMsgType != TYPE_ERROR_MESSAGE && ErrMsgType != TYPE_ALL_MESSAGE))
+    {
+        type_vector_msgs* pErrvecMsgs = GetMsgs(ErrMsgType);
+        if (pErrvecMsgs == nullptr)
+        {
+            assert(!"Error Chat");
+            return false;
+        }
+        addTo(*pErrvecMsgs);
+    }
+    return true;
+}
+
+void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
+                                                    const ItemLinkList& links)
 {
     m_bLinesDirty = true;
     type_vector_msgs* pvecMsgs = GetMsgs(MsgType);
@@ -174,138 +258,33 @@ void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, co
         return;
     }
 
+    const int rowScroll = (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType) ? 1 : 0;
     int nScrollLines = 0;
     if (strText.size() >= 20)
     {
         type_string	strText1, strText2;
         SeparateText(strID, strText, MsgType, strText1, strText2);
+        KeepItemLinksWhole(strText, links, strText1, strText2);
+        const std::size_t split = strText1.size();
+        // Only the first row carries the sender: the rest follows as its own row below, as in the all-messages list.
         if (!strText1.empty())
         {
-            // Only the first row: the rest follows as its own row below, as in the all-messages list.
-            const auto pMsgText = new CMessageText;
-            if (!pMsgText->Create(strID, strText1, MsgType))
-                delete pMsgText;
-            else
-            {
-                pvecMsgs->push_back(pMsgText);
-            }
-
-            const auto pAllMsgText = new CMessageText;
-            if (!pAllMsgText->Create(strID, strText1, MsgType))
-            {
-                delete pAllMsgText;
-            }
-            else
-            {
-                m_vecAllMsgs.push_back(pAllMsgText);
-            }
-
-            if ((MsgType == TYPE_ERROR_MESSAGE) && (ErrMsgType != TYPE_ERROR_MESSAGE && ErrMsgType != TYPE_ALL_MESSAGE))
-            {
-                type_vector_msgs* pErrvecMsgs = GetMsgs(ErrMsgType);
-                if (pErrvecMsgs == nullptr)
-                {
-                    assert(!"Error Chat");
-                    return;
-                }
-
-                const auto pErrMsgText = new CMessageText;
-                if (!pErrMsgText->Create(strID, strText1, MsgType))
-                    delete pErrMsgText;
-                else
-                {
-                    pErrvecMsgs->push_back(pErrMsgText);
-                }
-            }
-
-            if (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType)
-            {
-                nScrollLines++;
-            }
+            if (!AddRow(*pvecMsgs, strID, strText1, MsgType, ErrMsgType, LinksBetween(links, 0, split)))
+                return;
+            nScrollLines += rowScroll;
         }
         if (!strText2.empty())
         {
-            const auto pMsgText = new CMessageText;
-            if (!pMsgText->Create(L"", strText2, MsgType))
-                delete pMsgText;
-            else
-            {
-                pvecMsgs->push_back(pMsgText);
-            }
-
-            const auto pAllMsgText = new CMessageText;
-            if (!pAllMsgText->Create(L"", strText2, MsgType))
-                delete pAllMsgText;
-            else
-            {
-                m_vecAllMsgs.push_back(pAllMsgText);
-            }
-
-            if ((MsgType == TYPE_ERROR_MESSAGE) && (ErrMsgType != TYPE_ERROR_MESSAGE && ErrMsgType != TYPE_ALL_MESSAGE))
-            {
-                type_vector_msgs* pErrvecMsgs = GetMsgs(ErrMsgType);
-                if (pErrvecMsgs == nullptr)
-                {
-                    assert(!"Error chat 2");
-                    return;
-                }
-
-                const auto pErrMsgText = new CMessageText;
-                if (!pErrMsgText->Create(L"", strText2, MsgType))
-                    delete pErrMsgText;
-                else
-                {
-                    pErrvecMsgs->push_back(pErrMsgText);
-                }
-            }
-
-            if (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType)
-            {
-                nScrollLines++;
-            }
+            if (!AddRow(*pvecMsgs, L"", strText2, MsgType, ErrMsgType, LinksBetween(links, split, strText.size())))
+                return;
+            nScrollLines += rowScroll;
         }
     }
     else
     {
-        const auto pMsgText = new CMessageText;
-        if (!pMsgText->Create(strID, strText, MsgType))
-            delete pMsgText;
-        else
-        {
-            pvecMsgs->push_back(pMsgText);
-        }
-
-        const auto pAllMsgText = new CMessageText;
-        if (!pAllMsgText->Create(strID, strText, MsgType))
-            delete pAllMsgText;
-        else
-        {
-            m_vecAllMsgs.push_back(pAllMsgText);
-        }
-
-        if ((MsgType == TYPE_ERROR_MESSAGE)
-            && (ErrMsgType != TYPE_ERROR_MESSAGE && ErrMsgType != TYPE_ALL_MESSAGE))
-        {
-            type_vector_msgs* pErrvecMsgs = GetMsgs(ErrMsgType);
-            if (pErrvecMsgs == nullptr)
-            {
-                assert(!"Error chat 3");
-                return;
-            }
-
-            const auto pErrMsgText = new CMessageText;
-            if (!pErrMsgText->Create(strID, strText, MsgType))
-                delete pErrMsgText;
-            else
-            {
-                pErrvecMsgs->push_back(pErrMsgText);
-            }
-        }
-
-        if (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType)
-        {
-            nScrollLines++;
-        }
+        if (!AddRow(*pvecMsgs, strID, strText, MsgType, ErrMsgType, links))
+            return;
+        nScrollLines += rowScroll;
     }
 
     pvecMsgs = GetMsgs(GetCurrentMsgType());
@@ -534,8 +513,8 @@ bool mu::ui::window::CChatLogWindow::UpdateMouseEvent()
 {
     // Everything this used to do belongs to RmlUi now: the wheel, the scrollbar and the per-line
     // hit tests are #lines' (base.rcss's .scroll-pane), and the resize is a drag on #resize_handle
-    // (ResizeToPointer()).
-    return true;
+    // (ResizeToPointer()). Only a click on an item's name is the log's own, and the world must not take it.
+    return !TakeLinkClick();
 }
 
 void mu::ui::window::CChatLogWindow::ResizeToPointer(float pointerYPx)
@@ -585,6 +564,12 @@ void mu::ui::window::CChatLogWindow::ResizeToPointer(float pointerYPx)
 
 bool mu::ui::window::CChatLogWindow::UpdateKeyEvent()
 {
+    // Esc closes a shown item tooltip before anything else it would do.
+    if (m_PinnedLink && mu::ui::window::IsPress(VK_ESCAPE))
+    {
+        UnpinLink();
+        return false;
+    }
     return true;
 }
 
@@ -615,14 +600,18 @@ bool mu::ui::window::CChatLogWindow::Update()
 {
     BuildRmlUi();
     SyncRmlModel();
+    FollowItemLinks();
 
     return true;
 }
 
 bool mu::ui::window::CChatLogWindow::Render()
 {
-    // Nothing native left to draw -- RmlUi owns the fill, every message line and the scrollbar.
-    // Kept because CObject requires the override.
+    // RmlUi owns the fill, every message line and the scrollbar. Only an item's tooltip is native, drawn every
+    // frame while it shows (it hides itself in a frame it isn't drawn).
+    const std::optional<ItemLinkTip>& tip = m_PinnedLink ? m_PinnedLink : m_HoveredLink;
+    if (tip && tip->item)
+        ::RenderItemInfoAtPx(tip->anchor.x, tip->anchor.y, tip->item.get(), false);
     return true;
 }
 
@@ -630,12 +619,19 @@ void mu::ui::window::CChatLogWindow::BindRmlModel(Rml::DataModelConstructor& c, 
 {
     // Must re-run in full on every call, including on a theme switch -- same reason
     // CCharMakeWin::BindRmlModel() documents, so no guard here.
+    auto segment = c.RegisterStruct<ChatLogSegment>();
+    segment.RegisterMember("text", &ChatLogSegment::text);
+    segment.RegisterMember("link", &ChatLogSegment::link);
+    segment.RegisterMember("rarity", &ChatLogSegment::rarity);
+    c.RegisterArray<Rml::Vector<ChatLogSegment>>();
+
     auto line = c.RegisterStruct<ChatLogLineEntry>();
     line.RegisterMember("text", &ChatLogLineEntry::text);
     line.RegisterMember("kind", &ChatLogLineEntry::kind);
     line.RegisterMember("has_id", &ChatLogLineEntry::hasId);
     line.RegisterMember("faded", &ChatLogLineEntry::faded);
     line.RegisterMember("lead", &ChatLogLineEntry::lead);
+    line.RegisterMember("segs", &ChatLogLineEntry::segs);
     c.RegisterArray<Rml::Vector<ChatLogLineEntry>>();
 
     c.Bind("lines", &model.lines);
@@ -822,11 +818,32 @@ namespace
         return message.GetLineUtf8();
     }
 
+    // MU Moldova: a line showing items as its pieces, "ID : " and the text around each "[name]" plain.
+    void LinkSegments(const mu::ui::window::CMessageText& message, Rml::Vector<mu::ui::window::ChatLogSegment>& segs)
+    {
+        const std::vector<UI::Chat::ChatItemLink>& links = message.GetLinks();
+        std::vector<UI::Chat::ItemLinkAttach::Span> spans;
+        spans.reserve(links.size());
+        for (const UI::Chat::ChatItemLink& link : links)
+            spans.push_back({link.start, link.length});
+
+        const std::wstring lead = message.GetID().empty() ? std::wstring() : message.GetID() + L" : ";
+        segs.clear();
+        for (const UI::Chat::ItemLinkAttach::Segment& piece : UI::Chat::ItemLinkAttach::Segments(lead, message.GetText(), spans))
+        {
+            mu::ui::window::ChatLogSegment& seg = segs.emplace_back();
+            seg.text = StringUtils::WideToNarrow(piece.text.c_str());
+            seg.link = piece.link;
+            if (piece.link >= 0)
+                seg.rarity = UI::Chat::LinkRaritySlug(links[static_cast<std::size_t>(piece.link)].rarity);
+        }
+    }
+
     // Writes `wanted` into `slot` only when it differs; true when it did.
     bool StoreLineEntry(mu::ui::window::ChatLogLineEntry& slot, const mu::ui::window::ChatLogLineEntry& wanted)
     {
         if (slot.text == wanted.text && slot.kind == wanted.kind && slot.hasId == wanted.hasId
-            && slot.faded == wanted.faded && slot.lead == wanted.lead)
+            && slot.faded == wanted.faded && slot.lead == wanted.lead && slot.segs == wanted.segs)
             return false;
         slot = wanted;
         return true;
@@ -872,12 +889,22 @@ bool mu::ui::window::CChatLogWindow::RebuildLineModel()
             wanted.text.clear();
             wanted.kind.clear();
             wanted.hasId = false;
+            wanted.segs.clear();
         }
         else
         {
             wanted.kind = slug;
             wanted.hasId = !pMsgText->GetID().empty();
-            wanted.text = CachedLineUtf8(*pMsgText);
+            if (pMsgText->GetLinks().empty())
+            {
+                wanted.text = CachedLineUtf8(*pMsgText);
+                wanted.segs.clear();
+            }
+            else
+            {
+                wanted.text.clear();
+                LinkSegments(*pMsgText, wanted.segs);
+            }
         }
         changed |= StoreLineEntry(model.lines[index], wanted);
     }
@@ -995,9 +1022,120 @@ void mu::ui::window::CChatLogWindow::OnLinesTapped(float px, float py)
 {
     if (!UI::Mobile::IsPhoneView() || !m_bShowFrame || !UI::Mobile::ClickSource::IsFingerTap())
         return;
+
+    // A tooltip was up (this tap's press may have closed it already, FollowItemLinks()): the tap only closes it,
+    // or opens another item's.
+    const std::shared_ptr<ITEM> closed = m_PinnedLink ? m_PinnedLink->item : m_LinkClosedByPress;
+    UnpinLink();
+    std::optional<ItemLinkTip> link = LinkAt(px, py);
+    if (closed)
+    {
+        if (link && link->item != closed)
+            m_PinnedLink = std::move(link);
+        return;
+    }
+    if (link)
+    {
+        m_PinnedLink = std::move(link);
+        return;
+    }
+
     const int line = SenderLineAt(px, py);
     if (line >= 0)
         WhisperToSenderOf(line, true);
+}
+
+std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkAt(float px, float py)
+{
+    Rml::Element* lines = LinesElement();
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (lines == nullptr || document == nullptr || !document->IsVisible() || !IsVisible() || !m_bShowChatLog)
+        return std::nullopt;
+
+    // Only inside the scrolling well, so a line scrolled out of view is never pointed.
+    Rml::Vector2f wellPos;
+    Rml::Vector2f wellSize;
+    if (!UI::RmlBridge::DrawnBox(*lines, Rml::BoxArea::Padding, wellPos, wellSize) || px < wellPos.x
+        || px >= wellPos.x + wellSize.x || py < wellPos.y || py >= wellPos.y + wellSize.y)
+        return std::nullopt;
+
+    type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
+    if (pvecMsgs == nullptr)
+        return std::nullopt;
+    const ChatLogRmlModel& model = m_RmlView.GetModel();
+    const int count = std::min({lines->GetNumChildren(), static_cast<int>(model.lines.size()), static_cast<int>(pvecMsgs->size())});
+    for (int i = 0; i < count; ++i)
+    {
+        const ChatLogLineEntry& entry = model.lines[static_cast<std::size_t>(i)];
+        const CMessageText* message = (*pvecMsgs)[static_cast<std::size_t>(i)];
+        Rml::Element* row = lines->GetChild(i);
+        if (entry.faded || entry.segs.empty() || message == nullptr || row == nullptr)
+            continue;
+        if (auto tip = LinkInRow(*row, *message, px, py))
+            return tip;
+    }
+    return std::nullopt;
+}
+
+std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkInRow(
+    Rml::Element& row, const CMessageText& message, float px, float py) const
+{
+    const std::vector<UI::Chat::ChatItemLink>& links = message.GetLinks();
+    for (int c = 0; c < row.GetNumChildren(); ++c)
+    {
+        Rml::Element* piece = row.GetChild(c);
+        // The pieces carry their link's index (chat_log.rml); plain text and data-for's own hidden template don't.
+        const int link = piece != nullptr ? piece->GetAttribute<int>("link", -1) : -1;
+        if (link < 0 || link >= static_cast<int>(links.size()))
+            continue;
+        Rml::Vector2f offset;
+        Rml::Vector2f size;
+        if (!UI::RmlBridge::DrawnBox(*piece, Rml::BoxArea::Border, offset, size))
+            continue;
+        if (px >= offset.x && px < offset.x + size.x && py >= offset.y && py < offset.y + size.y)
+            return ItemLinkTip{links[static_cast<std::size_t>(link)].item, {offset.x + size.x / 2.f, offset.y}};
+    }
+    return std::nullopt;
+}
+
+bool mu::ui::window::CChatLogWindow::TakeLinkClick()
+{
+    // A phone opens a tooltip by a tap on the history (OnLinesTapped()); a closed chat lets clicks through.
+    if (UI::Mobile::IsPhoneView() || !mu::ui::window::IsPress(VK_LBUTTON) || !IsChatOpen())
+        return false;
+    std::optional<ItemLinkTip> link = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
+    if (!link)
+        return false;
+
+    m_bLinkPressTaken = true;
+    const bool same = m_PinnedLink && m_PinnedLink->item == link->item;
+    UnpinLink();
+    if (!same)
+        m_PinnedLink = std::move(link);
+    return true;
+}
+
+void mu::ui::window::CChatLogWindow::FollowItemLinks()
+{
+    const bool pressTaken = std::exchange(m_bLinkPressTaken, false);
+    if (mu::ui::window::IsPress(VK_LBUTTON) && !pressTaken)
+    {
+        m_LinkClosedByPress = m_PinnedLink ? m_PinnedLink->item : nullptr;
+        m_PinnedLink.reset();
+    }
+    if (m_PinnedLink && (!IsChatOpen() || !m_bShowChatLog))
+        UnpinLink();
+
+    // A phone has no pointer to hover with: its last tap stays where it was.
+    m_HoveredLink.reset();
+    if (!UI::Mobile::IsPhoneView())
+        m_HoveredLink = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
+}
+
+void mu::ui::window::CChatLogWindow::UnpinLink()
+{
+    m_PinnedLink.reset();
+    m_LinkClosedByPress.reset();
 }
 
 void mu::ui::window::CChatLogWindow::ApplyLogicalScroll()

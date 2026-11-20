@@ -26,6 +26,8 @@ struct Content
     // Marks it as junk or takes the mark off (pad and touch, a bag item: UI/Inventory/JunkSale), and its label.
     std::wstring junkLabel;
     std::function<void()> junk;
+    // MU Moldova: puts its name into the chat line (UI/Chat/ItemLinks.h), as Shift + click does on a PC.
+    std::function<void()> toChat;
     // Drops it on the ground, after asking.
     std::function<void()> drop;
 };
