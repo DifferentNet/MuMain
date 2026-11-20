@@ -144,12 +144,6 @@ namespace SEASON4A
         void CheckSocketSetOption();
         BOOL IsSocketSetOptionEnabled();
 
-        // RmlUi port (CMyInventory) of the former RenderToolTipForSocketSetOption -- same
-        // content resolution (m_EquipSetBonusList line-by-line), no drawing. Returns false (and
-        // leaves outModel untouched) when !IsSocketSetOptionEnabled(). CMyInventory::SyncRmlModel()
-        // is the only caller.
-        bool BuildSocketOptionTooltipModel(UI::Inventory::Tooltip::Model& outModel);
-
         void CreateSocketOptionText(wchar_t* pszOptionText, int iSeedID, int iSphereLv);
 
         __int64 CalcSocketBonusItemValue(const ITEM* pItem, __int64 iOrgGold);

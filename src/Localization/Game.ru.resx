@@ -3673,7 +3673,7 @@
     <comment>legacy_id=984</comment>
   </data>
   <data name="Set option" xml:space="preserve">
-    <value>Установить опцию</value>
+    <value>Бонус сета</value>
     <comment>legacy_id=989</comment>
   </data>
   <data name="My Friend" xml:space="preserve">
@@ -13590,6 +13590,9 @@
   </data>
   <data name="AdvStatsCombatPower" xml:space="preserve">
     <value>Боевая мощь: %ls</value>
+  </data>
+  <data name="InventoryCombatPower" xml:space="preserve">
+    <value>CP: %ls</value>
   </data>
   <data name="SetItemPieces" xml:space="preserve">
     <value>Предметы сета: собрано %d из %d</value>

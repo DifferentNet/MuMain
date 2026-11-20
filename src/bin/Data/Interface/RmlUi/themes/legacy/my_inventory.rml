@@ -108,17 +108,19 @@
 		<!-- The jewel bank (JewelBankWindow.h, key K) where the expanded inventory's button was. -->
 		<div id="btn_jewel_bank" class="inv-btn inv-btn-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
-		<!-- Set/Socket option header: one centred line with both labels at the same size (the native
+		<!-- Set option and Combat Power header: one centred line with both at the same size (the native
 		     client shrank each label into its own narrow box, so a long label came out smaller -- not
-		     reproduced). Hover areas stay the former native half-width split, as empty boxes. -->
+		     reproduced). The Combat Power stands where the socket option was (this server has no sockets)
+		     and shows once the server told it. Hover areas stay the former native half-width split, as
+		     empty boxes. -->
 		<div class="option-labels native-text counter-scaled" data-style-font-size="text_px + 'px'">
 			<span class="option-label" data-class-active="set_option_active">{{set_option_label}}</span>
-			<span class="option-label" data-class-active="socket_option_active">{{socket_option_label}}</span>
+			<span class="option-label option-label-cp" data-if="combat_power_known">{{combat_power_label}}</span>
 		</div>
-		<div id="set_option_label" class="option-hover option-hover-set"
+		<div id="set_option_label" class="option-hover option-hover-set" data-class-alone="!combat_power_known"
 		     data-event-mouseover="my_inventory_set_option_hover" data-event-mouseout="my_inventory_set_option_unhover"></div>
-		<div id="socket_option_label" class="option-hover option-hover-socket"
-		     data-event-mouseover="my_inventory_socket_option_hover" data-event-mouseout="my_inventory_socket_option_unhover"></div>
+		<div id="combat_power_label" class="option-hover option-hover-cp" data-if="combat_power_known"
+		     data-attr-data-hint="combat_power_hint"></div>
 	</div>
 </body>
 </rml>

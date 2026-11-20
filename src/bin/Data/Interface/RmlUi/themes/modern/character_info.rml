@@ -36,6 +36,8 @@
 		<div class="summary-fill"></div>
 		<span class="level-text">{{level_text}}</span>
 		<span class="levelup-point-text" data-class-hidden="!can_level_up">{{levelup_point_text}}</span>
+		<!-- The Combat Power the server counts, "-" until it answered (GameLogic/Character/HeroCombatPower.h). -->
+		<span class="cp-text">{{combat_power_text}}</span>
 		<span class="exp-text">{{exp_text}}</span>
 		<span class="point-probability-text">{{point_probability_text}}</span>
 		<span class="point-text">{{point_text}}</span>

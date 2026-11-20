@@ -28,15 +28,16 @@
 	left: 12px;
 	right: 13px;
 	top: 48px;
-	height: 71px;
+	height: 84px;
 	background-color: token(surface-panel);
 	border-radius: token(radius-sm)dp;
 	pointer-events: none;
 }
 
 /* 10px, one line each: the longest lines (a level-400 EXP pair, the fruit counts) fit the 165px
-   summary box; the level-up points get a line of their own (beside the level they overlapped). */
-.level-text, .levelup-point-text, .exp-text, .point-probability-text, .point-text {
+   summary box; the level-up points get a line of their own (beside the level they overlapped). The Combat Power
+   line under them moves the lines below it, the attribute rows and the advanced stats boxes 13 down. */
+.level-text, .levelup-point-text, .cp-text, .exp-text, .point-probability-text, .point-text {
 	display: block;
 	position: absolute;
 	left: 18px;
@@ -47,9 +48,10 @@
 }
 .level-text { top: 51px; color: token(accent-gold-hover); font-weight: bold; }
 .levelup-point-text { top: 63px; color: token(accent-gold-hover); font-weight: bold; }
-.exp-text { top: 76px; color: token(text-primary); }
-.point-probability-text { top: 89px; color: token(accent-steel-hover); }
-.point-text { top: 102px; color: token(accent-steel-hover); }
+.cp-text { top: 76px; color: rgb(204, 128, 204); }
+.exp-text { top: 89px; color: token(text-primary); }
+.point-probability-text { top: 102px; color: token(accent-steel-hover); }
+.point-text { top: 115px; color: token(accent-steel-hover); }
 
 .attr-textbox {
 	position: absolute;
@@ -60,11 +62,11 @@
 	border-radius: token(radius-sm)dp;
 	pointer-events: none;
 }
-.attr-textbox-str { top: 120px; }
-.attr-textbox-agi { top: 175px; }
-.attr-textbox-vit { top: 240px; }
-.attr-textbox-ene { top: 295px; }
-.attr-textbox-cmd { top: 350px; }
+.attr-textbox-str { top: 133px; }
+.attr-textbox-agi { top: 188px; }
+.attr-textbox-vit { top: 253px; }
+.attr-textbox-ene { top: 308px; }
+.attr-textbox-cmd { top: 363px; }
 
 .attr-label, .attr-value {
 	display: block;
@@ -77,18 +79,18 @@
 }
 .attr-label { left: 12px; width: 74px; color: token(text-secondary); }
 .attr-value { left: 86px; right: 18px; color: rgb(230, 230, 0); }
-.attr-label-str, .attr-value-str { top: 126px; }
-.attr-label-agi, .attr-value-agi { top: 181px; }
-.attr-label-vit, .attr-value-vit { top: 246px; }
-.attr-label-ene, .attr-value-ene { top: 301px; }
-.attr-label-cmd, .attr-value-cmd { top: 356px; }
+.attr-label-str, .attr-value-str { top: 139px; }
+.attr-label-agi, .attr-value-agi { top: 194px; }
+.attr-label-vit, .attr-value-vit { top: 259px; }
+.attr-label-ene, .attr-value-ene { top: 314px; }
+.attr-label-cmd, .attr-value-cmd { top: 369px; }
 
 .attr-lines { position: absolute; width: 160px; pointer-events: none; }
 .attr-lines span { display: block; line-height: 13px; font-size: 12px; font-family: "token(font-body)"; white-space: nowrap; }
-.attr-lines-str { left: 20px; top: 145px; }
-.attr-lines-agi { left: 20px; top: 199px; }
-.attr-lines-vit { left: 20px; top: 264px; }
-.attr-lines-ene { left: 18px; top: 319px; }
+.attr-lines-str { left: 20px; top: 158px; }
+.attr-lines-agi { left: 20px; top: 212px; }
+.attr-lines-vit { left: 20px; top: 277px; }
+.attr-lines-ene { left: 18px; top: 332px; }
 
 /* Flat "+" button -- a generic affordance, kept simple rather than a full forged-metal square
    (too small at 16x15 to carry that much chrome); recolored to this window's own metal/border
@@ -113,11 +115,11 @@
 .stat-btn:hover { color: token(accent-gold-hover); border-color: token(border-hover); }
 /* data-class-hidden: base.rcss's .hidden has this rule's specificity and loses to its display. */
 .stat-btn.hidden, .levelup-point-text.hidden, .attr-label.hidden, .attr-value.hidden { display: none; }
-.stat-btn-str { top: 122px; }
-.stat-btn-agi { top: 177px; }
-.stat-btn-vit { top: 242px; }
-.stat-btn-ene { top: 297px; }
-.stat-btn-cmd { top: 352px; }
+.stat-btn-str { top: 135px; }
+.stat-btn-agi { top: 190px; }
+.stat-btn-vit { top: 255px; }
+.stat-btn-ene { top: 310px; }
+.stat-btn-cmd { top: 365px; }
 
 /* Action row: base.rcss's .modern-icon-btn-px at its own default geometry (top:392/37x26) --
    same shared class CMyInventory's Exit/Repair/My Shop/Expand use, just this window's own left
@@ -196,8 +198,8 @@
 	border-radius: token(radius-sm)dp;
 	pointer-events: none;
 }
-.adv-fill-1 { top: 120px; height: 136px; }
-.adv-fill-2 { top: 260px; height: 123px; }
+.adv-fill-1 { top: 133px; height: 136px; }
+.adv-fill-2 { top: 273px; height: 110px; }
 .adv-title {
 	position: absolute;
 	left: 18px;
@@ -208,13 +210,13 @@
 	white-space: nowrap;
 	pointer-events: none;
 }
-.adv-title-1 { top: 124px; }
-.adv-title-2 { top: 264px; }
+.adv-title-1 { top: 137px; }
+.adv-title-2 { top: 277px; }
 .adv-lines { position: absolute; left: 18px; width: 160px; pointer-events: none; }
 .adv-lines span { display: block; line-height: 13px; font-size: 12px; font-family: "token(font-body)"; white-space: nowrap; color: token(text-primary); }
 .adv-lines span.boosted { color: rgb(100, 150, 255); }
-.adv-lines-1 { top: 141px; }
-.adv-lines-2 { top: 281px; }
+.adv-lines-1 { top: 154px; }
+.adv-lines-2 { top: 294px; }
 
 /* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the panel shrinks to the phone's height, so the
    window is 290 wide here with larger text, the "+" and the bottom buttons at finger size (legacy's layout,
@@ -223,7 +225,7 @@
 	#panel { width: 290px; }
 	#name { font-size: 15px; }
 	#classname, #servername { font-size: 13px; }
-	.level-text, .levelup-point-text, .exp-text, .point-probability-text, .point-text { font-size: 12px; }
+	.level-text, .levelup-point-text, .cp-text, .exp-text, .point-probability-text, .point-text { font-size: 12px; }
 	.levelup-point-text { top: 51px; left: auto; right: 20px; }
 	.attr-label, .attr-value { font-size: 14px; }
 	.attr-label { width: 110px; }
@@ -231,11 +233,11 @@
 	.attr-lines, .adv-lines { width: 250px; }
 	.attr-lines span { font-size: 13px; }
 	.stat-btn { width: 24px; height: 21px; line-height: 19px; font-size: 15px; }
-	.stat-btn-str { top: 120px; }
-	.stat-btn-agi { top: 175px; }
-	.stat-btn-vit { top: 240px; }
-	.stat-btn-ene { top: 295px; }
-	.stat-btn-cmd { top: 350px; }
+	.stat-btn-str { top: 133px; }
+	.stat-btn-agi { top: 188px; }
+	.stat-btn-vit { top: 253px; }
+	.stat-btn-ene { top: 308px; }
+	.stat-btn-cmd { top: 363px; }
 	#panel .chainfo-btn-exit, #panel .chainfo-btn-quest, #panel .chainfo-btn-pet, #panel .chainfo-btn-advstats,
 	#panel .chainfo-btn-titles { width: 44px; height: 32px; bottom: 7px; line-height: 32px; }
 	#panel .chainfo-btn-exit { left: 23px; }

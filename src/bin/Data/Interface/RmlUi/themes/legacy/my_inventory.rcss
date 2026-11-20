@@ -4,7 +4,9 @@
    icons/positions match CMyInventory::SetButtonInfo()'s former constants. */
 
 @spritesheet inv-bg-fill-sheet  { src: "../../../newui_msgbox_back.jpg";  inv-bg-fill:   0px 0px 190px 429px; }
-@spritesheet inv-bg-top-sheet   { src: "../../../newui_item_back04.tga";  inv-bg-top:    0px 0px 190px 64px;  }
+/* The top is the character window's (newui_chainfo_top: back04 with a name plate in the frame's manner where the
+   original had a flat black box behind the title, ghinzuro 2026-11-20). */
+@spritesheet inv-bg-top-sheet   { src: "../../../newui_chainfo_top.tga";  inv-bg-top:    0px 0px 190px 64px;  }
 @spritesheet inv-bg-left-sheet  { src: "../../../newui_item_back02-L.tga"; inv-bg-left:  0px 0px 21px 320px;  }
 @spritesheet inv-bg-right-sheet { src: "../../../newui_item_back02-R.tga"; inv-bg-right: 0px 0px 21px 320px;  }
 @spritesheet inv-bg-bottom-sheet { src: "../../../newui_item_back03.tga"; inv-bg-bottom: 0px 0px 190px 45px;  }
@@ -55,6 +57,14 @@
 	transform-origin: center top;
 	color: token(text-primary);
 	font-weight: bold;
+}
+/* The title's middle on the plate's (y 12-26, the character window's #name), at any panel scale. */
+#title .title-text {
+	position: absolute;
+	left: 0;
+	top: 7px;
+	transform-origin: center center;
+	transform: translateY(-50%) scale(calc(1 / var(--root-scale, 1)));
 }
 
 @spritesheet inv-money-sheet { src: "../../../newui_item_money.tga"; inv-money: 0px 0px 170px 26px; }
@@ -116,8 +126,9 @@
 
 /* Button centres (x + 18) less half the row. */
 
-/* Set/Socket option header labels -- one centred line at the native y + 25, gray by default,
-   yellow when that set/socket bonus is active (RenderSetOption()/RenderSocketOption()'s colors). */
+/* Set option and Combat Power header -- one centred line at the native y + 25: the set option gray by default,
+   yellow when the set bonus is active (RenderSetOption()'s colors); the Combat Power in the item tooltip's CP
+   colour. */
 .option-labels {
 	position: absolute;
 	left: 0;
@@ -130,6 +141,7 @@
 .option-label { color: #646464; }
 .option-label.active { color: #ffcc19; }
 .option-label + .option-label { margin-left: 0.3em; }
+.option-label.option-label-cp { color: rgb(204, 128, 204); }
 
 /* Hover areas -- each spans half of #panel's width, the original's hover split. */
 .option-hover {
@@ -141,7 +153,10 @@
 	cursor: default;
 }
 .option-hover-set { left: 0; }
-.option-hover-socket { left: 95px; }
+.option-hover-cp { left: 95px; }
+/* Alone on the line (the Combat Power not known yet), the set option is centred across the middle: its box spans
+   the line. */
+.option-hover-set.alone { width: 190px; }
 
 @spritesheet inv-slot-helper-sheet { src: "../../../newui_item_fairy.tga"; inv-slot-helper: 0px 0px 46px 46px; }
 @spritesheet inv-slot-helm-sheet { src: "../../../newui_item_cap.tga"; inv-slot-helm: 0px 0px 46px 46px; }
@@ -280,7 +295,8 @@
    CMyInventory::SyncBesideNeighbour()) it keeps the bag alone in 42 px cells, the gold above it and
    the buttons down its right side, so the two fit a phone's width. --bag-x is the bag's left edge;
    the panel's width follows from it. Equipped items in hidden slots are not drawn. */
-@spritesheet inv-phone-top-sheet    { src: "../../../newui_item_back04.tga"; inv-phone-top-l: 0px 0px 60px 64px; inv-phone-top-c: 90px 0px 10px 64px; inv-phone-top-r: 130px 0px 60px 64px; }
+/* The top as the character window's on a phone (newui_item_back01: no black box under the title). */
+@spritesheet inv-phone-top-sheet    { src: "../../../newui_item_back01.tga"; inv-phone-top-l: 0px 0px 60px 64px; inv-phone-top-c: 90px 0px 10px 64px; inv-phone-top-r: 130px 0px 60px 64px; }
 @spritesheet inv-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; inv-phone-bottom-l: 0px 0px 50px 45px; inv-phone-bottom-c: 90px 0px 10px 45px; inv-phone-bottom-r: 140px 0px 50px 45px; }
 
 @media (theme: mobile) {
@@ -320,7 +336,8 @@
 	.option-labels { left: 20px; top: 42px; width: 300px; }
 	.option-hover { top: 38px; width: 150px; height: 22px; }
 	.option-hover-set { left: 20px; }
-	.option-hover-socket { left: 170px; }
+	.option-hover-cp { left: 170px; }
+	.option-hover-set.alone { width: 300px; }
 	#option_tooltip_anchor { left: 170px; top: 62px; }
 
 	/* The gold above the bag, then the bag; the gold short of the sort button. */

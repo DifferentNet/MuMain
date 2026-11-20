@@ -51,8 +51,8 @@
 /* The jewel bank, where the expanded inventory's button was. */
 .inv-btn-jewel-bank { left: 138px; }
 
-/* Set/Socket option header labels -- gray/yellow match legacy since they're semantic
-   (active vs. inactive), not part of modern's chrome palette. */
+/* Set option and Combat Power header labels -- gray/yellow match legacy since they're semantic
+   (active vs. inactive), not part of modern's chrome palette; the Combat Power in the item tooltip's CP colour. */
 .option-label {
 	position: absolute;
 	top: 32px;
@@ -68,7 +68,7 @@
 }
 .option-label.active { color: #ffcc1a; }
 .option-label-set { left: 0; }
-.option-label-socket { left: 95px; }
+.option-label-cp { left: 95px; color: rgb(204, 128, 204); }
 
 /* Native equipment slots, item grid and item-option tooltip: where CMyInventory places them, in
    #panel's units. A slot's box is its hit and drop area; the grid's top-left is its first cell;
@@ -327,7 +327,7 @@
 
 	.option-label { top: 48px; width: 150px; height: 16px; font-size: 12px; }
 	.option-label-set { left: 20px; }
-	.option-label-socket { left: 170px; }
+	.option-label-cp { left: 170px; }
 	#option_tooltip_anchor { left: 170px; top: 64px; }
 
 	/* The bag from the top; the gold and a row of 60 x 48 buttons under the equipment. */

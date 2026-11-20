@@ -8,6 +8,7 @@
 #include "UI/HUD/KeyHint.h"
 #include "UI/Dialogs/MessageBox.h"
 #include "UI/Inventory/MyInventory.h"
+#include "GameLogic/Character/HeroCombatPower.h"
 
 namespace Rml { class ElementDocument; }
 
@@ -53,11 +54,12 @@ namespace mu::ui::window
         {
             CHAINFO_WINDOW_WIDTH = 190,
             CHAINFO_WINDOW_HEIGHT = 429,
-            HEIGHT_STRENGTH = 120,
-            HEIGHT_DEXTERITY = 175,
-            HEIGHT_VITALITY = 240,
-            HEIGHT_ENERGY = 295,
-            HEIGHT_CHARISMA = 350,
+            // The original's 120/175/240/295/350, 13 lower under the summary's Combat Power line.
+            HEIGHT_STRENGTH = 133,
+            HEIGHT_DEXTERITY = 188,
+            HEIGHT_VITALITY = 253,
+            HEIGHT_ENERGY = 308,
+            HEIGHT_CHARISMA = 363,
             BTN_STAT_COUNT = 5,
             STAT_STRENGTH = 0,
             STAT_DEXTERITY,
@@ -126,6 +128,8 @@ namespace mu::ui::window
         // The advanced stats tab: asks the server for the stats while it shows, and rebuilds its lines when an
         // answer came (GameLogic/Character/AdvancedStats.h).
         void BuildAdvancedStatsLines();
+        // The summary's Combat Power line, formatted again only when the value or the language changed.
+        void SyncCombatPowerText();
 
         struct CharacterInfoRmlModel
         {
@@ -143,6 +147,8 @@ namespace mu::ui::window
 
             Rml::String levelText;
             Rml::String levelUpPointText;
+            // "Combat Power: 12,345" under the level, "-" until the server answered (HeroCombatPower.h).
+            Rml::String combatPowerText;
             Rml::String expText;
             Rml::String pointProbabilityText;
             Rml::String pointText;
@@ -194,6 +200,11 @@ namespace mu::ui::window
         CManager* m_pNewUIMng;
         // The answer of the advanced stats store the tab's lines were built from (Store::Version()).
         unsigned m_advancedStatsVersion = ~0u;
+        // Asks the server for the Combat Power while the window is open and the gear or stats change; the value and
+        // the language the line was built from.
+        GameLogic::AdvancedStats::HeroCombatPowerWatch m_combatPowerWatch;
+        std::optional<long long> m_combatPowerTextValue;
+        int m_combatPowerTextLocale = -1;
         // The raw inputs the texts were built from (StatInputsChanged()), and the buffer the current
         // ones are gathered in; both keep their room, so the per-frame check allocates nothing.
         std::vector<unsigned char> m_statInputs;
