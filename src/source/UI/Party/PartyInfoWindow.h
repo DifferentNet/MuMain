@@ -116,7 +116,7 @@ namespace mu::ui::window
         {
             Rml::String name;
             Rml::String mapText, coordText, hpText;
-            float hpPercent = 0.f;
+            float hpFraction = 0.f; // 0..1, the health bar's share (the theme scales or sizes it)
             bool isLeader = false;
             bool showKick = false;
             int index = 0;
