@@ -30,6 +30,11 @@ downloads a model's files together instead of one after another (fetch-backend.j
 What the map of the trace run had already shown (its NPCs) opens nothing in the trace: take those from
 a second run on another map, or from MuWeb_TraceTake right after entering.
 
+Files added to map-files.txt by hand (what stand runs saw the game read one by one, which the trace and
+the spawns don't find) go at its end, from a line starting "# Added by hand". A new list keeps that block:
+--out's old lines from that line to the end come after the made ones, without a "<pack> <path>" line the
+made ones have already.
+
 The game opens some monsters' models only on their own maps (the Kalima ones); the trace of one map
 has their model's number but no file. Those are named by the number, Data/Monster/Monster<NN>.bmd, and
 get the textures the model names (model_textures.py).
@@ -67,6 +72,21 @@ MODEL_SUFFIX = ".bmd"
 # The monster models' numbers after Monster01.bmd's (MAX_MODEL_MONSTER, _define.h); past them are others
 # (the player's, which monsters dressed as players use, and the game has from the start).
 MONSTER_MODEL_COUNT = 400
+# The first line of map-files.txt's block of files added by hand (the module's docstring).
+HAND_BLOCK = "# Added by hand"
+
+
+def hand_block(path):
+    """The lines of the list at `path` from the first one starting with HAND_BLOCK to the end, without their
+    line ends; none where it has no such line or doesn't exist."""
+    if not os.path.isfile(path):
+        return []
+    with open(path, encoding="utf-8") as f:
+        lines = [line.rstrip("\r\n") for line in f]
+    for i, line in enumerate(lines):
+        if line.startswith(HAND_BLOCK):
+            return lines[i:]
+    return []
 
 
 def pack_of_map(number):
@@ -90,7 +110,8 @@ def main():
     parser.add_argument("--root", required=True, help="the web build's output folder")
     parser.add_argument("--spawns", required=True, help="'map,monster' lines from the server's database")
     parser.add_argument("--trace", required=True, help="{monster: [model, file, ...]} from a trace build")
-    parser.add_argument("--out", default=os.path.join(REPO_ROOT, "src", "web", "map-files.txt"))
+    parser.add_argument("--out", default=os.path.join(REPO_ROOT, "src", "web", "map-files.txt"),
+                        help="the map list; its block of files added by hand is kept (the module's docstring)")
     parser.add_argument("--models-out", default=os.path.join(REPO_ROOT, "src", "web", "model-files.txt"))
     parser.add_argument("--monsters-out", help="also write the PC client's monster preload list here "
                         "(src/bin/Data/Local/MapMonsters.txt)")
@@ -209,9 +230,12 @@ def main():
             if path not in everywhere:
                 lines.append(f"{pack} {path}")
                 total += 1
+    made = {line for line in lines if not line.startswith("#")}
+    kept = [line for line in hand_block(args.out) if line.strip() not in made]
+    lines.extend(kept)
     with open(args.out, "w", encoding="utf-8", newline="\n") as out:
         out.write("\n".join(lines) + "\n")
-    print(f"{args.out}: {total} lines for {len(packs)} packs")
+    print(f"{args.out}: {total} lines for {len(packs)} packs, and {len(kept)} lines of the block added by hand")
     lines = ["# Made by tools/web/make_map_files.py: the files the game reads right after a monster's or an",
              "# NPC's model. \"<model> <file>\"."]
     lines.extend(f"{model} {path}" for model, files in groups.items() for path in files)

@@ -1857,7 +1857,8 @@
 # still downloaded one by one there. The NPCs the server now puts in Lorencia and Devias, the boids, bugs and
 # smoke that World/MapInfra/MapManager.cpp loads from other folders, the maps' ambient and monster sounds
 # (Data/Sound/wNN), and the parts of the Swamp of Calmness monsters' models. make_map_files.py doesn't find
-# them: keep this block when the list is made again.
+# them; it keeps this block (from its first line to the end) when it makes the list again, without the
+# lines it finds itself.
 1 Data/NPC/mirazu.bmd
 1 Data/NPC/eyeglas_R.OZJ
 1 Data/NPC/mirazu01.OZJ
