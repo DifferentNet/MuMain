@@ -677,6 +677,18 @@ mu_add_test(
     LINK_LIBS MuClient
 )
 
+# The explosion sheets in src/bin/Data: fire in the frames FlipbookBlend.h counts, white past them.
+# MuClient brings turbojpeg.
+mu_add_test(
+    NAME explosion_sheets_tests
+    SOURCES
+        test_explosion_sheets.cpp
+    LINK_LIBS MuClient
+)
+target_compile_definitions(explosion_sheets_tests PRIVATE
+    MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
+)
+
 mu_add_test(
     NAME ancient_color_rules_tests
     SOURCES
