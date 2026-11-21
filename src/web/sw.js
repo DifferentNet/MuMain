@@ -217,6 +217,8 @@ function byteRange(blob, fileHeaders, range, fromDevice) {
   return new Response(blob.slice(start, end + 1), { status: 206, statusText: "Partial Content", headers });
 }
 
+// The note in the page's language, picked as index.html picks it (pageLang: ?lang=, the one the page
+// kept, the browser's languages), by its own few lines: English where they don't run.
 function offlinePage() {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -227,10 +229,36 @@ function offlinePage() {
          background: #0d0e12; color: #f2eee6; font: 16px/1.5 "Segoe UI", system-ui, sans-serif; text-align: center; }
   button { margin-top: 1rem; font: inherit; font-weight: 600; color: #1b1406; background: #e5b95c; border: 0;
            border-radius: 6px; padding: .5rem 1.75rem; cursor: pointer; }
-</style></head><body><div>
-<p>No connection to the internet. The game is played online.<br>
-Нет подключения к интернету. Игра работает только онлайн.</p>
-<button type="button" onclick="location.reload()">Try again · Повторить</button>
-</div></body></html>`;
+</style></head><body>
+<div lang="en"><p>No connection to the internet. The game is played online.</p>
+<button type="button" onclick="location.reload()">Try again</button></div>
+<div lang="ru" hidden><p>Нет подключения к интернету. Игра работает только онлайн.</p>
+<button type="button" onclick="location.reload()">Повторить</button></div>
+<div lang="ro" hidden><p>Nu ai conexiune la internet. Jocul merge doar online.</p>
+<button type="button" onclick="location.reload()">Încearcă din nou</button></div>
+<script>
+(function () {
+  var langs = ["en", "ru", "ro"], key = "mu-page-lang", lang = new URLSearchParams(location.search).get("lang");
+  if (langs.indexOf(lang) >= 0) {
+    try { localStorage.setItem(key, lang); } catch (e) {}
+  } else {
+    lang = null;
+    try { lang = localStorage.getItem(key); } catch (e) {}
+    if (langs.indexOf(lang) < 0) {
+      lang = "en";
+      var tags = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+      for (var i = 0; i < tags.length; i++) {
+        var primary = String(tags[i] || "").toLowerCase().split(/[-_;]/)[0];
+        if (primary === "mo") primary = "ro";
+        if (langs.indexOf(primary) >= 0) { lang = primary; break; }
+      }
+    }
+  }
+  document.documentElement.lang = lang;
+  var notes = document.querySelectorAll("body > div[lang]");
+  for (var j = 0; j < notes.length; j++) notes[j].hidden = notes[j].lang !== lang;
+})();
+</script>
+</body></html>`;
   return new Response(html, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

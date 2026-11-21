@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
 <!-- No "Translate this page?" offer over the game (translate="no" above too): the page's own lines are
-     in English and Russian already, and the game draws its texts itself. -->
+     in the player's language already (English, Russian or Romanian: pageLang), and the game draws its
+     texts itself. -->
 <meta name="google" content="notranslate">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
@@ -24,6 +25,39 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://skynet-mu.net/static/og-image.jpg">
 <script>
+  // The language of the page's own texts (TEXT, in the next script): English, Russian or Romanian, one of
+  // them, not two side by side (ghinzuro, 2026-11-21). The site's links carry it (?lang=ru or ?lang=ro,
+  // server/signup/app.py PLAY_HREF), and the page keeps it in the browser (PAGE_LANG_KEY): ?reset and a
+  // link without it come back to it, so does the installed app where it shares the browser's storage
+  // (Android). An iPhone's home-screen app has storage of its own: it starts without the choice. Without
+  // either, the first of the browser's languages the page has; English when none of them.
+  const PAGE_LANGS = ["en", "ru", "ro"];
+  const PAGE_LANG_KEY = "mu-page-lang";
+  function browserPageLang() {
+    const tags = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+    for (const tag of tags) {
+      const primary = String(tag || "").toLowerCase().split(/[-_;]/)[0];
+      if (primary === "ru") return "ru";
+      if (primary === "ro" || primary === "mo") return "ro";   // mo: Moldovan, an old code for Romanian
+      if (primary === "en") return "en";
+    }
+    return "en";
+  }
+  function pickPageLang() {
+    const asked = new URLSearchParams(location.search).get("lang");
+    if (PAGE_LANGS.includes(asked)) {
+      try { localStorage.setItem(PAGE_LANG_KEY, asked); } catch (e) { /* no storage: this visit only */ }
+      return asked;
+    }
+    let saved = null;
+    try { saved = localStorage.getItem(PAGE_LANG_KEY); } catch (e) { /* no storage */ }
+    return PAGE_LANGS.includes(saved) ? saved : browserPageLang();
+  }
+  const pageLang = pickPageLang();
+  document.documentElement.lang = pageLang;
+  // The HTML's texts are the English ones; until translatePage (the next script) puts them in the page's
+  // language they stay unseen (html.tx-wait): a slow phone draws the page before its last script runs.
+  if (pageLang !== "en") document.documentElement.classList.add("tx-wait");
   // What the game runs on, decided before the page is drawn, so nothing jumps: a phone, a tablet or a
   // computer. Phones and tablets are played with the fingers: they get the touch page (html.phone: the
   // game fills the screen in landscape, the footer opens from the menu button, the device's own
@@ -74,15 +108,11 @@
   #status[hidden] { display: none; }
   footer { height: 2.5rem; display: flex; gap: 1rem; align-items: center; padding: 0 1rem; border-top: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: .8125rem; }
   footer button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .15rem .6rem; cursor: pointer; white-space: nowrap; }
-  /* A footer button's label in full and short (setFooterLabel): on a PC window narrower than 1280 px the
-     two-language labels took two lines, and the footer spilled over the game (2026-11-19); there the
-     footer also drops its title and closes up, so it keeps one line down to 800 px. The phone's menu
-     panel is a column: full labels there. */
-  footer .label-short { display: none; }
+  /* A PC window narrower than 1280 px: the footer drops its title and closes up, so its buttons keep one
+     line down to 800 px; it spilled over the game there (2026-11-19). */
   @media (max-width: 1279px) {
     html:not(.phone) footer { gap: .5rem; }
-    html:not(.phone) footer > span, html:not(.phone) footer .label-full { display: none; }
-    html:not(.phone) footer .label-short { display: inline; }
+    html:not(.phone) footer > span { display: none; }
   }
   footer select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: .1rem .3rem; }
   footer label { white-space: nowrap; }
@@ -142,62 +172,323 @@
   /* Phones: the unseen field that brings up the phone's keyboard for the game's text fields
      (phoneKeyboard below). 16px, or an iPhone zooms in on it. */
   #keyboard { position: fixed; left: 0; top: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; pointer-events: none; caret-color: transparent; -webkit-user-select: text; user-select: text; }
+  html.tx-wait #status, html.tx-wait #play, html.tx-wait #install-hint, html.tx-wait #rotate, html.tx-wait footer { visibility: hidden; }
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
 <input id="keyboard" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" tabindex="-1" aria-hidden="true">
-<div id="status">Loading… · Загрузка…</div>
+<!-- The texts below are the English ones; data-tx (the text), data-tx-title (the tooltip) and data-tx-aria
+     (aria-label) name their TEXT entries, which show them in the page's language (translatePage). -->
+<div id="status" data-tx="loading">Loading…</div>
 <pre id="log" hidden></pre>
-<button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
+<button id="menu" type="button" aria-label="Menu" title="Menu" data-tx-aria="menu" data-tx-title="menu">⋮</button>
 <div id="play">
-  <button id="play-fullscreen" type="button">Play</button>
-  <button id="install" type="button" hidden>Install the game · Установить игру</button>
-  <button id="play-here" type="button">Stay in the browser · Остаться в браузере</button>
-  <div id="download-choice" role="group" aria-label="Game files">
-    <span>Game files · Файлы игры</span>
+  <button id="play-fullscreen" type="button" data-tx="play">Play</button>
+  <button id="install" type="button" hidden data-tx="installGame">Install the game</button>
+  <button id="play-here" type="button" data-tx="stayInBrowser">Stay in the browser</button>
+  <div id="download-choice" role="group" aria-label="Game files" data-tx-aria="gameFiles">
+    <span data-tx="gameFiles">Game files</span>
     <div>
-      <button type="button" data-full="0" aria-pressed="false">Lite · Лёгкая</button>
-      <button type="button" data-full="1" aria-pressed="false">Full · Полная</button>
+      <button type="button" data-full="0" aria-pressed="false" data-tx="lite">Lite</button>
+      <button type="button" data-full="1" aria-pressed="false" data-tx="full">Full</button>
     </div>
     <small></small>
   </div>
 </div>
-<div id="install-hint" role="dialog" aria-label="Install" hidden><p></p><button type="button">OK</button></div>
-<div id="rotate"><div><div id="rotate-icon"></div>Turn your phone sideways<br>Поверните телефон горизонтально</div></div>
+<div id="install-hint" role="dialog" aria-label="Install" data-tx-aria="install" hidden><p></p><button type="button" data-tx="ok">OK</button></div>
+<div id="rotate"><div><div id="rotate-icon"></div><span data-tx="rotate">Turn your phone sideways</span></div></div>
 <footer>
-  <span>MU Online in the browser</span>
-  <button id="toggle-log" type="button">Log</button>
-  <button id="copy-log" type="button" title="The log, the browser and the graphics card, for a bug report · Журнал, браузер и видеокарта для сообщения об ошибке"><span class="label-full">Copy log · Копировать журнал</span><span class="label-short">Копировать журнал</span></button>
-  <button id="fullscreen" type="button">Fullscreen</button>
-  <button id="install-menu" type="button" hidden>Install</button>
-  <button id="download-game" type="button" hidden><span class="label-full">Download the whole game · Скачать всю игру</span><span class="label-short">Скачать всю игру</span></button>
-  <button id="new-version" type="button" hidden title="A new version of the game came out while this page was open · Пока страница была открыта, вышла новая версия игры"><span class="label-full">New version: reload · Новая версия: обновить</span><span class="label-short">Новая версия: обновить</span></button>
-  <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
-  <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download">Screenshot</button>
-  <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
+  <span data-tx="inBrowser">MU Online in the browser</span>
+  <button id="toggle-log" type="button" data-tx="log">Log</button>
+  <button id="copy-log" type="button" title="The log, the browser and the graphics card, for a bug report" data-tx="copyLog" data-tx-title="copyLogTitle">Copy log</button>
+  <button id="fullscreen" type="button" data-tx="fullscreen">Fullscreen</button>
+  <button id="install-menu" type="button" hidden data-tx="install">Install</button>
+  <button id="download-game" type="button" hidden data-tx="downloadGame">Download the whole game</button>
+  <button id="new-version" type="button" hidden title="A new version of the game came out while this page was open" data-tx="newVersion" data-tx-title="newVersionTitle">New version: reload</button>
+  <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface" data-tx="view" data-tx-title="viewTitle">View</button>
+  <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download" data-tx="screenshot" data-tx-title="screenshotTitle">Screenshot</button>
+  <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off" data-tx-title="qualityTitle"><span data-tx="quality">Quality</span>
     <select id="quality">
-      <option value="high">High</option>
-      <option value="medium">Medium</option>
-      <option value="low">Low</option>
-      <option value="lowest">Lowest</option>
+      <option value="high" data-tx="qualityHigh">High</option>
+      <option value="medium" data-tx="qualityMedium">Medium</option>
+      <option value="low" data-tx="qualityLow">Low</option>
+      <option value="lowest" data-tx="qualityLowest">Lowest</option>
     </select>
   </label>
 </footer>
 <script>
+  // The page's own texts in English, Russian and Romanian; pageLang (the first script) picks the one shown.
+  // A text missing in ru or ro shows in English. A text with numbers or names in it is a function of them.
+  // Not here, and English: the log's lines and Copy log's report (they are for us), the tab's title and the
+  // head's lines for search engines and link previews. The Romanian pages name the game's own windows in
+  // English (Options → Interface), as the game shows them: it has no Romanian.
+  const TEXT = {
+    en: {
+      loading: "Loading…",
+      loadingGameData: "Loading game data…",
+      starting: "Starting the game…",
+      menu: "Menu",
+      play: "Play",
+      installGame: "Install the game",
+      stayInBrowser: "Stay in the browser",
+      playInBrowser: "Play in the browser",
+      gameFiles: "Game files",
+      lite: "Lite",
+      full: "Full",
+      liteNote: "Lite: files download as you play, the first visit to a place loads a little longer",
+      fullNote: "Full: the whole game now, about 800 MB, best on Wi-Fi",
+      install: "Install",
+      ok: "OK",
+      installApple: "Tap Share (the square with an arrow), then “Add to Home Screen”.",
+      installSamsung: "Open the menu ≡, then “Add page to” → “Home screen”.",
+      installFirefox: "Open the menu ⋮, then “Install” or “Add to Home screen”.",
+      installOther: "Open the browser's menu (⋮ or …), then “Install app” or “Add to Home screen”.",
+      rotate: "Turn your phone sideways",
+      inBrowser: "MU Online in the browser",
+      log: "Log",
+      copyLog: "Copy log",
+      copyLogTitle: "The log, the browser and the graphics card, for a bug report",
+      copied: "Copied",
+      notCopied: "Not copied",
+      fullscreen: "Fullscreen",
+      leaveFullscreen: "Leave fullscreen",
+      fullscreenRefused: (why) => `Fullscreen refused: ${why}`,
+      noPageFullscreen: "this browser has no fullscreen for pages",
+      downloadGame: "Download the whole game",
+      downloadGameTitle: (have, total) => `${have} of ${total} files on this device; maps you haven't entered yet ` +
+        "download when you enter them, or all at once with this button",
+      downloadingGame: (percent) => `Downloading · ${percent} %`,
+      downloadingGameTitle: (have, total, mb) => `${have} of ${total} files, ${mb} MB so far; tap to stop`,
+      gameDownloaded: "Game downloaded ✓",
+      gameDownloadedTitle: "The whole game is on this device",
+      newVersion: "New version: reload",
+      newVersionTitle: "A new version of the game came out while this page was open",
+      view: "View",
+      viewTitle: "The game's layout, as in its Options → Interface",
+      // The View button once the game runs (muView): Auto, PC or Phone; Auto says which layout it gives now.
+      viewChoice: (choice, phoneView) => "View: " + [phoneView ? "Auto (phone)" : "Auto (PC)", "PC", "Phone"][choice],
+      screenshot: "Screenshot",
+      screenshotTitle: "A picture of the game, saved as a download",
+      quality: "Quality",
+      qualityTitle: "How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off",
+      qualityHigh: "High",
+      qualityMedium: "Medium",
+      qualityLow: "Low",
+      qualityLowest: "Lowest",
+      leftGame: "You left the game.",
+      playAgain: "Play again",
+      crashTitle: "The game stopped because of an error.",
+      gpuLost: "The graphics device was lost (GPU reset or the browser freed it). Reload to continue.",
+      reload: "Reload",
+      resetReload: "Reset settings and reload",
+      updateIos: "Update iOS: Settings → General → Software Update (iOS 27 or later), then reload this page.",
+      appleNoFeatures: (features) => `This iPhone or iPad can't run the game yet. Missing WebGPU features: ${features}`,
+      appleNoGpu: "Safari gives this page no graphics (WebGPU).",
+      appleMissing: (what) => `This iPhone or iPad can't run the game yet: no ${what}.`,
+      browserMissing: (what) => `This browser can't run the game: no ${what}. Use a current Chrome or Edge.`,
+      noFeatures: (features) => "Your graphics card can't run the game in this browser yet.\n" +
+        `Missing WebGPU features: ${features}\n` +
+        "Update the graphics driver and Chrome or Edge, then reload this page.",
+      noAdapter: "The browser gives this page no graphics card (WebGPU). To fix it:\n" +
+        "1. Use Google Chrome or Microsoft Edge (not Yandex, Opera or Brave).\n" +
+        "2. Settings → System: turn on \"Use graphics acceleration when available\", restart the browser.\n" +
+        "3. Update the graphics driver (AMD Adrenalin, NVIDIA, Intel).\n" +
+        "4. If it still fails: open chrome://flags/#enable-unsafe-webgpu, set Enabled, restart the browser.\n" +
+        "Then reload this page. Still failing: send a screenshot of chrome://gpu.",
+      gpuAndBrowser: (gpu, browser) => `GPU: ${gpu} · Browser: ${browser}`,
+      slowNetwork: "Slow network, trying again",
+      downloadingGameData: "Downloading game data",
+      downloadingMap: "Downloading the map",
+      // `doing` (one of the two above, or slowNetwork) and the megabytes come so far, of `all` when known.
+      progress: (doing, mb) => `${doing}… ${mb} MB`,
+      progressOf: (doing, mb, all) => `${doing}… ${mb} of ${all} MB`,
+      mainJsRetry: (seconds) => `Main.js didn't load, trying again in ${seconds} s…`,
+      mainJsMissing: "Main.js didn't load: is the web build in this folder?",
+    },
+    ru: {
+      loading: "Загрузка…",
+      loadingGameData: "Загрузка данных игры…",
+      starting: "Запуск игры…",
+      menu: "Меню",
+      play: "Играть",
+      installGame: "Установить игру",
+      stayInBrowser: "Остаться в браузере",
+      playInBrowser: "Играть в браузере",
+      gameFiles: "Файлы игры",
+      lite: "Лёгкая",
+      full: "Полная",
+      liteNote: "Лёгкая: файлы качаются по ходу игры, первый заход в новое место чуть дольше",
+      fullNote: "Полная: вся игра сразу, около 800 МБ, лучше по Wi-Fi",
+      install: "Установить",
+      ok: "Понятно",
+      installApple: "Нажмите «Поделиться» (квадрат со стрелкой), затем «На экран „Домой“».",
+      installSamsung: "Откройте меню ≡, затем «Добавить страницу на» → «Главный экран».",
+      installFirefox: "Откройте меню ⋮, затем «Установить» или «Добавить на главный экран».",
+      installOther: "Откройте меню браузера (⋮ или …), затем «Установить приложение» или «Добавить на главный экран».",
+      rotate: "Поверните телефон горизонтально",
+      inBrowser: "MU Online в браузере",
+      log: "Журнал",
+      copyLog: "Копировать журнал",
+      copyLogTitle: "Журнал, браузер и видеокарта для сообщения об ошибке",
+      copied: "Скопировано",
+      notCopied: "Не скопировано",
+      fullscreen: "Во весь экран",
+      leaveFullscreen: "Выйти из полного экрана",
+      fullscreenRefused: (why) => `Браузер не открыл игру во весь экран: ${why}`,
+      noPageFullscreen: "в этом браузере нет полного экрана для страниц",
+      downloadGame: "Скачать всю игру",
+      downloadGameTitle: (have, total) => `На устройстве ${have} из ${total} файлов; карты, где вы ещё не были, ` +
+        "скачаются при входе на них или сразу все по этой кнопке",
+      downloadingGame: (percent) => `Скачивание · ${percent} %`,
+      downloadingGameTitle: (have, total, mb) => `${have} из ${total} файлов, скачано ${mb} МБ; нажмите, чтобы остановить`,
+      gameDownloaded: "Игра скачана ✓",
+      gameDownloadedTitle: "Вся игра на этом устройстве",
+      newVersion: "Новая версия: обновить",
+      newVersionTitle: "Пока страница была открыта, вышла новая версия игры",
+      view: "Вид",
+      viewTitle: "Раскладка игры, как в её Настройках → Интерфейс",
+      viewChoice: (choice, phoneView) => "Вид: " + [phoneView ? "авто (телефон)" : "авто (ПК)", "ПК", "телефон"][choice],
+      screenshot: "Снимок экрана",
+      screenshotTitle: "Снимок игры, сохраняется как загруженный файл",
+      quality: "Качество",
+      qualityTitle: "Сколько пикселей рисует игра, пока в Настройках разрешение «Авто»; «Минимальное» ещё и выключает эффекты и тени",
+      qualityHigh: "Высокое",
+      qualityMedium: "Среднее",
+      qualityLow: "Низкое",
+      qualityLowest: "Минимальное",
+      leftGame: "Вы вышли из игры.",
+      playAgain: "Играть снова",
+      crashTitle: "Игра остановилась из-за ошибки.",
+      gpuLost: "Связь с видеокартой потеряна (сброс драйвера, или браузер её освободил). Обновите страницу, чтобы продолжить.",
+      reload: "Обновить страницу",
+      resetReload: "Сбросить настройки и обновить",
+      updateIos: "Обновите iOS: Настройки → Основные → Обновление ПО (iOS 27 или новее), затем обновите страницу.",
+      appleNoFeatures: (features) => `Этот iPhone или iPad пока не может запустить игру. Не хватает функций WebGPU: ${features}`,
+      appleNoGpu: "Safari не даёт этой странице графику (WebGPU).",
+      appleMissing: (what) => `Этот iPhone или iPad пока не может запустить игру: нет ${what}.`,
+      browserMissing: (what) => `Этот браузер не может запустить игру: нет ${what}. Откройте её в свежем Chrome или Edge.`,
+      noFeatures: (features) => "Видеокарта пока не может запустить игру в этом браузере.\n" +
+        `Не хватает функций WebGPU: ${features}\n` +
+        "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу.",
+      noAdapter: "Браузер не даёт странице видеокарту (WebGPU). Как исправить:\n" +
+        "1. Откройте игру в Google Chrome или Microsoft Edge (не в Яндексе, Opera или Brave).\n" +
+        "2. Настройки → Система: включите «Использовать графическое ускорение», перезапустите браузер.\n" +
+        "3. Обновите драйвер видеокарты (AMD Adrenalin, NVIDIA, Intel).\n" +
+        "4. Если не помогло: откройте chrome://flags/#enable-unsafe-webgpu, выберите Enabled, перезапустите браузер.\n" +
+        "Затем обновите эту страницу. Если всё равно не работает, пришлите снимок страницы chrome://gpu.",
+      gpuAndBrowser: (gpu, browser) => `Видеокарта: ${gpu} · Браузер: ${browser}`,
+      slowNetwork: "Медленная сеть, пробую снова",
+      downloadingGameData: "Данные игры",
+      downloadingMap: "Карта",
+      progress: (doing, mb) => `${doing}: ${mb} МБ`,
+      progressOf: (doing, mb, all) => `${doing}: ${mb} из ${all} МБ`,
+      mainJsRetry: (seconds) => `Main.js не загрузился, ещё раз через ${seconds} с…`,
+      mainJsMissing: "Main.js не загрузился: есть ли в этой папке веб-сборка?",
+    },
+    ro: {
+      loading: "Se încarcă…",
+      loadingGameData: "Se încarcă datele jocului…",
+      starting: "Pornește jocul…",
+      menu: "Meniu",
+      play: "Joacă",
+      installGame: "Instalează jocul",
+      stayInBrowser: "Rămâi în browser",
+      playInBrowser: "Joacă în browser",
+      gameFiles: "Fișierele jocului",
+      lite: "Ușoară",
+      full: "Completă",
+      liteNote: "Ușoară: fișierele se descarcă în timp ce joci, prima intrare într-un loc nou durează puțin mai mult",
+      fullNote: "Completă: tot jocul acum, cam 800 MB, mai bine pe Wi-Fi",
+      install: "Instalează",
+      ok: "Am înțeles",
+      installApple: "Apasă „Partajează” (pătratul cu săgeată), apoi „Adaugă pe ecranul principal”.",
+      installSamsung: "Deschide meniul ≡, apoi „Adăugare pagină la” → „Ecran de pornire”.",
+      installFirefox: "Deschide meniul ⋮, apoi „Instalează” sau „Adaugă pe ecranul de pornire”.",
+      installOther: "Deschide meniul browserului (⋮ sau …), apoi „Instalează aplicația” sau „Adaugă pe ecranul de pornire”.",
+      rotate: "Întoarce telefonul pe orizontală",
+      inBrowser: "MU Online în browser",
+      log: "Jurnal",
+      copyLog: "Copiază jurnalul",
+      copyLogTitle: "Jurnalul, browserul și placa video, pentru un raport de eroare",
+      copied: "Copiat",
+      notCopied: "Nu s-a copiat",
+      fullscreen: "Ecran complet",
+      leaveFullscreen: "Ieși din ecran complet",
+      fullscreenRefused: (why) => `Browserul nu a deschis jocul pe tot ecranul: ${why}`,
+      noPageFullscreen: "acest browser nu are ecran complet pentru pagini",
+      downloadGame: "Descarcă tot jocul",
+      downloadGameTitle: (have, total) => `Pe acest dispozitiv sunt ${have} din ${total} fișiere; hărțile în care n-ai ` +
+        "intrat încă se descarcă atunci când intri în ele sau toate odată, cu acest buton",
+      downloadingGame: (percent) => `Se descarcă · ${percent} %`,
+      downloadingGameTitle: (have, total, mb) => `${have} din ${total} fișiere, ${mb} MB până acum; apasă ca să oprești`,
+      gameDownloaded: "Joc descărcat ✓",
+      gameDownloadedTitle: "Tot jocul e pe acest dispozitiv",
+      newVersion: "Versiune nouă: reîncarcă",
+      newVersionTitle: "A apărut o versiune nouă a jocului cât timp pagina era deschisă",
+      view: "Interfață",
+      viewTitle: "Interfața jocului, ca în Options → Interface",
+      viewChoice: (choice, phoneView) => "Interfață: " + [phoneView ? "auto (telefon)" : "auto (PC)", "PC", "telefon"][choice],
+      screenshot: "Captură de ecran",
+      screenshotTitle: "O imagine din joc, salvată ca descărcare",
+      quality: "Calitate",
+      qualityTitle: "Câți pixeli desenează jocul cât timp rezoluția din Options e Auto; Minimă oprește și efectele și umbrele",
+      qualityHigh: "Înaltă",
+      qualityMedium: "Medie",
+      qualityLow: "Joasă",
+      qualityLowest: "Minimă",
+      leftGame: "Ai ieșit din joc.",
+      playAgain: "Joacă din nou",
+      crashTitle: "Jocul s-a oprit din cauza unei erori.",
+      gpuLost: "Legătura cu placa video s-a pierdut (driverul s-a resetat sau browserul a eliberat-o). Reîncarcă pagina ca să continui.",
+      reload: "Reîncarcă pagina",
+      resetReload: "Resetează setările și reîncarcă",
+      updateIos: "Actualizează iOS: Configurări → General → Actualizare software (iOS 27 sau mai nou), apoi reîncarcă pagina.",
+      appleNoFeatures: (features) => `Acest iPhone sau iPad încă nu poate rula jocul. Lipsesc funcții WebGPU: ${features}`,
+      appleNoGpu: "Safari nu dă acestei pagini acces la grafică (WebGPU).",
+      appleMissing: (what) => `Acest iPhone sau iPad încă nu poate rula jocul: nu are ${what}.`,
+      browserMissing: (what) => `Acest browser nu poate rula jocul: nu are ${what}. Folosește un Chrome sau Edge recent.`,
+      noFeatures: (features) => "Placa video încă nu poate rula jocul în acest browser.\n" +
+        `Lipsesc funcții WebGPU: ${features}\n` +
+        "Actualizează driverul plăcii video și Chrome sau Edge, apoi reîncarcă pagina.",
+      noAdapter: "Browserul nu dă paginii acces la placa video (WebGPU). Ce poți face:\n" +
+        "1. Deschide jocul în Google Chrome sau Microsoft Edge (nu în Yandex, Opera sau Brave).\n" +
+        "2. Setări → Sistem: pornește „Folosește accelerarea grafică atunci când este disponibilă”, apoi repornește browserul.\n" +
+        "3. Actualizează driverul plăcii video (AMD Adrenalin, NVIDIA, Intel).\n" +
+        "4. Dacă tot nu merge: deschide chrome://flags/#enable-unsafe-webgpu, alege Enabled, repornește browserul.\n" +
+        "Apoi reîncarcă pagina. Tot nu merge? Trimite-ne o captură a paginii chrome://gpu.",
+      gpuAndBrowser: (gpu, browser) => `Placa video: ${gpu} · Browser: ${browser}`,
+      slowNetwork: "Rețea lentă, încerc din nou",
+      downloadingGameData: "Se descarcă datele jocului",
+      downloadingMap: "Se descarcă harta",
+      progress: (doing, mb) => `${doing}… ${mb} MB`,
+      progressOf: (doing, mb, all) => `${doing}… ${mb} din ${all} MB`,
+      mainJsRetry: (seconds) => `Main.js nu s-a încărcat, încerc din nou în ${seconds} s…`,
+      mainJsMissing: "Main.js nu s-a încărcat: e build-ul web în acest folder?",
+    },
+  };
+  // The text `key` in the page's language; a function's text with `args` filled in.
+  function tx(key, ...args) {
+    const own = TEXT[pageLang] || TEXT.en;
+    const text = key in own ? own[key] : TEXT.en[key];
+    if (text === undefined) return key;
+    return typeof text === "function" ? text(...args) : text;
+  }
+  // The static HTML's texts (data-tx, data-tx-title, data-tx-aria) in the page's language.
+  function translatePage() {
+    for (const element of document.querySelectorAll("[data-tx]")) element.textContent = tx(element.dataset.tx);
+    for (const element of document.querySelectorAll("[data-tx-title]")) element.title = tx(element.dataset.txTitle);
+    for (const element of document.querySelectorAll("[data-tx-aria]")) element.setAttribute("aria-label", tx(element.dataset.txAria));
+    document.documentElement.classList.remove("tx-wait");
+  }
+  translatePage();
   const statusEl = document.getElementById("status");
   const logEl = document.getElementById("log");
   const canvas = document.getElementById("canvas");
   const playCard = document.getElementById("play");
-  // A footer button's label: `full`, and `short` for a narrow PC window (the CSS's .label-short).
-  function setFooterLabel(button, full, short) {
-    const [fullSpan, shortSpan] = [full, short].map((text, i) => {
-      const span = document.createElement("span");
-      span.className = i ? "label-short" : "label-full";
-      span.textContent = text;
-      return span;
-    });
-    button.replaceChildren(fullSpan, shortSpan);
+  // A footer button's label (also on the ⋮ menu's buttons on a phone).
+  function setFooterLabel(button, text) {
+    button.textContent = text;
   }
   function setStatus(text, bad) {
     statusEl.hidden = !text;
@@ -445,11 +736,6 @@
   const RELEASE_RECORD = ".manifest.json";      // the release's record (scripts/publish-web.py)
   const RELEASE_RECORD_HEAD = "bytes=0-1023";   // its release and client come first, then a long file list
   const RELEASE_RECORD_DELAY_MS = 30000;        // read once the page's own downloads are under way
-  const COPY_LOG_LABELS = {
-    idle: ["Copy log · Копировать журнал", "Копировать журнал"],
-    copied: ["Copied · Скопировано", "Скопировано"],
-    failed: ["Not copied · Не скопировано", "Не скопировано"],
-  };
   let gpuName = "not checked yet";    // checkGpu()
   let releaseNote = null;             // readReleaseRecord()
   let releaseRead = null;
@@ -511,20 +797,20 @@
     report.push("", `The last ${recent.length} lines:`, ...texts(recent));
     return report.join("\n");
   }
-  // logReport() to the clipboard; label(pair) shows one of COPY_LOG_LABELS on the button.
+  // logReport() to the clipboard; label(text) shows "Copied" or "Not copied" on the button, then "Copy log".
   async function copyLog(button, label) {
     clearTimeout(copyNoteTimers.get(button));
     readReleaseRecord();
     const copied = await writeClipboard(logReport());
     if (!copied) appendLog("Log not copied: the browser refused its clipboard", true);
-    label(copied ? COPY_LOG_LABELS.copied : COPY_LOG_LABELS.failed);
-    copyNoteTimers.set(button, setTimeout(() => label(COPY_LOG_LABELS.idle), COPIED_NOTE_MS));
+    label(tx(copied ? "copied" : "notCopied"));
+    copyNoteTimers.set(button, setTimeout(() => label(tx("copyLog")), COPIED_NOTE_MS));
   }
   const copyLogButton = document.getElementById("copy-log");
   // On a phone the ⋮ menu stays open: the button's note is seen there.
   copyLogButton.addEventListener("pointerdown", readReleaseRecord);
   copyLogButton.onclick = () => {
-    copyLog(copyLogButton, ([full, short]) => setFooterLabel(copyLogButton, full, short));
+    copyLog(copyLogButton, (text) => setFooterLabel(copyLogButton, text));
     canvas.focus();
   };
   const displayMode = ["fullscreen", "standalone", "minimal-ui", "browser"]
@@ -542,11 +828,14 @@
   const fullscreenButton = document.getElementById("fullscreen");
   let fullscreenNoteTimer = 0;
   function inFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  // The reason given when the browser has no fullscreen for pages at all: the screen says it in the
+  // page's language (noPageFullscreen), the log in English.
+  const NO_PAGE_FULLSCREEN = "this browser has no fullscreen for pages";
   function fullscreenRefused(reason) {
-    const text = "Fullscreen refused: " + (reason && reason.message ? reason.message : String(reason));
-    appendLog(text, true);
+    const why = reason && reason.message ? reason.message : String(reason);
+    appendLog("Fullscreen refused: " + why, true);
     if (!statusEl.hidden && !fullscreenNoteTimer) return; // "Loading…" and the like stay
-    setStatus(text);
+    setStatus(tx("fullscreenRefused", why === NO_PAGE_FULLSCREEN ? tx("noPageFullscreen") : why));
     clearTimeout(fullscreenNoteTimer);
     fullscreenNoteTimer = setTimeout(() => { fullscreenNoteTimer = 0; setStatus(""); }, FULLSCREEN_NOTE_MS);
   }
@@ -554,7 +843,7 @@
     const target = phone ? document.documentElement : stage;
     const request = target.requestFullscreen || target.webkitRequestFullscreen;
     if (!request) {
-      fullscreenRefused("this browser has no fullscreen for pages");
+      fullscreenRefused(NO_PAGE_FULLSCREEN);
       return;
     }
     let result;
@@ -583,7 +872,7 @@
   }
   function showFullscreenState() {
     if (!inFullscreen() && navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock();
-    fullscreenButton.textContent = inFullscreen() ? "Leave fullscreen" : "Fullscreen";
+    fullscreenButton.textContent = tx(inFullscreen() ? "leaveFullscreen" : "fullscreen");
     appendLog(inFullscreen() ? "Fullscreen" : "Fullscreen left");
   }
   document.addEventListener("fullscreenchange", showFullscreenState);
@@ -604,19 +893,14 @@
   // frames (Core/Platform/web/WebPageView.h) and calls show() with the choice in force, which also
   // shows the item once the game runs.
   const viewButton = document.getElementById("view");
-  const VIEW_NAMES = [["Auto", "авто"], ["PC", "ПК"], ["Phone", "телефон"]];
+  const VIEW_CHOICES = 3;   // Auto, PC, Phone (viewChoice)
   window.muView = {
     request: null,
     choice: 0,
     show(choice, phoneView) {
-      if (!VIEW_NAMES[choice]) return;
+      if (!Number.isInteger(choice) || choice < 0 || choice >= VIEW_CHOICES) return;
       this.choice = choice;
-      let [en, ru] = VIEW_NAMES[choice];
-      if (choice === 0) {
-        en += phoneView ? " (phone)" : " (PC)";
-        ru += phoneView ? " (телефон)" : " (ПК)";
-      }
-      setFooterLabel(viewButton, "View: " + en + " · Вид: " + ru, "Вид: " + ru);
+      setFooterLabel(viewButton, tx("viewChoice", choice, phoneView));
       // A phone or tablet always plays the phone layout (UI/Mobile/InterfaceMode.cpp): no choice there.
       viewButton.hidden = phone;
       // The game runs: it can take a screenshot too (below).
@@ -624,7 +908,7 @@
     },
   };
   viewButton.onclick = () => {
-    window.muView.request = (window.muView.choice + 1) % VIEW_NAMES.length;
+    window.muView.request = (window.muView.choice + 1) % VIEW_CHOICES;
     footer.classList.remove("open");
     canvas.focus();
   };
@@ -672,18 +956,12 @@
   const FULL_DOWNLOAD = "mu-web/full-download";
   let applyDownloadChoice = null;   // starts or stops the download once the page can (downloadButton)
   const downloadChoice = document.getElementById("download-choice");
-  const DOWNLOAD_NOTES = [
-    "Lite: files download as you play, the first visit to a place loads a little longer · " +
-      "Лёгкая: файлы качаются по ходу игры, первый заход в новое место чуть дольше",
-    "Full: the whole game now, about 800 MB, best on Wi-Fi · " +
-      "Полная: вся игра сразу, около 800 МБ, лучше по Wi-Fi",
-  ];
   function showDownloadChoice() {
     const full = stored(FULL_DOWNLOAD) === "1";
     for (const button of downloadChoice.querySelectorAll("button")) {
       button.setAttribute("aria-pressed", String((button.dataset.full === "1") === full));
     }
-    downloadChoice.querySelector("small").textContent = DOWNLOAD_NOTES[full ? 1 : 0];
+    downloadChoice.querySelector("small").textContent = tx(full ? "fullNote" : "liteNote");
   }
   function chooseDownload(full) {
     store(FULL_DOWNLOAD, full ? "1" : "0");
@@ -708,7 +986,7 @@
     const playButton = document.getElementById("play-fullscreen");
     const stayButton = document.getElementById("play-here");
     playButton.hidden = !(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
-    if (playButton.hidden) stayButton.textContent = "Play in the browser · Играть в браузере";
+    if (playButton.hidden) stayButton.textContent = tx("playInBrowser");
     playCard.classList.add("show");
     playButton.onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
     stayButton.onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
@@ -730,20 +1008,10 @@
   }
   function installSteps() {
     const ua = navigator.userAgent;
-    if (appleMobile) {
-      return "Tap Share (the square with an arrow), then “Add to Home Screen”.\n" +
-             "Нажмите «Поделиться» (квадрат со стрелкой), затем «На экран „Домой“».";
-    }
-    if (/SamsungBrowser/.test(ua)) {
-      return "Open the menu ≡, then “Add page to” → “Home screen”.\n" +
-             "Откройте меню ≡, затем «Добавить страницу на» → «Главный экран».";
-    }
-    if (/Firefox/.test(ua)) {
-      return "Open the menu ⋮, then “Install” or “Add to Home screen”.\n" +
-             "Откройте меню ⋮, затем «Установить» или «Добавить на главный экран».";
-    }
-    return "Open the browser's menu (⋮ or …), then “Install app” or “Add to Home screen”.\n" +
-           "Откройте меню браузера (⋮ или …), затем «Установить приложение» или «Добавить на главный экран».";
+    if (appleMobile) return tx("installApple");
+    if (/SamsungBrowser/.test(ua)) return tx("installSamsung");
+    if (/Firefox/.test(ua)) return tx("installFirefox");
+    return tx("installOther");
   }
   async function install() {
     footer.classList.remove("open");
@@ -1695,35 +1963,32 @@
     gameEnded = true;
     document.title = "MU Skynet";
     statusEl.classList.remove("bad");
-    box.innerHTML = "<p></p><p></p>";
-    box.firstChild.textContent = "You left the game.";
-    box.lastChild.textContent = "Вы вышли из игры.";
+    box.innerHTML = "<p></p>";
+    box.firstChild.textContent = tx("leftGame");
     const again = document.createElement("button");
-    again.textContent = "Play again · Играть снова";
+    again.textContent = tx("playAgain");
     again.onclick = () => location.reload();
     styleStatusButton(again);
     box.appendChild(again);
     statusEl.appendChild(box);
   };
-  // The crash panel's first lines, [English, Russian].
-  const CRASH_TITLE = ["The game stopped because of an error.", "Игра остановилась из-за ошибки."];
-  function gameCrashed(error, title = CRASH_TITLE) {
+  // `title`: the crash panel's first line, in the page's language; the error itself as it came.
+  function gameCrashed(error, title = tx("crashTitle")) {
     const box = stopGame();
     if (!box) return;
     statusEl.classList.add("bad");
-    box.innerHTML = "<p></p><p></p><p></p>";
-    box.children[0].textContent = title[0];
-    box.children[1].textContent = title[1];
+    box.innerHTML = "<p></p><p></p>";
+    box.firstChild.textContent = title;
     box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
     const reload = document.createElement("button");
-    reload.textContent = "Reload · Обновить страницу";
+    reload.textContent = tx("reload");
     reload.onclick = () => location.reload();
     const reset = document.createElement("button");
-    reset.textContent = "Reset settings and reload · Сбросить настройки и обновить";
+    reset.textContent = tx("resetReload");
     reset.onclick = () => { location.search = "?reset"; };
     const copy = document.createElement("button");
-    copy.textContent = COPY_LOG_LABELS.idle[0];
-    copy.onclick = () => copyLog(copy, ([full]) => { copy.textContent = full; });
+    copy.textContent = tx("copyLog");
+    copy.onclick = () => copyLog(copy, (text) => { copy.textContent = text; });
     readReleaseRecord();   // read by the time the button is pressed
     for (const button of [reload, reset, copy]) {
       styleStatusButton(button);
@@ -1778,9 +2043,7 @@
       reloadWhenSeen();
       return;
     }
-    gameCrashed(String(info.message || "").slice(0, 200),
-                ["The graphics device was lost (GPU reset or the browser freed it). Reload to continue.",
-                 "Связь с видеокартой потеряна (сброс драйвера, или браузер её освободил). Обновите страницу, чтобы продолжить."]);
+    gameCrashed(String(info.message || "").slice(0, 200), tx("gpuLost"));
   }
   window.muTestDeviceLost = () => gpuDeviceLost({ reason: "unknown", message: "test" });
   // Leaving the page can keep it frozen in Chrome's back/forward cache with its sockets open, and
@@ -1867,9 +2130,7 @@
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
   // iPhones and iPads (appleMobile): the game runs from iOS 27 (JSPI came with Safari 27). Their Safari
   // says "iPhone OS 18_7" in the user agent even on iOS 27.2, so the messages below tell them to update
-  // iOS by what the browser lacks.
-  const UPDATE_IOS = ["Update iOS: Settings → General → Software Update (iOS 27 or later), then reload this page.",
-                      "Обновите iOS: Настройки → Основные → Обновление ПО (iOS 27 или новее), затем обновите страницу."];
+  // iOS by what the browser lacks (updateIos).
   // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
   // of them the game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an
   // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). float32-filterable is
@@ -1999,32 +2260,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
            (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
+    const features = missingFeatures.join(", ");
     const lines = appleMobile
-      ? [missingFeatures.length
-           ? "This iPhone or iPad can't run the game yet. Missing WebGPU features: " + missingFeatures.join(", ")
-           : "Safari gives this page no graphics (WebGPU).",
-         UPDATE_IOS[0], "", "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]]
-      : missingFeatures.length
-      ? ["Your graphics card can't run the game in this browser yet.",
-         "Missing WebGPU features: " + missingFeatures.join(", "),
-         "Update the graphics driver and Chrome or Edge, then reload this page.",
-         "",
-         "Видеокарта пока не может запустить игру в этом браузере.",
-         "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу."]
-      : ["The browser gives this page no graphics card (WebGPU). To fix it:",
-         "1. Use Google Chrome or Microsoft Edge (not Yandex, Opera or Brave).",
-         "2. Settings → System: turn on \"Use graphics acceleration when available\", restart the browser.",
-         "3. Update the graphics driver (AMD Adrenalin, NVIDIA, Intel).",
-         "4. If it still fails: open chrome://flags/#enable-unsafe-webgpu, set Enabled, restart the browser.",
-         "Then reload this page. Still failing: send a screenshot of chrome://gpu.",
-         "",
-         "Браузер не даёт странице видеокарту (WebGPU). Как исправить:",
-         "1. Откройте игру в Google Chrome или Microsoft Edge (не в Яндексе, Opera или Brave).",
-         "2. Настройки → Система: включите «Использовать графическое ускорение», перезапустите браузер.",
-         "3. Обновите драйвер видеокарты (AMD Adrenalin, NVIDIA, Intel).",
-         "4. Если не помогло: откройте chrome://flags/#enable-unsafe-webgpu, выберите Enabled, перезапустите браузер.",
-         "Затем обновите эту страницу. Если всё равно не работает, пришлите снимок страницы chrome://gpu."];
-    lines.push("", "GPU: " + gpu + " · Browser: " + browser);
+      ? [missingFeatures.length ? tx("appleNoFeatures", features) : tx("appleNoGpu"), tx("updateIos")]
+      : [missingFeatures.length ? tx("noFeatures", features) : tx("noAdapter")];
+    lines.push("", tx("gpuAndBrowser", gpu, browser));
     canvas.style.display = "none";
     statusEl.style.whiteSpace = "pre-line";
     setStatus(lines.join("\n"), true);
@@ -2032,12 +2272,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
 
   if (missing.length && appleMobile) {
     statusEl.style.whiteSpace = "pre-line";
-    setStatus(["This iPhone or iPad can't run the game yet: no " + missing.join(", ") + ".", UPDATE_IOS[0], "",
-               "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]].join("\n"), true);
+    setStatus([tx("appleMissing", missing.join(", ")), tx("updateIos")].join("\n"), true);
   } else if (missing.length) {
     statusEl.style.whiteSpace = "pre-line";
-    setStatus(["This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.",
-               "Этот браузер не может запустить игру. Откройте её в свежем Chrome или Edge."].join("\n"), true);
+    setStatus(tx("browserMissing", missing.join(", ")), true);
   } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
@@ -2211,11 +2449,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     // While a pack the player waits for (the startup pack, a map's) is read again after it stalled, the
     // status line says so, the download's progress too (downloadProgress). Gives what `again()` gives.
-    const SLOW_NETWORK = ["Slow network, trying again", "Медленная сеть, пробую снова"];
     let slowRetries = 0;
     async function slowRetry(again) {
       slowRetries++;
-      setStatus(SLOW_NETWORK.join(" · "));
+      setStatus(tx("slowNetwork"));
       try {
         return await again();
       } finally {
@@ -2223,9 +2460,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }
     }
     const stalledRead = (e) => String((e && e.message) || e).endsWith(PACK_STALLED);
-    // "Downloading <what>… X of Y MB · <whatRu>: X из Y МБ" as the bytes come (a total of 0: not known),
-    // "Slow network, trying again… X of Y MB · …" while a stalled pack is read again (slowRetry).
-    function downloadProgress(what, whatRu, total) {
+    // "Downloading <what>… X of Y MB" as the bytes come (a total of 0: not known; `doingKey` the TEXT of
+    // "Downloading <what>"), "Slow network, trying again… X of Y MB" while a stalled pack is read again
+    // (slowRetry).
+    function downloadProgress(doingKey, total) {
       let received = 0;
       let shownMb = -1;
       return (bytes) => {
@@ -2234,9 +2472,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (mb === shownMb) return;
         shownMb = mb;
         const shown = Math.min(mb, Math.round(total / 1e6)), all = Math.round(total / 1e6);
-        const [doing, doingRu] = slowRetries ? SLOW_NETWORK : [`Downloading ${what}`, whatRu];
-        setStatus(total ? `${doing}… ${shown} of ${all} MB · ${doingRu}: ${shown} из ${all} МБ`
-                        : `${doing}… ${mb} MB · ${doingRu}: ${mb} МБ`);
+        const doing = tx(slowRetries ? "slowNetwork" : doingKey);
+        setStatus(total ? tx("progressOf", doing, shown, all) : tx("progress", doing, mb));
       };
     }
 
@@ -2388,9 +2625,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         }
       }
       const toDownload = parts.reduce((sum, part, i) => sum + (kept[i] ? 0 : part.packed), 0);
-      const onNetworkBytes = downloadProgress("game data", "Данные игры", toDownload);
+      const onNetworkBytes = downloadProgress("downloadingGameData", toDownload);
       if (toDownload) onNetworkBytes(0);
-      else setStatus("Loading game data… · Загрузка данных игры…");
+      else setStatus(tx("loadingGameData"));
       const queue = taskQueue(PACK_DOWNLOADS);
       return parts.map((part, i) => {
         const label = `Startup pack part ${part.name}`;
@@ -2576,7 +2813,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       ahead.loading = readMapPack(world, (total) => {
         ahead.total = total;
         ahead.totalKnown = true;
-        if (ahead.claimed && !ahead.progress) ahead.progress = downloadProgress("the map", "Карта", total);
+        if (ahead.claimed && !ahead.progress) ahead.progress = downloadProgress("downloadingMap", total);
         return (bytes) => {
           ahead.received += bytes;
           if (ahead.progress) ahead.progress(bytes);
@@ -2607,7 +2844,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           ahead.claimed = true;
           // "X of Y MB" once the pack's size is known (its index read); the bytes so far count too.
           if (ahead.totalKnown) {
-            ahead.progress = downloadProgress("the map", "Карта", ahead.total);
+            ahead.progress = downloadProgress("downloadingMap", ahead.total);
             if (ahead.received) ahead.progress(ahead.received);
           }
           const started = performance.now();
@@ -2627,7 +2864,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         mapPacksLoading++;
         try {
           const read = () => withOneRetry(`Map pack ${world}`,
-            () => readMapPack(world, (total) => downloadProgress("the map", "Карта", total)), undefined, true);
+            () => readMapPack(world, (total) => downloadProgress("downloadingMap", total)), undefined, true);
           return await (aheadStalled ? slowRetry(read) : read());
         } finally {
           mapPacksLoading--;
@@ -2940,17 +3177,14 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         button.hidden = false;
         const running = downloadJob && downloadJob.full && !downloadJob.stopped;
         if (have >= total) {
-          setFooterLabel(button, "Game downloaded · Игра скачана ✓", "Игра скачана ✓");
-          button.title = "The whole game is on this device · Вся игра на этом устройстве";
+          setFooterLabel(button, tx("gameDownloaded"));
+          button.title = tx("gameDownloadedTitle");
         } else if (running) {
-          setFooterLabel(button, `Downloading · Скачивание · ${percent()} %`, `Скачивание · ${percent()} %`);
-          button.title = `${have} of ${total} files, ${Math.round(megabytes)} MB so far; tap to stop · ` +
-                         `${have} из ${total} файлов, скачано ${Math.round(megabytes)} МБ; нажмите, чтобы остановить`;
+          setFooterLabel(button, tx("downloadingGame", percent()));
+          button.title = tx("downloadingGameTitle", have, total, Math.round(megabytes));
         } else {
-          setFooterLabel(button, "Download the whole game · Скачать всю игру", "Скачать всю игру");
-          button.title = `${have} of ${total} files on this device; maps you haven't entered yet download when you ` +
-                         `enter them, or all at once with this button · На устройстве ${have} из ${total} файлов; ` +
-                         `карты, где вы ещё не были, скачаются при входе на них или сразу все по этой кнопке`;
+          setFooterLabel(button, tx("downloadGame"));
+          button.title = tx("downloadGameTitle", have, total);
         }
       };
       button.onclick = () => {
@@ -3047,7 +3281,12 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muCovered: coveredByRotate(),
       print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
       printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
-      setStatus: (text) => { if (packDone || text) setStatus(text); },
+      // Emscripten's own "Running..." and "Preparing... (n/m)" in the page's language; its rarer lines as
+      // they come.
+      setStatus: (text) => {
+        if (/^(Running|Preparing)\b/.test(text)) text = tx("starting");
+        if (packDone || text) setStatus(text);
+      },
       onRuntimeInitialized: () => {
         if (packDone) setStatus("");
         canvas.focus();
@@ -3134,10 +3373,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         script.remove();
         if (++mainJsTries <= 3) {
           const seconds = 2 ** mainJsTries;
-          setStatus(`Main.js didn't load, trying again in ${seconds} s… · Main.js не загрузился, ещё раз через ${seconds} с…`);
+          setStatus(tx("mainJsRetry", seconds));
           setTimeout(loadMainJs, 1000 * seconds);
         } else {
-          setStatus("Main.js didn't load: is the web build in this folder?", true);
+          setStatus(tx("mainJsMissing"), true);
         }
       };
       document.body.appendChild(script);
