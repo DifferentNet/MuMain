@@ -113,13 +113,17 @@
 	decorator: image(party-hpbar-back);
 	pointer-events: none;
 }
+/* The bar's inside (147 of its 151 px), shrunk from the left edge by a scaleX() bound to the member's
+   health (party_info.rml). A transform, unlike a width, does not lay the document out again on each
+   change; the fill's art is one column stretched over the box either way, so it looks the same. */
 .party-hp-fill {
 	position: absolute;
 	left: 2px;
 	top: 2px;
-	width: 0%;
-	max-width: 147px;
+	width: 147px;
 	height: 4px;
+	transform-origin: left center;
+	transform: scaleX(0);
 	decorator: image(party-hpbar-fill);
 	pointer-events: none;
 }

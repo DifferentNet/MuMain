@@ -7,6 +7,12 @@
 
 namespace UI::HUD::HeroGauges
 {
+// A share kept within 0..1 (NaN counts 0): the bars' fills scale by it and must not run past their track.
+[[nodiscard]] inline double UnitFraction(double value)
+{
+    return value > 0.0 ? (value < 1.0 ? value : 1.0) : 0.0;
+}
+
 // What the hero has now, and at most.
 struct Gauge
 {

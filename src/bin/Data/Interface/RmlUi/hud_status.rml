@@ -1,6 +1,7 @@
 <rml>
-	<!-- bound-geometry: the macro cooldown's bar is a gauge length, the fraction of the cooldown left,
-	     and the cooldown centres on the world the open docks leave uncovered -->
+	<!-- bound-geometry: the macro cooldown centres on the world the open docks leave uncovered. Its bar,
+	     the fraction of the cooldown left, is scaled instead (a bound scaleX(), not a width): a transform
+	     does not lay the document out again on each frame of the cooldown. -->
 <head>
 	<title>HUD Status</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -27,7 +28,7 @@
 			<div class="macro-shadow"></div>
 			<div class="macro-bar">
 				<div class="macro-track">
-					<div class="macro-fill" data-style-width="(macro_fraction * 100) + '%'"></div>
+					<div class="macro-fill" data-style-transform="'scaleX(' + macro_fraction + ')'"></div>
 				</div>
 			</div>
 		</div>

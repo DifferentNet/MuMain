@@ -1,8 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
+<!-- No "Translate this page?" offer over the game (translate="no" above too): the page's own lines are
+     in English and Russian already, and the game draws its texts itself. -->
+<meta name="google" content="notranslate">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Play MU Skynet in the Browser · MU Online Season 3 x500</title>
@@ -1020,12 +1023,12 @@
   // at least 1 s, doubling with each busy answer in a row up to 8 s, up to a quarter longer at random;
   // for up to 30 s in all, and then the busy answer is the answer. Once a download has given up, the
   // next ones get 3 s until the server answers something else (busyGaveUp). `init.signal` (optional)
-  // ends the wait too.
+  // ends the wait too. `onBusyWait(ms)` (optional) hears of each wait before it starts.
   const BUSY_FIRST_WAIT_MS = 1000, BUSY_MOST_WAIT_MS = 8000, BUSY_GIVE_UP_MS = 30000, BUSY_AFTER_GIVE_UP_MS = 3000;
   const BUSY_NOTE_MS = 10000;   // at most a line this often about downloads waiting for a busy server
   const busyAnswer = (response) => response.status === 429 || response.status === 503;
   let busyGaveUp = false, busyNotedAt = -BUSY_NOTE_MS, busySinceNote = 0;
-  async function fetchWhenFree(url, init) {
+  async function fetchWhenFree(url, init, onBusyWait) {
     const started = performance.now();
     const budget = busyGaveUp ? BUSY_AFTER_GIVE_UP_MS : BUSY_GIVE_UP_MS;
     const signal = init && init.signal;
@@ -1055,6 +1058,7 @@
         busyNotedAt = performance.now();
         busySinceNote = 0;
       }
+      if (onBusyWait) onBusyWait(wait);
       await new Promise((resume) => {
         if (signal && signal.aborted) return resume();
         const done = () => {
@@ -1858,18 +1862,18 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // they are, and a phone on a slow line waits for every megabyte (186 MB as they are, 120 packed,
     // 2026-10-29). A browser without DecompressionStream gets Main.wasm itself, and the game's files
     // one by one. Gives the response as it came over the network and whether its body is still packed
-    // (a server that marks the copy as gzip has the browser unpack it already).
-    async function fetchPacked(name, init, version) {
+    // (a server that marks the copy as gzip has the browser unpack it already). `onBusyWait` as fetchWhenFree's.
+    async function fetchPacked(name, init, version, onBusyWait) {
       const query = version ? `?v=${version}` : "";
       if (self.DecompressionStream) {
-        const response = await fetchWhenFree(name + ".gz" + query, init).catch(() => null);
+        const response = await fetchWhenFree(name + ".gz" + query, init, onBusyWait).catch(() => null);
         if (response && response.ok) {
           return { response, packed: !/gzip/i.test(response.headers.get("Content-Encoding") || "") };
         }
         // Still busy after the tries: the copy as it is would be refused too, and is bigger.
         if (response && busyAnswer(response)) throw new Error(`${name}.gz: HTTP ${response.status}`);
       }
-      const response = await fetchWhenFree(name + query, init);
+      const response = await fetchWhenFree(name + query, init, onBusyWait);
       if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
       return { response, packed: false };
     }
@@ -1880,7 +1884,74 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     function counted(body, onBytes) {
       return body.pipeThrough(new TransformStream({ transform(chunk, out) { onBytes(chunk.length); out.enqueue(chunk); } }));
     }
-    // "Downloading <what>… X of Y MB · <whatRu>: X из Y МБ" as the bytes come (a total of 0: not known).
+    // A pack's download that gets no byte for PACK_STALL_MS stops and fails as PACK_STALLED, which
+    // withOneRetry tries once more as any failed read: a phone's weak line can stop delivering without
+    // closing the connection, and the loading screen stayed up for good. A wait the busy server asked
+    // for (fetchWhenFree) doesn't count, nor a time the page itself was held (a hidden tab, a phone's
+    // frozen page): a check that comes late gives the download a fresh PACK_STALL_MS from then. A stall
+    // is looked at once more PACK_STALL_CONFIRM_MS later before the download stops: the main thread held
+    // up for a moment (wasm, shaders, a map's load) leaves the chunks that came meanwhile still queued.
+    // {signal, stalled, alive(), quiet(ms), stop()}: `signal` stops the download, where the watch does or
+    // the caller's own `callerSignal` (optional); alive() for each chunk that comes, quiet(ms) for a busy
+    // server's wait.
+    const PACK_STALL_MS = 20000;
+    const PACK_STALL_LATE_MS = 1000;
+    const PACK_STALL_CONFIRM_MS = 250;
+    const PACK_STALLED = `no byte for ${PACK_STALL_MS / 1000} s`;
+    function eitherSignal(first, second) {
+      if (AbortSignal.any) return AbortSignal.any([first, second]);
+      const either = new AbortController();
+      for (const signal of [first, second]) {
+        if (signal.aborted) either.abort(signal.reason);
+        else signal.addEventListener("abort", () => either.abort(signal.reason), { once: true });
+      }
+      return either.signal;
+    }
+    function stallWatch(callerSignal) {
+      const stall = new AbortController();
+      let lastAlive = performance.now(), due = lastAlive + PACK_STALL_MS, timer = 0, confirming = false;
+      const watch = {
+        signal: callerSignal ? eitherSignal(callerSignal, stall.signal) : stall.signal,
+        stalled: false,
+        alive: () => { lastAlive = Math.max(lastAlive, performance.now()); },
+        quiet: (ms) => { lastAlive = Math.max(lastAlive, performance.now() + ms); },
+        stop: () => clearTimeout(timer),
+      };
+      const check = () => {
+        const now = performance.now();
+        if (now - due > PACK_STALL_LATE_MS) lastAlive = Math.max(lastAlive, now);   // the page was held
+        if (now - lastAlive < PACK_STALL_MS) {
+          confirming = false;
+          due = lastAlive + PACK_STALL_MS;
+        } else if (!confirming) {
+          confirming = true;
+          due = now + PACK_STALL_CONFIRM_MS;
+        } else {
+          watch.stalled = true;
+          stall.abort(new Error(PACK_STALLED));
+          return;
+        }
+        timer = setTimeout(check, due - now);
+      };
+      timer = setTimeout(check, PACK_STALL_MS);
+      return watch;
+    }
+    // While a pack the player waits for (the startup pack, a map's) is read again after it stalled, the
+    // status line says so, the download's progress too (downloadProgress). Gives what `again()` gives.
+    const SLOW_NETWORK = ["Slow network, trying again", "Медленная сеть, пробую снова"];
+    let slowRetries = 0;
+    async function slowRetry(again) {
+      slowRetries++;
+      setStatus(SLOW_NETWORK.join(" · "));
+      try {
+        return await again();
+      } finally {
+        slowRetries--;
+      }
+    }
+    const stalledRead = (e) => String((e && e.message) || e).endsWith(PACK_STALLED);
+    // "Downloading <what>… X of Y MB · <whatRu>: X из Y МБ" as the bytes come (a total of 0: not known),
+    // "Slow network, trying again… X of Y MB · …" while a stalled pack is read again (slowRetry).
     function downloadProgress(what, whatRu, total) {
       let received = 0;
       let shownMb = -1;
@@ -1890,8 +1961,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (mb === shownMb) return;
         shownMb = mb;
         const shown = Math.min(mb, Math.round(total / 1e6)), all = Math.round(total / 1e6);
-        setStatus(total ? `Downloading ${what}… ${shown} of ${all} MB · ${whatRu}: ${shown} из ${all} МБ`
-                        : `Downloading ${what}… ${mb} MB · ${whatRu}: ${mb} МБ`);
+        const [doing, doingRu] = slowRetries ? SLOW_NETWORK : [`Downloading ${what}`, whatRu];
+        setStatus(total ? `${doing}… ${shown} of ${all} MB · ${doingRu}: ${shown} из ${all} МБ`
+                        : `${doing}… ${mb} MB · ${doingRu}: ${mb} МБ`);
       };
     }
 
@@ -1931,22 +2003,28 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
     // device (kept) or from the server, telling onNetworkBytes about each downloaded byte. `signal`
-    // (optional, an AbortSignal) stops it, the download too.
+    // (optional, an AbortSignal) stops it, the download too. A download that stalls fails as PACK_STALLED
+    // (stallWatch).
     async function readPack(label, entry, store, kept, onNetworkBytes, signal) {
-      let body, packed;
-      if (kept) {
-        body = kept.body;
-        packed = kept.headers.get("X-Mu-Packed") === "1";
-      } else {
-        const source = await fetchPacked(entry.name, signal ? { cache: "no-store", signal } : { cache: "no-store" });
-        body = counted(source.response.body, onNetworkBytes);
-        packed = source.packed;
+      if (kept) return readPackBody(entry, kept.body, kept.headers.get("X-Mu-Packed") === "1", signal);
+      const watch = stallWatch(signal);
+      try {
+        const source = await fetchPacked(entry.name, { cache: "no-store", signal: watch.signal }, undefined, watch.quiet);
+        let body = counted(source.response.body, (bytes) => { watch.alive(); onNetworkBytes(bytes); });
         if (store) {
           const [forGame, forStore] = body.tee();
           body = forGame;
-          keepPack(label, store, entry, forStore, packed);
+          keepPack(label, store, entry, forStore, source.packed);
         }
+        return await readPackBody(entry, body, source.packed, signal);
+      } catch (e) {
+        throw watch.stalled && !(signal && signal.aborted) ? new Error(`${entry.name}: ${PACK_STALLED}`) : e;
+      } finally {
+        watch.stop();
       }
+    }
+    // A pack's body (`packed`: still gzip) read into one array, as readPack.
+    async function readPackBody(entry, body, packed, signal) {
       const total = entry.files.reduce((sum, file) => sum + file[1], 0);
       const bytes = new Uint8Array(total);
       const reader = unpacked(body, packed).getReader();
@@ -1983,17 +2061,21 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // A pack read that failed is tried once more after PACK_RETRY_MS: a phone's line drops for a moment. Not
     // one that was stopped (its abort signal), nor a file the server doesn't have (HTTP 404), nor a read ahead
     // without storage. `read(attempt)` reads it, attempt 0 then 1 (a kept copy that didn't read is gone by then).
+    // `waited` (optional): the player waits for this pack, and the status line tells of a stalled one (slowRetry).
     const PACK_RETRY_MS = 2000;
-    async function withOneRetry(label, read, signal) {
+    async function withOneRetry(label, read, signal, waited) {
       try {
         return await read(0);
       } catch (e) {
         const message = String((e && e.message) || e);
         if ((signal && signal.aborted) || /HTTP 404\b/.test(message) || message === MAP_PACK_NO_STORE) throw e;
         console.warn(`${label}: ${e}; trying once more`);
-        await new Promise((resolve) => setTimeout(resolve, PACK_RETRY_MS));
-        if (signal && signal.aborted) throw signal.reason;
-        return read(1);
+        const again = async () => {
+          await new Promise((resolve) => setTimeout(resolve, PACK_RETRY_MS));
+          if (signal && signal.aborted) throw signal.reason;
+          return read(1);
+        };
+        return waited && stalledRead(e) ? slowRetry(again) : again();
       }
     }
     // Runs the tasks given to it at most `count` at a time, in the order given.
@@ -2040,7 +2122,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       return parts.map((part, i) => {
         const label = `Startup pack part ${part.name}`;
         const loading = queue(() => withOneRetry(label,
-          (attempt) => loadPack(label, part, store, attempt ? undefined : kept[i], onNetworkBytes)));
+          (attempt) => loadPack(label, part, store, attempt ? undefined : kept[i], onNetworkBytes), undefined, true));
         loading.catch(() => {});   // WebFileSystem.cpp says which part failed
         return loading;
       });
@@ -2141,13 +2223,22 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (local) {
           return await loadPack(`Map pack ${world}`, local.entry, store, local.kept, progress(local.entry.packed || 0), signal);
         }
-        const indexResponse = await fetchWhenFree(`packs/world${world}.json`, signal ? { cache: "no-cache", signal } : { cache: "no-cache" });
-        // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
-        if (!indexResponse.ok) {
-          if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
-          return null;
+        // The index stalls as a pack does (stallWatch).
+        const watch = stallWatch(signal);
+        let entry;
+        try {
+          const indexResponse = await fetchWhenFree(`packs/world${world}.json`, { cache: "no-cache", signal: watch.signal }, watch.quiet);
+          // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
+          if (!indexResponse.ok) {
+            if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
+            return null;
+          }
+          entry = Object.assign(await new Response(counted(indexResponse.body, watch.alive)).json(), { name: mapPackName(world) });
+        } catch (e) {
+          throw watch.stalled && !(signal && signal.aborted) ? new Error(`packs/world${world}.json: ${PACK_STALLED}`) : e;
+        } finally {
+          watch.stop();
         }
-        const entry = Object.assign(await indexResponse.json(), { name: mapPackName(world) });
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
         if (store) keepMapIndex(store, world, entry);
         return await loadPack(`Map pack ${world}`, entry, store, kept, progress(entry.packed || 0), signal);
@@ -2207,6 +2298,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     async function mapPack(world) {
       try {
         const ahead = mapPackAhead;
+        let aheadStalled = false;
         if (ahead && ahead.world === world) {
           clearTimeout(ahead.timer);
           mapPackAhead = null;
@@ -2224,6 +2316,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           } catch (e) {
             if (e && e.message === MAP_PACK_NO_STORE) console.log(`Map pack ${world}: no read ahead without storage`);
             else console.warn(`Map pack ${world} read ahead failed (${e}), reading it again`);
+            aheadStalled = stalledRead(e);
           }
         } else {
           dropMapPackAhead(`map ${world} entered`);
@@ -2231,8 +2324,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         // Counted across the retry's pause too: the late pack and the deferred parts wait for the map.
         mapPacksLoading++;
         try {
-          return await withOneRetry(`Map pack ${world}`,
-            () => readMapPack(world, (total) => downloadProgress("the map", "Карта", total)));
+          const read = () => withOneRetry(`Map pack ${world}`,
+            () => readMapPack(world, (total) => downloadProgress("the map", "Карта", total)), undefined, true);
+          return await (aheadStalled ? slowRetry(read) : read());
         } finally {
           mapPacksLoading--;
         }

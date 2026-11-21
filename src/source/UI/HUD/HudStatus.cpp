@@ -5,6 +5,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Events/MatchEvent.h"
 #include "I18N/All.h"
+#include "UI/HUD/HeroGauges.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlSyncField.h"
@@ -62,7 +63,9 @@ void StatusTexts::Sync(bool visible, bool worldOverlays)
     float macroFraction = 0.f;
     const bool macroVisible = MacroCooldownFraction(macroFraction);
     SyncField(binder, &HudStatusRmlModel::macroVisible, "macro_visible", macroVisible);
-    SyncField(binder, &HudStatusRmlModel::macroFraction, "macro_fraction", macroVisible ? macroFraction : 0.f);
+    // Within 0..1: the bar's fill scales by it (hud_status.rml).
+    const float macroShown = macroVisible ? static_cast<float>(UI::HUD::HeroGauges::UnitFraction(macroFraction)) : 0.f;
+    SyncField(binder, &HudStatusRmlModel::macroFraction, "macro_fraction", macroShown);
     if (macroVisible)
     {
         SyncField(binder, &HudStatusRmlModel::worldCentre, "world_centre", UncoveredWorldCentreOnHudBoard());

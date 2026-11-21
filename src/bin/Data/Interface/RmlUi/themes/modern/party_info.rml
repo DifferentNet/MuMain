@@ -1,5 +1,6 @@
 <rml>
-	<!-- bound-geometry: each member's health bar is a fraction -->
+	<!-- bound-geometry: each member's health bar is a fraction. It keeps a bound width, unlike the old
+	     theme's scaled one (party_info.rml): this theme's bar has rounded ends, which a scale would squash. -->
 <head>
 	<title>Party Info</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -43,7 +44,7 @@
 				<span class="party-map">{{m.map_text}}</span>
 				<span class="party-coord">{{m.coord_text}}</span>
 				<div class="party-hp-bar">
-					<div class="party-hp-fill" data-style-width="m.hp_percent + '%'"></div>
+					<div class="party-hp-fill" data-style-width="m.hp_fraction * 100 + '%'"></div>
 				</div>
 				<span class="party-hp-text">{{m.hp_text}}</span>
 				<div class="party-kick-btn" data-class-hidden="!m.show_kick"
