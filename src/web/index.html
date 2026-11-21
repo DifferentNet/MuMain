@@ -303,6 +303,7 @@
       // `doing` (one of the two above, or slowNetwork) and the megabytes come so far, of `all` when known.
       progress: (doing, mb) => `${doing}… ${mb} MB`,
       progressOf: (doing, mb, all) => `${doing}… ${mb} of ${all} MB`,
+      noRoom: "No room on this device to keep the game: it downloads again on each visit",
       mainJsRetry: (seconds) => `Main.js didn't load, trying again in ${seconds} s…`,
       mainJsMissing: "Main.js didn't load: is the web build in this folder?",
     },
@@ -383,6 +384,7 @@
       downloadingMap: "Карта",
       progress: (doing, mb) => `${doing}: ${mb} МБ`,
       progressOf: (doing, mb, all) => `${doing}: ${mb} из ${all} МБ`,
+      noRoom: "На устройстве нет места для игры: она скачивается заново при каждом заходе",
       mainJsRetry: (seconds) => `Main.js не загрузился, ещё раз через ${seconds} с…`,
       mainJsMissing: "Main.js не загрузился: есть ли в этой папке веб-сборка?",
     },
@@ -463,6 +465,7 @@
       downloadingMap: "Se descarcă harta",
       progress: (doing, mb) => `${doing}… ${mb} MB`,
       progressOf: (doing, mb, all) => `${doing}… ${mb} din ${all} MB`,
+      noRoom: "Nu e loc pe acest dispozitiv pentru joc: se descarcă din nou la fiecare vizită",
       mainJsRetry: (seconds) => `Main.js nu s-a încărcat, încerc din nou în ${seconds} s…`,
       mainJsMissing: "Main.js nu s-a încărcat: e build-ul web în acest folder?",
     },
@@ -1940,6 +1943,9 @@
     if (crashed) return null;
     crashed = true;
     removeEventListener("beforeunload", askBeforeLeaving);
+    // The phone's Back is the game's no more (Core/Platform/web/WebScreen.cpp MuWeb_ArmBack) but the browser's:
+    // the first one steps off the game's history entry, the next leaves the page.
+    if (window.Module && window.Module.muBack) window.Module.muBack.armed = false;
     playCard.classList.remove("show");
     shotButton.hidden = true;
     for (const socket of openSockets) {
@@ -2500,16 +2506,67 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     const packKey = (entry) => new URL(`${entry.name}?v=${entry.hash}`, location.href).href;
     const packPath = (key) => key.split("?")[0];
+    // The browser refused to store something for room: the device, or the share of it the browser gives
+    // this site, is full.
+    const isNoRoom = (e) => !!e && (e.name === "QuotaExceededError" || e.code === DOMException.QUOTA_EXCEEDED_ERR);
+    // Drops the copies `store` keeps of `key`'s file under other versions (earlier releases).
+    async function dropOtherVersions(store, key) {
+      for (const request of await store.keys()) {
+        if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
+      }
+    }
+    // Stores `response()` (a new Response at each call) under `key`, then drops the key's other versions.
+    // The old copy went only once the new one was in, so an update needed room for both, and a phone short
+    // of space kept nothing and downloaded the game again at every visit: refused for room, the other
+    // versions go first and it is stored once more. Refused again, it throws.
+    async function storeMakingRoom(store, key, response) {
+      try {
+        await store.put(key, response());
+      } catch (e) {
+        if (!isNoRoom(e)) throw e;
+        await dropOtherVersions(store, key);
+        await store.put(key, response());
+      }
+      await dropOtherVersions(store, key);
+    }
+    // The first file this visit the device had no room to keep, even without its old copies: a line in
+    // the log, and one on the screen for NO_ROOM_NOTE_MS once the loading lines are done (it looks every
+    // NO_ROOM_WAIT_MS). Nothing said why each visit downloaded the game again.
+    const NO_ROOM_NOTE_MS = 6000;
+    const NO_ROOM_WAIT_MS = 1000;
+    let noRoomSaid = false;
+    function sayNoRoom(label, e) {
+      if (noRoomSaid) return;
+      noRoomSaid = true;
+      appendLog(`No room on this device to keep the game's files (${label}: ${e}): they download again on each visit`, true);
+      const text = tx("noRoom");
+      const show = () => {
+        if (crashed) return;
+        if (!statusEl.hidden) {
+          setTimeout(show, NO_ROOM_WAIT_MS);
+          return;
+        }
+        setStatus(text);
+        setTimeout(() => { if (!crashed && statusEl.textContent === text) setStatus(""); }, NO_ROOM_NOTE_MS);
+      };
+      show();
+    }
+    function notKept(label, e) {
+      console.warn(`${label} not kept on this device: ${e}`);
+      if (isNoRoom(e)) sayNoRoom(label, e);
+    }
     // Keeps a pack's second stream (a tee of the download) for the next visit, and drops its older copies.
+    // The stream is read whole first, as the browser does before it stores one, so it can be stored again.
     function keepPack(label, store, entry, body, packed) {
       const key = packKey(entry);
-      store.put(key, new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } })).then(async () => {
-        for (const request of await store.keys()) {
-          if (request.url !== key && packPath(request.url) === packPath(key)) store.delete(request);
-        }
-        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-        console.log(`${label} kept on this device (${entry.hash})`);
-      }).catch((e) => console.warn(`${label} not kept on this device: ${e}`));
+      const headers = { "X-Mu-Packed": packed ? "1" : "0" };
+      new Response(body).blob()
+        .then((blob) => storeMakingRoom(store, key, () => new Response(blob, { headers })))
+        .then(() => {
+          if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+          console.log(`${label} kept on this device (${entry.hash})`);
+        })
+        .catch((e) => notKept(label, e));
     }
     // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
     // device (kept) or from the server, telling onNetworkBytes about each downloaded byte. `signal`
@@ -2727,11 +2784,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     const mapIndexKey = (world, hash) => new URL(`packs/world${world}.json?v=${hash}`, location.href).href;
     function keepMapIndex(store, world, entry) {
       const key = mapIndexKey(world, entry.hash);
-      return store.put(key, new Response(JSON.stringify(entry))).then(async () => {
-        for (const request of await store.keys()) {
-          if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
-        }
-      }).catch(() => {});
+      return storeMakingRoom(store, key, () => new Response(JSON.stringify(entry))).catch(() => {});
     }
     // The pack of `world` with the hash startup.json names and its index, where this device keeps
     // both: {entry, kept}; else null.
@@ -3049,11 +3102,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     async function keepMapPack(store, world, entry) {
       const source = await fetchPacked(entry.name, { cache: "no-store" });
       const key = packKey(entry);
-      await store.put(key, new Response(await source.response.arrayBuffer(),
-                                        { headers: { "X-Mu-Packed": source.packed ? "1" : "0" } }));
-      for (const request of await store.keys()) {
-        if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
-      }
+      const bytes = await source.response.arrayBuffer();
+      const headers = { "X-Mu-Packed": source.packed ? "1" : "0" };
+      await storeMakingRoom(store, key, () => new Response(bytes, { headers }));
       await keepMapIndex(store, world, entry);
       return entry.packed || 0;
     }
@@ -3113,6 +3164,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
             downloadButton.progress(null, null, size);
           } catch (e) {
             failed++;
+            if (isNoRoom(e)) sayNoRoom(`Map pack ${world}`, e);
           }
         })));
         appendLog(`Map packs: ${done} of ${maps.packs.length} kept on this device, ${Math.round(bytes / 1e6)} MB in ` +
