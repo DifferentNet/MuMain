@@ -26,9 +26,10 @@
 /* Where C++ draws the live 3D preview: the original's place and size. */
 .entry-item-box { position: absolute; left: -20px; top: 50px; width: 190px; height: 429px; pointer-events: none; }
 
-/* MU Moldova: the phone view (theme flag "mobile"): Register and Close 90 x 38. Places on the 190-unit
-   window; event_item_entry.rcss moves them right. */
+/* MU Moldova: the phone view (theme flag "mobile"): Register 140 x 38 (its bold Russian label,
+   "Зарегистрироваться", is about 126 units) and Close 90 x 38. Places on the 190-unit window;
+   event_item_entry.rcss moves them right. */
 @media (theme: mobile) {
-	.entry-btn:nth-child(1) { left: 50px; top: 205px; width: 90px; height: 38px; }
+	.entry-btn:nth-child(1) { left: 25px; top: 205px; width: 140px; height: 38px; }
 	.entry-btn:nth-child(2) { left: 50px; top: 356px; width: 90px; height: 38px; }
 }

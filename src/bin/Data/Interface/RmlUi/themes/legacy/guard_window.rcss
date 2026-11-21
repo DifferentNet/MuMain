@@ -159,3 +159,85 @@
 .gd-row { width: calc(148px * var(--root-scale)); height: calc(13px * var(--root-scale)); }
 #guard_siege_list { width: calc(160px * var(--root-scale)); height: calc(195px * var(--root-scale)); }
 .gd-label { width: calc(53px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide, so the heading, the
+   owner lines and the pages' lines the phone's readable text makes longer keep to it. The tabs are 34 tall
+   (newui_guild_tab04's stretch-safe middle, so the art is not stretched out of shape): Register 131 wide for
+   its long name (Russian "Зарегистрироваться", about 96 units), Status and List 70. The guild
+   lists widen to 270 units and move 9 down under the taller tabs, their rows 26 units tall for a finger
+   with the columns spread over the wider row; the declarations list ends above Abandon. Announce, Register
+   and Abandon are 90 / 120 / 160 x 38 so their names fit, drawn from newui_btn_empty_small's stretch-safe
+   middle; a locked one keeps its tint. The frame's ends keep their art while its plain middle repeats
+   (docked_panel_frame.rcss), and the parchment repeats. */
+@spritesheet gd-phone-tab-sheet
+{
+	src: "../../../newui_guild_tab04.tga";
+	gd-phone-tab-up: 0px 0px 56px 22px; gd-phone-tab-up-inner: 8px 4px 40px 14px;
+	gd-phone-tab-on: 0px 22px 56px 22px; gd-phone-tab-on-inner: 8px 26px 40px 14px;
+}
+@spritesheet gd-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	gd-phone-btn-up: 0px 0px 64px 29px; gd-phone-btn-up-inner: 10px 7px 44px 15px;
+	gd-phone-btn-over: 0px 29px 64px 29px; gd-phone-btn-over-inner: 10px 36px 44px 15px;
+	gd-phone-btn-down: 0px 58px 64px 29px; gd-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#heading { left: 0; width: calc(300px * var(--root-scale)); }
+	#owner_master, #owner_guild { width: calc(300px * var(--root-scale)); }
+	#panel .gd-line { width: calc(300px * var(--root-scale)); }
+
+	.gd-tab { top: 82px; width: 70px; height: 34px; decorator: ninepatch(gd-phone-tab-up, gd-phone-tab-up-inner); }
+	.gd-tab:nth-child(1) { left: 12px; }
+	.gd-tab:nth-child(2) { left: 84px; width: 131px; }
+	.gd-tab:nth-child(3) { left: 217px; }
+	.gd-tab.selected { decorator: ninepatch(gd-phone-tab-on, gd-phone-tab-on-inner); }
+	.gd-tab-label { width: calc(70px * var(--root-scale)); }
+	.gd-tab:nth-child(2) .gd-tab-label { width: calc(131px * var(--root-scale)); }
+
+	#panel .gd-btn { left: 105px; width: 90px; height: 38px; decorator: ninepatch(gd-phone-btn-up, gd-phone-btn-up-inner); }
+	#panel .gd-btn:hover { decorator: ninepatch(gd-phone-btn-over, gd-phone-btn-over-inner); }
+	#panel .gd-btn:active { decorator: ninepatch(gd-phone-btn-down, gd-phone-btn-down-inner); }
+	#panel .gd-btn.locked, #panel .gd-btn.locked:hover, #panel .gd-btn.locked:active {
+		decorator: ninepatch(gd-phone-btn-up, gd-phone-btn-up-inner);
+		image-color: #646464;
+	}
+	.gd-label { width: calc(90px * var(--root-scale)); }
+	#btn_proclaim { top: 124px; }
+	#panel #btn_register { left: 90px; top: 196px; width: 120px; }
+	#btn_register .gd-label { width: calc(120px * var(--root-scale)); }
+	#panel #btn_give_up { left: 70px; top: 346px; width: 160px; }
+	#btn_give_up .gd-label { width: calc(160px * var(--root-scale)); }
+
+	/* The guild lists. */
+	.t-edge-top, .t-edge-bottom { width: 270px; }
+	.gd-list-edge-left { top: 120px; height: 210px; }
+	.gd-list-edge-right { left: 275px; top: 120px; height: 210px; }
+	.gd-list-edge-top { top: 120px; }
+	.gd-list-edge-bottom { top: 321px; }
+	.with-footer .gd-list-edge-bottom { top: 326px; }
+	.gd-foot-edge-left { top: 354px; }
+	.gd-foot-edge-right { left: 275px; top: 354px; }
+	.gd-foot-edge-top { top: 354px; }
+	.gd-foot-edge-bottom { top: 371px; }
+	.gd-list-back { top: 137px; width: 270px; height: 193px; }
+	.gd-foot-back-label { top: 357px; width: 100px; }
+	.gd-foot-back-value { left: 114px; top: 357px; width: 170px; }
+	.score-label { left: 22px; top: 363px; }
+	.score-value { left: 122px; top: 363px; }
+
+	.gd-header { top: 126px; }
+	.hdr-mark-count { left: 96px; }
+	.hdr-state { left: 190px; }
+	.hdr-order { left: 230px; }
+	.hdr-side { left: 156px; }
+	.hdr-involvement { left: 210px; }
+	.gd-scroll-pane { top: 138px; }
+	#guard_declare_list { width: calc(268px * var(--root-scale)); height: calc(192px * var(--root-scale)); }
+	#guard_siege_list { width: calc(268px * var(--root-scale)); height: calc(195px * var(--root-scale)); }
+	.gd-row { width: calc(256px * var(--root-scale)); height: calc(26px * var(--root-scale)); }
+	.gd-row .gd-cell { top: 25%; }
+}
