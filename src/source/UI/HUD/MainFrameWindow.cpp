@@ -54,6 +54,7 @@
 #include "UI/Placement/WindowPlacement.h"
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -572,6 +573,7 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         SyncLiveHud(document);
         SyncItemSlots();
     }
+    SyncLiveHudStats(!phoneHud && UI::RmlBridge::ThemeHasLiveHud());
 
     SyncAlerts();
     SyncSkillList();
@@ -629,6 +631,26 @@ void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* documen
     inputs.hero = std::hash<std::wstring_view>{}(std::wstring_view(Hero->ID));
     inputs.level = UI::HUD::HeroGauges::ReadExperience().level + overrides.levelUps;
     m_LiveHud.Sync(document, inputs, now);
+}
+
+void mu::ui::window::CMainFrameWindow::SyncLiveHudStats(bool liveHud)
+{
+    // `off` and leaving the game scene put the requests back to 0: only a count above the last one answered is new.
+    const UI::HUD::LiveHudTest::Overrides& overrides = UI::HUD::LiveHudTest::Current();
+    const bool asked = overrides.statsRequests > m_iLiveHudStatsAnswered;
+    m_iLiveHudStatsAnswered = overrides.statsRequests;
+    const UI::HUD::LiveHudTest::StatsWindow& stats = m_LiveHud.Stats();
+    const bool log = overrides.statsLog && liveHud && stats.Filled() != m_iLiveHudStatsLogged;
+    m_iLiveHudStatsLogged = stats.Filled();
+    if (!asked && !log)
+        return;
+
+    const std::string line =
+        liveHud ? UI::HUD::LiveHudTest::FormatStats(stats.Latest()) : UI::HUD::LiveHudTest::NoLiveHudStats;
+    if (asked)
+        g_pSystemLogBox->AddText(std::wstring(line.begin(), line.end()).c_str(), mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    if (log)
+        MU_LOG_INFO(mu::log::Get("ui"), "{}", line);
 }
 
 void mu::ui::window::CMainFrameWindow::SyncGauges()
@@ -738,6 +760,9 @@ void mu::ui::window::CMainFrameWindow::SyncExperience()
     int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
     double fProgress = std::clamp(scaled - static_cast<double>(static_cast<long long>(scaled)), 0.0, 1.0);
     if (fRatio >= 1.0) { iExp = 9; fProgress = 1.0; }
+    // $hudtest expfill: the bar (and the live HUD's spark at its end) filled to a chosen point.
+    if (const std::optional<float> testFill = UI::HUD::LiveHudTest::Current().expFill)
+        fProgress = *testFill;
 
     SyncFloat(&MainFrameRmlModel::expFraction, "exp_fraction", static_cast<float>(fProgress));
     if (m_TextSources.expDigit.Changed(kNumberFormat, iExp))

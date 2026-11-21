@@ -202,6 +202,9 @@ namespace mu::ui::window
         void SyncSkillRow();
         // The live gems under a theme with LiveHud=1 (UI/HUD/LiveHud.h), from the hero's values or $hudtest's.
         void SyncLiveHud(Rml::ElementDocument* document);
+        // `$hudtest stats`: answers each new request with one system line and, with `stats on`, logs every full
+        // window; `liveHud` when the live HUD runs (else the line says there is none).
+        void SyncLiveHudStats(bool liveHud);
         void SyncItemSlots();
         void SyncSkillList();
         void SyncSkillTooltip();
@@ -249,6 +252,9 @@ namespace mu::ui::window
         bool m_bSyncedPhoneHud = false;
         UI::HUD::LiveHud m_LiveHud;
         UI::HUD::LiveHudTest::CooldownPlayback m_LiveHudTestCooldown;
+        // The `$hudtest stats` requests answered and the stats windows logged so far.
+        int m_iLiveHudStatsAnswered = 0;
+        int m_iLiveHudStatsLogged = 0;
         // The HUD, and its top-right button row on the same model: a document of its own so it
         // stacks under the windows docked over that corner while the bars stay over them
         // (RmlStackingOrder.cpp).

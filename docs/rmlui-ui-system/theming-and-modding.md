@@ -343,6 +343,98 @@ Tests: `tests/gamelogic/test_item_rarity.cpp`, `tests/ui/test_item_tooltip_layou
 the neutral tokens and the layout of skynet's rich tooltip (header bars, dividers, the Combat
 Power pill, the diamonds and the gold frame).
 
+## Live HUD
+
+`LiveHud=1` makes the PC HUD live (`UI::RmlBridge::ThemeHasLiveHud()`, `UI::HUD::LiveHud` in
+`UI/HUD/LiveHud.h`). `skynet` declares it; legacy and modern do not, so their HUD keeps its
+documents, classes and pixels. C++ reads the capability, never the theme's name.
+
+```ini
+[Capabilities]
+LiveHud=1
+```
+
+- **What it draws.** Life and mana gems filled with liquid: an eased level, a wave and slosh, a
+  crest, a glass highlight and a sheen; a damage ghost on the life gem; a halo that pulses while
+  life is low. SD and AG rings round the gems, the SD one with its own ghost. On the skill row a
+  dark sweep over the cooldown left, the whole seconds left, and a short gold flash when a slot is
+  ready again. On the EXP bar a spark breathes at the fill's end and flares on each EXP gain; a
+  level-up sends a band of light across the bar and the sheen over both gems.
+- **Markup.** `main_frame.rml` is shared by every theme. Its live parts carry `live-only`: per gem
+  `orb_hp_*` / `orb_mp_*` (`_box`, `_under`, `_halo`, `_body`, `_shine`), the rings
+  `orb_sd_arc` / `orb_ag_arc` and their `_cap`, per skill slot `.skill-sweep`, `.skill-ready` and
+  `.skill-cd-secs`, and `#exp_spark`. The meshes are `<additive-mesh>` elements; C++ builds their
+  geometry (`UI/HUD/LiveGaugeMesh.h`) at most every 1/30 s, and only when what they show changed.
+- **`main_frame_live.rcss` in every theme.** `main_frame.rml` links it, so a theme without a
+  `Base=` must ship one. Legacy's and modern's hold only `.live-only { display: none; }`. Skynet's
+  shows and places the parts, hides the old cooldown wipe on the skill row (the open grid keeps
+  it), animates `.skill-ready` on the slot's icon while C++ gives the slot the class `ready` (0.4 s:
+  a 2dp rim fading out and a faint additive fill), draws `.skill-cd-secs` smaller while C++ gives it
+  the class `long` (10 s and more), and hides the parts again under `@media (theme: mobile-hud)`.
+- **Phones.** A phone or tablet always plays legacy (`ResolveStartupThemeName`), and the phone's
+  HUD (`UI::Mobile::ReplacesPcHud()`) never syncs the live HUD, so there is none there.
+
+`[LiveHud]` in `theme.ini` tunes it (`UI::HUD::LiveGauge::LiveHudConfig`). Every key is optional;
+a missing value, or one out of range or not a number, keeps its default. Do not put a comment after
+a value: `ThemeInheritance` keeps it, and the value is refused. Sizes are dp, times seconds, angles
+degrees clockwise from 3 o'clock, colours `#rrggbb` (`SweepShade` `#rrggbbaa`).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `GemOutline` | `25,3 75,3 96,32 96,70 68,97 32,97 5,70 5,32` | the gem's convex outline, x,y in percent of its box |
+| `GemZoom` | 1.32 | the gem art's zoom about its centre (cuts off its corner curls), at least 1 |
+| `EmptyShade` | 0.30 | the art's brightness above the liquid |
+| `CrestTint` | 0.30 | the crest's brightness at the liquid's surface |
+| `WaveAmplitude` | 1.2 | the surface wave's height |
+| `WavePeriodLife`, `WavePeriodMana` | 2.6, 3.3 | the wave's period in each gem |
+| `ArcStart`, `ArcSweep`, `ArcWidth` | 140, 260, 3.5 | the SD and AG rings: start angle, extent, width |
+| `LowLife`, `PulsePeriod`, `PulseStrength` | 0.30, 1.2, 0.22 | the life gem pulses under this share of life |
+| `HaloLife`, `HaloMana`, `HaloPoison` | `#ff3418`, `#2870ff`, `#30c040` | the glow round each gem |
+| `SweepShade` | `#060403cc` | the skill cooldown's shade |
+| `RimOuter`, `RimInner`, `RimWidth` | `#5c462a`, `#0b0907`, 1.5 | the socket's rim round each gem; the colours also draw the rings' track |
+| `SparkRadius`, `SparkPeak` | 5, 0.6 | the EXP spark's size and its brightness (0..1) at the top of its breathing |
+| `SparkPeriod`, `SparkStill` | 1.4, 0.825 | the breathing's cycle; the brightness with HudEffects off, a share of `SparkPeak` |
+| `FlareTime`, `FlareRadius`, `FlareBrightness` | 0.8, 1.8, 1.5 | an EXP gain's flare: how long it takes to fall back, how many times as big and as bright the spark starts (at least 1) |
+| `BandTime`, `BandHalfWidth`, `BandStrength` | 0.9, 16, 0.8 | the level-up: the run of the band and the gems' sheen, the band's reach either side of its line, its brightness (0..1) |
+
+The colours drawn by the stylesheet are `hud-*` tokens in the theme's `tokens.ini`:
+`hud-orb-plate` (the plate over the strip's sockets round the bigger gems), `hud-sd-num` and
+`hud-ag-num` (the SD and AG numbers), `hud-ready-rim` (the ready flash's rim), `hud-ready-flash`
+(the colour the flash adds over the slot at its start) and `hud-cd-secs` (the seconds left).
+Legacy and modern have none.
+
+**HUD animation.** Options > Interface "HUD animation" (`config.ini` `[UI] HudEffects`, on by
+default) shows only while the live HUD runs. Off: the liquid lies flat, and there is no sheen, no
+low-life pulse, no ready flash and no level-up cue; the spark stands still at `SparkStill` without
+its flare. The levels still ease, the ghosts still drain, and the cooldowns still show their sweep
+and seconds.
+
+**`$hudtest`** (chat, `UI/HUD/LiveHudTest.h`) puts local values in place of the hero's, to show
+and screenshot every state; nothing goes to the server, and leaving the game scene clears it all.
+A form it does not know answers with the usage line.
+
+| Command | Effect |
+|---|---|
+| `$hudtest hp\|mp\|sd\|ag <0..1>` | a gauge's fill |
+| `$hudtest expfill <0..1>` | the EXP bar's fill (within its tenth), and with it the spark |
+| `$hudtest cd <seconds>` | every skill slot cooling down for that long, from now; `cd 0` stops it |
+| `$hudtest exp` | an EXP gain (the spark's flare) |
+| `$hudtest lvl` | a level-up (the band and the sheen) |
+| `$hudtest poison on\|off` | the hero poisoned or not (the life gem's poisoned art and halo) |
+| `$hudtest stats` | one system line with the live HUD's cost over the last full 5 s window |
+| `$hudtest stats on\|off` | that line also logged at every full window (`MU_LOG_INFO`: `MuError.log`, and the browser console on the web) |
+| `$hudtest off` | the hero's own values again, and the stats log off |
+
+The stats line reads `HUD stats over 5.0 s: 60.0 syncs/s, 30.0 ticks/s; mesh rebuilds per tick avg
+4.0, max 10; sync avg 42 us, max 900 us`: `LiveHud::Sync()` calls per second, the syncs past the
+1/30 s gate, the meshes rebuilt per such tick, and each sync's own time (binding left out). Before
+the first window is full it shows the running one; where no live HUD runs it says so.
+
+Tests: `tests/ui/test_live_gauge_math.cpp` and `tests/ui/test_live_gauge_mesh.cpp` (the motion,
+`[LiveHud]` parsing, `$hudtest`, the stats window and the meshes), and in
+`tests/ui/test_theme_reforge.cpp` the capability, skynet's `[LiveHud]` values and the live parts'
+layout in each theme and on the phone.
+
 ## Design tokens: `themes/<theme>/tokens.ini`
 
 Both built-in themes have a `tokens.ini` file (`[Tokens]` section, plain `name=value` lines) that a theme's own `.rcss`

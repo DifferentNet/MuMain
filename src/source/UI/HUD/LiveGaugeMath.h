@@ -55,7 +55,23 @@ struct LiveHudConfig
     std::uint32_t rimInner = 0xFF07090Bu; // #0b0907
     float rimWidth = 1.5f;
     // The crest's brightness at the liquid's surface (UI/HUD/LiveGaugeMesh.h, ShineInputs).
-    float crestTint = 0.45f;
+    float crestTint = 0.30f;
+    // The EXP spark: a glow sparkRadius big round the fill's end, sparkPeak bright at the top of its breathing (a
+    // sparkPeriod cycle, LiveGauge::SparkBreath()); with HudEffects off it stands still at sparkStill of its peak.
+    float sparkRadius = 5.f;
+    float sparkPeriod = 1.4f;
+    float sparkStill = 0.825f;
+    float sparkPeak = 0.6f;
+    // An EXP gain makes the spark flareRadius times as big and flareBrightness times as bright, both falling back
+    // over flareTime.
+    float flareTime = 0.8f;
+    float flareRadius = 1.8f;
+    float flareBrightness = 1.5f;
+    // The level-up: a band bandHalfWidth either side of its line and bandStrength bright crosses the EXP bar, and the
+    // sheen crosses both gems, in bandTime.
+    float bandTime = 0.9f;
+    float bandHalfWidth = 16.f;
+    float bandStrength = 0.8f;
 };
 
 // The section's values by lower-case key, as UI::RmlBridge::ThemeInheritance reads them; a missing or unreadable
@@ -164,6 +180,10 @@ private:
 // The whole seconds a skill slot shows of a cooldown with `remainingMs` left: rounded up, and none (0) once that would
 // read 1 or less, so a 5 s cooldown counts 5, 4, 3, 2 and its last second shows no number.
 [[nodiscard]] int CooldownSeconds(int remainingMs);
+
+// Whether CooldownSeconds()' number has two digits or more (10 and up): it is then drawn smaller, clear of the slot's
+// hotkey number (main_frame_live.rcss's .skill-cd-secs.long).
+[[nodiscard]] bool IsLongCooldownNumber(int seconds);
 
 // The EXP spark's breathing at time `t`: 0.65..1 on a sine of `period` seconds; 1 for a period of 0 or less.
 [[nodiscard]] float SparkBreath(double t, float period);

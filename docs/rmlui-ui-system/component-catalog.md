@@ -422,6 +422,17 @@ resolve normal/master skill atlas sprites and lit/grey states. Link `skill_icons
 The skill HUD, master tree and MU Helper provide references. Skill meaning and availability stay
 in the feature; this helper resolves presentation assets.
 
+## Live HUD
+
+**Feature driver:** [`UI::HUD::LiveHud`](../../src/source/UI/HUD/LiveHud.h), owned by
+`CMainFrameWindow`, fills `main_frame.rml`'s `live-only` `<additive-mesh>` elements (the gems, the
+SD and AG rings, the skill sweeps and the EXP spark) and sets the skill slots' `ready` class and
+seconds, under a theme that declares `LiveHud=1`. The geometry lives in `UI/HUD/LiveGaugeMesh.h`,
+the timing in `UI/HUD/LiveGaugeMath.h`. Every theme ships `main_frame_live.rcss`; a theme without
+the capability hides `.live-only` there. It is not a general mesh component: see
+[Theming & Modding](theming-and-modding.md#live-hud) for the capability, the `[LiveHud]` keys,
+the `hud-*` tokens, the HUD animation option and `$hudtest`. Phones never show it.
+
 ## Sprite digits
 
 **Domain helper:** [`DigitCells()`](../../src/source/UI/RmlBridge/RmlDigitCells.h) resolves a

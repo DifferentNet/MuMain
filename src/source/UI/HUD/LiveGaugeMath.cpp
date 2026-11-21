@@ -38,6 +38,8 @@ constexpr float HaloPulseHigh = 0.60f;
 constexpr int MillisecondsPerSecond = 1000;
 // A cooldown's last whole second shows no number.
 constexpr int FirstHiddenSecond = 1;
+// From two digits on, the number is drawn smaller.
+constexpr int FirstLongNumber = 10;
 
 constexpr float BreathLow = 0.65f;
 constexpr float BreathHigh = 1.f;
@@ -205,6 +207,17 @@ LiveHudConfig ReadLiveHudConfig(const std::map<std::string, std::string>& sectio
     ReadColour(section, "riminner", config.rimInner);
     ReadFloat(section, "rimwidth", 0.f, NoLimit, config.rimWidth);
     ReadFloat(section, "cresttint", 0.f, 1.f, config.crestTint);
+    ReadFloat(section, "sparkradius", 0.f, NoLimit, config.sparkRadius);
+    ReadFloat(section, "sparkperiod", 0.01f, NoLimit, config.sparkPeriod);
+    ReadFloat(section, "sparkstill", 0.f, 1.f, config.sparkStill);
+    ReadFloat(section, "sparkpeak", 0.f, 1.f, config.sparkPeak);
+    ReadFloat(section, "flaretime", 0.01f, NoLimit, config.flareTime);
+    // A flare is never smaller or dimmer than the spark.
+    ReadFloat(section, "flareradius", 1.f, NoLimit, config.flareRadius);
+    ReadFloat(section, "flarebrightness", 1.f, NoLimit, config.flareBrightness);
+    ReadFloat(section, "bandtime", 0.01f, NoLimit, config.bandTime);
+    ReadFloat(section, "bandhalfwidth", 0.f, NoLimit, config.bandHalfWidth);
+    ReadFloat(section, "bandstrength", 0.f, 1.f, config.bandStrength);
     return config;
 }
 
@@ -343,6 +356,11 @@ int CooldownSeconds(int remainingMs)
         return 0;
     const int seconds = remainingMs / MillisecondsPerSecond + (remainingMs % MillisecondsPerSecond != 0 ? 1 : 0);
     return seconds > FirstHiddenSecond ? seconds : 0;
+}
+
+bool IsLongCooldownNumber(int seconds)
+{
+    return seconds >= FirstLongNumber;
 }
 
 float SparkBreath(double t, float period)

@@ -2,6 +2,7 @@
 
 #include "UI/HUD/LiveGaugeMath.h"
 #include "UI/HUD/LiveGaugeMesh.h"
+#include "UI/HUD/LiveHudTest.h"
 
 #include <array>
 #include <cstddef>
@@ -78,6 +79,11 @@ public:
     // Forgets the document and the gems' motion: the phone HUD, a theme without LiveHud, a reload. Cheap when
     // nothing is bound.
     void Unbind();
+    // The bound syncs' time and mesh rebuilds, for `$hudtest stats`; it starts over with each new document.
+    [[nodiscard]] const LiveHudTest::StatsWindow& Stats() const
+    {
+        return m_stats;
+    }
 
 private:
     // What a gem's mesh was last built from.
@@ -238,6 +244,9 @@ private:
         bool operator==(const SparkKey&) const = default;
     };
 
+    // Sync() past the binding: eases the levels and, once per 1/30 s, rebuilds what changed. False when the gate held
+    // it.
+    bool Step(Rml::ElementDocument* document, const Inputs& inputs, double now);
     void Bind(Rml::ElementDocument* document);
     bool BindGem(Rml::ElementDocument* document, const char* name, const char* arcName, Gem& gem);
     void BindSkills(Rml::ElementDocument* document);
@@ -271,5 +280,9 @@ private:
     LiveGauge::LevelUpDetector m_levelUp;
     std::optional<double> m_flareStart;
     std::optional<double> m_levelUpStart;
+
+    // The meshes rebuilt in this Step().
+    int m_rebuilds = 0;
+    LiveHudTest::StatsWindow m_stats;
 };
 } // namespace UI::HUD

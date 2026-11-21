@@ -11,6 +11,8 @@
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <algorithm>
+#include <chrono>
+#include <climits>
 #include <cmath>
 #include <filesystem>
 #include <map>
@@ -44,23 +46,11 @@ constexpr const char* SkillSlotIds[] = {"skill_slot_0", "skill_slot_1", "skill_s
 static_assert(std::size(SkillSlotIds) == UI::HUD::LiveHud::SkillSlotCount);
 // A slot's class while its ready flash runs (main_frame_live.rcss's skill-ready-flash, as long).
 constexpr const char* ReadyClass = "ready";
+// The seconds' class while they have two digits or more (main_frame_live.rcss's .skill-cd-secs.long).
+constexpr const char* LongSecondsClass = "long";
 constexpr double ReadyFlashTime = 0.4;
-// The EXP spark: a glow this big round the fill's end, this bright at the top of its breathing (a 1.4 s cycle,
-// LiveGauge::SparkBreath()); with HudEffects off it stands still at its breathing's middle. An EXP gain makes it
-// FlareRadius times as big and FlareBrightness times as bright, both falling back over FlareTime.
-constexpr float SparkRadiusDp = 5.f;
-constexpr float SparkPeak = 0.6f;
-constexpr float SparkBreathPeriod = 1.4f;
-constexpr float SparkStill = 0.825f;
-constexpr float FlareRadius = 1.8f;
-constexpr float FlareBrightness = 1.5f;
-constexpr float FlareTime = 0.8f;
-// The level-up: a band this wide either side of its line and this bright crosses the EXP bar, and the sheen crosses
-// both gems, in LevelUpRun.
-constexpr float LevelUpRun = 0.9f;
-constexpr float BandHalfWidthDp = 16.f;
-constexpr float BandStrength = 0.8f;
-// The spark's and the band's gold, #ffd778: the skill slots' ready flash (tokens.ini hud-ready-flash).
+// The EXP spark's and the level-up band's gold, #ffd778: the skill slots' ready rim (tokens.ini hud-ready-rim). Their
+// sizes and times are the theme's (LiveGauge::LiveHudConfig).
 constexpr std::uint32_t SparkColour = 0xFF78D7FFu;
 
 constexpr const char* ThemesRoot = "Data/Interface/RmlUi/themes";
@@ -115,6 +105,19 @@ void UI::HUD::LiveHud::Sync(Rml::ElementDocument* document, const Inputs& inputs
     if (!m_bound)
         return;
 
+    // $hudtest stats: the step's time and how many meshes it rebuilt, the binding left out.
+    using Clock = std::chrono::steady_clock;
+    const Clock::time_point start = Clock::now();
+    m_rebuilds = 0;
+    const bool ticked = Step(document, inputs, now);
+    const Clock::time_point end = Clock::now();
+    const long long micros = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    m_stats.Record(std::chrono::duration<double>(end.time_since_epoch()).count(),
+                   static_cast<int>(std::min<long long>(micros, INT_MAX)), ticked, m_rebuilds);
+}
+
+bool UI::HUD::LiveHud::Step(Rml::ElementDocument* document, const Inputs& inputs, double now)
+{
     const float dt = m_lastNow >= 0.0 ? static_cast<float>(now - m_lastNow) : 0.f;
     m_lastNow = now;
     Advance(m_gems[LifeGem].motion, inputs.life, now, dt);
@@ -124,14 +127,14 @@ void UI::HUD::LiveHud::Sync(Rml::ElementDocument* document, const Inputs& inputs
 
     const double tick = std::floor(now * TicksPerSecond) / TicksPerSecond;
     if (tick == m_lastTick)
-        return;
+        return false;
     m_lastTick = tick;
     if (const Rml::Context* context = document->GetContext())
         m_dpRatio = context->GetDensityIndependentPixelRatio();
 
     Cue(inputs, tick);
     const float levelUp =
-        inputs.effects && m_levelUpStart ? LiveGauge::RunPhase(tick - *m_levelUpStart, LevelUpRun) : -1.f;
+        inputs.effects && m_levelUpStart ? LiveGauge::RunPhase(tick - *m_levelUpStart, m_config.bandTime) : -1.f;
 
     Look life;
     life.poisoned = inputs.poisoned;
@@ -148,6 +151,7 @@ void UI::HUD::LiveHud::Sync(Rml::ElementDocument* document, const Inputs& inputs
     for (std::size_t i = 0; i < SkillSlotCount; ++i)
         DrawSkill(m_slots[i], inputs.cooldowns[i], inputs.effects, tick);
     DrawSpark(inputs, levelUp, tick);
+    return true;
 }
 
 void UI::HUD::LiveHud::Unbind()
@@ -190,6 +194,7 @@ void UI::HUD::LiveHud::Unbind()
 void UI::HUD::LiveHud::Bind(Rml::ElementDocument* document)
 {
     Unbind();
+    m_stats.Reset();
     m_document = document;
     if (document == nullptr)
         return;
@@ -246,8 +251,10 @@ void UI::HUD::LiveHud::BindSkills(Rml::ElementDocument* document)
             continue;
         slot.sweep = rmlui_dynamic_cast<Render::RmlUi::AdditiveMeshElement*>(FirstByClass(slot.slot, "skill-sweep"));
         slot.seconds = FirstByClass(slot.slot, "skill-cd-secs");
-        // A return from the phone's HUD finds the same document, maybe with a flash left on.
+        // A return from the phone's HUD finds the same document, maybe with a flash or a long number left on.
         slot.slot->SetClass(ReadyClass, false);
+        if (slot.seconds != nullptr)
+            slot.seconds->SetClass(LongSecondsClass, false);
     }
     m_spark = MeshById(document, "exp_spark");
 }
@@ -336,6 +343,7 @@ void UI::HUD::LiveHud::Draw(Gem& gem, const Look& look, double tick)
         const LiveGauge::BodyShades shades{m_config.emptyShade, GhostShade, FillShade};
         LiveGauge::BuildOrbBody(gem.shape, gem.surface, bodyKey.ghost, shades, gem.bodyQuads);
         gem.body->SetMesh(source, gem.bodyQuads, 1.f, false);
+        ++m_rebuilds;
         gem.bodyKey = bodyKey;
     }
     if (shineDirty)
@@ -349,6 +357,7 @@ void UI::HUD::LiveHud::Draw(Gem& gem, const Look& look, double tick)
         shine.brighten = shineKey.brighten;
         LiveGauge::BuildOrbShine(gem.shape, gem.surface, shine, gem.shineQuads);
         gem.shine->SetMesh(source, gem.shineQuads, 1.f, true);
+        ++m_rebuilds;
         gem.shineKey = shineKey;
     }
 }
@@ -367,6 +376,7 @@ void UI::HUD::LiveHud::DrawUnder(Gem& gem)
     if (trackWidth > 0.f)
         LiveGauge::AppendArcTrack(TrackRing(box, ring), colours, gem.underQuads);
     gem.under->SetPlainMesh(gem.underQuads, 1.f, false);
+    ++m_rebuilds;
     gem.underKey = key;
 }
 
@@ -385,6 +395,7 @@ void UI::HUD::LiveHud::DrawHalo(Gem& gem, const Look& look)
                                      std::min(ring.width, ring.height) / 2.f, box.top + box.height};
     LiveGauge::BuildHalo(box, m_config.gemOutline, shape, key.colour, key.strength, gem.haloQuads);
     gem.halo->SetPlainMesh(gem.haloQuads, 1.f, true);
+    ++m_rebuilds;
     gem.haloKey = key;
 }
 
@@ -404,10 +415,12 @@ void UI::HUD::LiveHud::DrawArc(Gem& gem)
     value.outer -= inset;
     LiveGauge::BuildArc(value, {key.level, key.ghost, GhostShade}, arc.quads);
     arc.mesh->SetMesh(arc.source, arc.quads, 1.f, false);
+    ++m_rebuilds;
     if (arc.cap != nullptr)
     {
         LiveGauge::BuildArcCap(value, key.level, CapLengthDp * m_dpRatio, CapTint, arc.capQuads);
         arc.cap->SetMesh(arc.source, arc.capQuads, 1.f, true);
+        ++m_rebuilds;
     }
     arc.key = key;
 }
@@ -455,6 +468,10 @@ void UI::HUD::LiveHud::DrawSkill(SkillSlot& slot, const Inputs::Cooldown& cooldo
         if (seconds != slot.shownSeconds)
         {
             slot.seconds->SetInnerRML(seconds > 0 ? std::to_string(seconds) : Rml::String());
+            // The class changes only when the number crosses 10.
+            const bool longNumber = LiveGauge::IsLongCooldownNumber(seconds);
+            if (longNumber != LiveGauge::IsLongCooldownNumber(slot.shownSeconds))
+                slot.seconds->SetClass(LongSecondsClass, longNumber);
             slot.shownSeconds = seconds;
         }
     }
@@ -467,6 +484,7 @@ void UI::HUD::LiveHud::DrawSkill(SkillSlot& slot, const Inputs::Cooldown& cooldo
         return;
     LiveGauge::BuildSweep(box, fraction, m_config.sweepShade, slot.quads);
     slot.sweep->SetPlainMesh(slot.quads, 1.f, false);
+    ++m_rebuilds;
     slot.sweepFraction = fraction;
     slot.sweepBox = box;
 }
@@ -476,20 +494,23 @@ void UI::HUD::LiveHud::DrawSpark(const Inputs& inputs, float levelUp, double tic
     if (m_spark == nullptr)
         return;
     const LiveGauge::Box box = OwnBox(m_spark);
-    const float flare = inputs.effects && m_flareStart ? LiveGauge::FlareLeft(tick - *m_flareStart, FlareTime) : 0.f;
-    const float breath = inputs.effects ? LiveGauge::SparkBreath(tick, SparkBreathPeriod) : SparkStill;
+    const float flare =
+        inputs.effects && m_flareStart ? LiveGauge::FlareLeft(tick - *m_flareStart, m_config.flareTime) : 0.f;
+    const float breath = inputs.effects ? LiveGauge::SparkBreath(tick, m_config.sparkPeriod) : m_config.sparkStill;
     SparkKey key;
     key.box = box;
     key.fill = std::clamp(inputs.expFill, 0.f, 1.f);
-    key.radius = SparkRadiusDp * m_dpRatio * (1.f + (FlareRadius - 1.f) * flare);
-    key.strength = SparkPeak * breath * (1.f + (FlareBrightness - 1.f) * flare);
+    key.radius = m_config.sparkRadius * m_dpRatio * (1.f + (m_config.flareRadius - 1.f) * flare);
+    key.strength = m_config.sparkPeak * breath * (1.f + (m_config.flareBrightness - 1.f) * flare);
     key.bandPhase = levelUp;
     if (key == m_sparkKey || !HasArea(box))
         return;
 
     LiveGauge::BuildGlow(box.left + key.fill * box.width, box.top + box.height / 2.f, key.radius, SparkColour,
                          key.strength, m_sparkQuads);
-    LiveGauge::AppendBand(box, key.bandPhase, BandHalfWidthDp * m_dpRatio, SparkColour, BandStrength, m_sparkQuads);
+    LiveGauge::AppendBand(box, key.bandPhase, m_config.bandHalfWidth * m_dpRatio, SparkColour, m_config.bandStrength,
+                          m_sparkQuads);
     m_spark->SetPlainMesh(m_sparkQuads, 1.f, true);
+    ++m_rebuilds;
     m_sparkKey = key;
 }

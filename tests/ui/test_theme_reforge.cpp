@@ -517,9 +517,11 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
         values.emplace(key, setting.value);
     }
     for (const char* key :
-         {"gemoutline", "gemzoom",    "emptyshade", "waveamplitude", "waveperiodlife", "waveperiodmana", "arcstart",
-          "arcsweep",   "arcwidth",   "lowlife",    "pulseperiod",   "pulsestrength",  "halolife",       "halomana",
-          "halopoison", "sweepshade", "rimouter",   "riminner",      "rimwidth",       "cresttint"})
+         {"gemoutline", "gemzoom",     "emptyshade",      "waveamplitude", "waveperiodlife", "waveperiodmana",
+          "arcstart",   "arcsweep",    "arcwidth",        "lowlife",       "pulseperiod",    "pulsestrength",
+          "halolife",   "halomana",    "halopoison",      "sweepshade",    "rimouter",       "riminner",
+          "rimwidth",   "cresttint",   "sparkradius",     "sparkpeak",     "sparkperiod",    "sparkstill",
+          "flaretime",  "flareradius", "flarebrightness", "bandtime",      "bandhalfwidth",  "bandstrength"})
     {
         CAPTURE(key);
         CHECK(values.count(key) == 1);
@@ -534,7 +536,17 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
     CHECK(config.rimOuter == 0xFF2A465Cu);
     CHECK(config.rimInner == 0xFF07090Bu);
     CHECK(config.rimWidth == doctest::Approx(1.5f));
-    CHECK(config.crestTint == doctest::Approx(0.45f));
+    CHECK(config.crestTint == doctest::Approx(0.30f));
+    CHECK(config.sparkRadius == doctest::Approx(5.f));
+    CHECK(config.sparkPeak == doctest::Approx(0.6f));
+    CHECK(config.sparkPeriod == doctest::Approx(1.4f));
+    CHECK(config.sparkStill == doctest::Approx(0.825f));
+    CHECK(config.flareTime == doctest::Approx(0.8f));
+    CHECK(config.flareRadius == doctest::Approx(1.8f));
+    CHECK(config.flareBrightness == doctest::Approx(1.5f));
+    CHECK(config.bandTime == doctest::Approx(0.9f));
+    CHECK(config.bandHalfWidth == doctest::Approx(16.f));
+    CHECK(config.bandStrength == doctest::Approx(0.8f));
     CHECK(ThemeInheritance(fixture.Theme("legacy")).Section("LiveHud").empty());
 }
 
@@ -947,26 +959,36 @@ TEST_CASE("the skill row's sweep, seconds and flash and the EXP spark show only 
         }
     }
 
-    SUBCASE("skynet lays the sweep and the flash over each slot, the seconds across its middle, the spark on the bar")
+    SUBCASE("skynet lays the sweep over each slot, the flash on its icon, the seconds across its middle, the spark on "
+            "the bar")
     {
         UI::RmlBridge::SetActiveThemeName("skynet");
         auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        const float dp = fixture.context->GetDensityIndependentPixelRatio();
         for (const std::string& slot : slots)
         {
             CAPTURE(slot);
             Rml::Element* box = Fixture::First(document, slot.c_str());
             const Rml::Vector2f inside = box->GetAbsoluteOffset(Rml::BoxArea::Padding);
             const Rml::Vector2f size = box->GetBox().GetSize(Rml::BoxArea::Padding);
-            for (const char* part : {" .skill-sweep", " .skill-ready"})
-            {
-                Rml::Element* cover = Fixture::First(document, (slot + part).c_str());
-                CHECK(cover->GetComputedValues().display() != Display::None);
-                CHECK(BorderOffset(*cover).x == doctest::Approx(inside.x));
-                CHECK(BorderOffset(*cover).y == doctest::Approx(inside.y));
-                CHECK(BorderSize(*cover).x == doctest::Approx(size.x));
-                CHECK(BorderSize(*cover).y == doctest::Approx(size.y));
-                CHECK(cover->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
-            }
+            Rml::Element* sweep = Fixture::First(document, (slot + " .skill-sweep").c_str());
+            CHECK(sweep->GetComputedValues().display() != Display::None);
+            CHECK(BorderOffset(*sweep).x == doctest::Approx(inside.x));
+            CHECK(BorderOffset(*sweep).y == doctest::Approx(inside.y));
+            CHECK(BorderSize(*sweep).x == doctest::Approx(size.x));
+            CHECK(BorderSize(*sweep).y == doctest::Approx(size.y));
+            CHECK(sweep->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
+            // The flash lies on the slot's own icon (the current-skill slot is the icon), off the frame round it.
+            Rml::Element* icon = Fixture::First(document, (slot + " .skill-icon").c_str());
+            Rml::Element* flash = Fixture::First(document, (slot + " .skill-ready").c_str());
+            CHECK(flash->GetComputedValues().display() != Display::None);
+            CHECK(BorderOffset(*flash).x == doctest::Approx(BorderOffset(*icon).x));
+            CHECK(BorderOffset(*flash).y == doctest::Approx(BorderOffset(*icon).y));
+            CHECK(BorderSize(*flash).x == doctest::Approx(BorderSize(*icon).x));
+            CHECK(BorderSize(*flash).y == doctest::Approx(BorderSize(*icon).y));
+            CHECK(BorderSize(*flash).x == doctest::Approx(20.f * dp));
+            CHECK(BorderSize(*flash).y == doctest::Approx(28.f * dp));
+            CHECK(flash->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
             // The sweep takes the old wipe's place on this row.
             CHECK(display(document, slot + " .cooldown-wipe") == Display::None);
 
@@ -983,6 +1005,27 @@ TEST_CASE("the skill row's sweep, seconds and flash and the EXP spark show only 
             CHECK(BorderOffset(*seconds).x == doctest::Approx(inside.x));
             CHECK(BorderSize(*seconds).x == doctest::Approx(size.x));
             CHECK(BorderOffset(*seconds).y + BorderSize(*seconds).y / 2.f == doctest::Approx(inside.y + size.y / 2.f));
+            CHECK(style.font_size() == doctest::Approx(14.f * dp));
+            // Two digits (C++ gives them "long") are smaller, clear of the hotkey number, and stay centred.
+            seconds->SetInnerRML("90");
+            seconds->SetClass("long", true);
+            fixture.context->Update();
+            CHECK(seconds->GetComputedValues().font_size() == doctest::Approx(11.f * dp));
+            CHECK(seconds->GetComputedValues().color() == Rml::Colourb(0xff, 0xf2, 0xcf));
+            CHECK(BorderOffset(*seconds).x == doctest::Approx(inside.x));
+            CHECK(BorderSize(*seconds).x == doctest::Approx(size.x));
+            CHECK(BorderOffset(*seconds).y + BorderSize(*seconds).y / 2.f == doctest::Approx(inside.y + size.y / 2.f));
+            seconds->SetClass("long", false);
+            fixture.context->Update();
+            CHECK(seconds->GetComputedValues().font_size() == doctest::Approx(14.f * dp));
+        }
+        // Neighbouring hotkey slots' flashes keep the frame between them dark.
+        for (std::size_t i = 0; i + 2 < slots.size(); ++i)
+        {
+            CAPTURE(slots[i]);
+            Rml::Element* left = Fixture::First(document, (slots[i] + " .skill-ready").c_str());
+            Rml::Element* right = Fixture::First(document, (slots[i + 1] + " .skill-ready").c_str());
+            CHECK(BorderOffset(*left).x + BorderSize(*left).x < BorderOffset(*right).x);
         }
         // The open grid's cells keep their bottom-up wipe.
         CHECK(display(document, "#skill_grid .cooldown-wipe") != Display::None);
@@ -997,11 +1040,18 @@ TEST_CASE("the skill row's sweep, seconds and flash and the EXP spark show only 
         CHECK(BorderSize(*spark).x == doctest::Approx(track->GetBox().GetSize(Rml::BoxArea::Padding).x));
         CHECK(BorderSize(*spark).y == doctest::Approx(track->GetBox().GetSize(Rml::BoxArea::Padding).y));
 
-        // A slot ready again flashes once while C++ gives it "ready": its flash layer draws nothing until then.
+        // A slot ready again flashes once while C++ gives it "ready": its flash layer draws nothing until then, its
+        // gold rim (inside the icon's box) at no opacity.
         Rml::Element* slot = Fixture::First(document, "#skill_slot_2");
         Rml::Element* flash = Fixture::First(document, "#skill_slot_2 .skill-ready");
         CHECK_FALSE(flash->GetComputedValues().has_decorator());
         CHECK(flash->GetComputedValues().animation() == nullptr);
+        CHECK(flash->GetComputedValues().opacity() == doctest::Approx(0.f));
+        for (const float width :
+             {flash->GetComputedValues().border_top_width(), flash->GetComputedValues().border_right_width(),
+              flash->GetComputedValues().border_bottom_width(), flash->GetComputedValues().border_left_width()})
+            CHECK(width == doctest::Approx(std::round(2.f * dp)));
+        CHECK(flash->GetComputedValues().border_top_color() == Rml::Colourb(0xff, 0xd7, 0x78));
         slot->SetClass("ready", true);
         fixture.context->Update();
         const Rml::AnimationList* animation = flash->GetComputedValues().animation();
@@ -1010,6 +1060,8 @@ TEST_CASE("the skill row's sweep, seconds and flash and the EXP spark show only 
         CHECK(animation->front().name == "skill-ready-flash");
         CHECK(animation->front().duration == doctest::Approx(0.4f));
         CHECK(animation->front().num_iterations == 1);
+        // The rim lights up at once and fades from there.
+        CHECK(flash->GetComputedValues().opacity() > 0.9f);
         // The other slots stay dark.
         CHECK(Fixture::First(document, "#skill_slot_3 .skill-ready")->GetComputedValues().animation() == nullptr);
         slot->SetClass("ready", false);

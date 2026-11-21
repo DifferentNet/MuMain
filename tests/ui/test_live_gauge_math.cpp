@@ -308,6 +308,14 @@ TEST_CASE("a cooldown shows its whole seconds left, rounded up, until its last s
     CHECK(CooldownSeconds(-500) == 0);
     CHECK(CooldownSeconds(60000) == 60);
 
+    // Ten seconds and more are drawn smaller (two digits); none shown (0) and 2..9 are not.
+    CHECK_FALSE(IsLongCooldownNumber(-1));
+    CHECK_FALSE(IsLongCooldownNumber(0));
+    CHECK_FALSE(IsLongCooldownNumber(9));
+    CHECK(IsLongCooldownNumber(10));
+    CHECK(IsLongCooldownNumber(CooldownSeconds(90000)));
+    CHECK(IsLongCooldownNumber(100));
+
     // A 5 s cooldown counted down frame by frame: 5, 4, 3, 2, then no number, each a change of the text.
     std::vector<int> shown;
     for (int ms = 5000; ms >= 0; ms -= 16)
@@ -431,7 +439,17 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(defaults.rimOuter == 0xFF2A465Cu);
     CHECK(defaults.rimInner == 0xFF07090Bu);
     CHECK(defaults.rimWidth == doctest::Approx(1.5f));
-    CHECK(defaults.crestTint == doctest::Approx(0.45f));
+    CHECK(defaults.crestTint == doctest::Approx(0.30f));
+    CHECK(defaults.sparkRadius == doctest::Approx(5.f));
+    CHECK(defaults.sparkPeriod == doctest::Approx(1.4f));
+    CHECK(defaults.sparkStill == doctest::Approx(0.825f));
+    CHECK(defaults.sparkPeak == doctest::Approx(0.6f));
+    CHECK(defaults.flareTime == doctest::Approx(0.8f));
+    CHECK(defaults.flareRadius == doctest::Approx(1.8f));
+    CHECK(defaults.flareBrightness == doctest::Approx(1.5f));
+    CHECK(defaults.bandTime == doctest::Approx(0.9f));
+    CHECK(defaults.bandHalfWidth == doctest::Approx(16.f));
+    CHECK(defaults.bandStrength == doctest::Approx(0.8f));
 
     const std::map<std::string, std::string> set = {{"gemoutline", "10,20 90,20 50,90"},
                                                     {"gemzoom", "1.3"},
@@ -452,7 +470,17 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
                                                     {"rimouter", "#102030"},
                                                     {"riminner", "#40506070"},
                                                     {"rimwidth", "2.5"},
-                                                    {"cresttint", "0.6"}};
+                                                    {"cresttint", "0.6"},
+                                                    {"sparkradius", "7"},
+                                                    {"sparkperiod", "2"},
+                                                    {"sparkstill", "0.5"},
+                                                    {"sparkpeak", "0.9"},
+                                                    {"flaretime", "1.2"},
+                                                    {"flareradius", "2.5"},
+                                                    {"flarebrightness", "1"},
+                                                    {"bandtime", "0.5"},
+                                                    {"bandhalfwidth", "0"},
+                                                    {"bandstrength", "1"}};
     const LiveHudConfig read = ReadLiveHudConfig(set);
     CHECK(read.gemOutline.size() == 3);
     CHECK(read.gemZoom == doctest::Approx(1.3f));
@@ -474,14 +502,27 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(read.rimInner == 0x70605040u);
     CHECK(read.rimWidth == doctest::Approx(2.5f));
     CHECK(read.crestTint == doctest::Approx(0.6f));
+    CHECK(read.sparkRadius == doctest::Approx(7.f));
+    CHECK(read.sparkPeriod == doctest::Approx(2.f));
+    CHECK(read.sparkStill == doctest::Approx(0.5f));
+    CHECK(read.sparkPeak == doctest::Approx(0.9f));
+    CHECK(read.flareTime == doctest::Approx(1.2f));
+    CHECK(read.flareRadius == doctest::Approx(2.5f));
+    CHECK(read.flareBrightness == doctest::Approx(1.f));
+    CHECK(read.bandTime == doctest::Approx(0.5f));
+    CHECK(read.bandHalfWidth == doctest::Approx(0.f));
+    CHECK(read.bandStrength == doctest::Approx(1.f));
 
     // Out of range, not a number, a trailing comment, an upper-case key (ThemeInheritance lower-cases them).
     const std::map<std::string, std::string> bad = {
-        {"gemzoom", "0.9"},      {"emptyshade", "1.5"},  {"waveamplitude", "-1"},
-        {"waveperiodlife", "0"}, {"arcsweep", "400"},    {"lowlife", "0.3 ; life"},
-        {"pulseperiod", "fast"}, {"halolife", "red"},    {"GemOutline", "10,20 90,20 50,90"},
-        {"rimouter", "#5c46"},   {"riminner", "bronze"}, {"rimwidth", "-1"},
-        {"cresttint", "1.5"}};
+        {"gemzoom", "0.9"},       {"emptyshade", "1.5"},      {"waveamplitude", "-1"},
+        {"waveperiodlife", "0"},  {"arcsweep", "400"},        {"lowlife", "0.3 ; life"},
+        {"pulseperiod", "fast"},  {"halolife", "red"},        {"GemOutline", "10,20 90,20 50,90"},
+        {"rimouter", "#5c46"},    {"riminner", "bronze"},     {"rimwidth", "-1"},
+        {"cresttint", "1.5"},     {"sparkradius", "-2"},      {"sparkperiod", "0"},
+        {"sparkstill", "1.2"},    {"sparkpeak", "bright"},    {"flaretime", "0"},
+        {"flareradius", "0.5"},   {"flarebrightness", "0.9"}, {"bandtime", "-0.9"},
+        {"bandhalfwidth", "-16"}, {"bandstrength", "2"}};
     const LiveHudConfig kept = ReadLiveHudConfig(bad);
     CHECK(SameOutline(kept.gemOutline, DefaultOutline()));
     CHECK(kept.gemZoom == doctest::Approx(1.32f));
@@ -495,7 +536,17 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(kept.rimOuter == 0xFF2A465Cu);
     CHECK(kept.rimInner == 0xFF07090Bu);
     CHECK(kept.rimWidth == doctest::Approx(1.5f));
-    CHECK(kept.crestTint == doctest::Approx(0.45f));
+    CHECK(kept.crestTint == doctest::Approx(0.30f));
+    CHECK(kept.sparkRadius == doctest::Approx(5.f));
+    CHECK(kept.sparkPeriod == doctest::Approx(1.4f));
+    CHECK(kept.sparkStill == doctest::Approx(0.825f));
+    CHECK(kept.sparkPeak == doctest::Approx(0.6f));
+    CHECK(kept.flareTime == doctest::Approx(0.8f));
+    CHECK(kept.flareRadius == doctest::Approx(1.8f));
+    CHECK(kept.flareBrightness == doctest::Approx(1.5f));
+    CHECK(kept.bandTime == doctest::Approx(0.9f));
+    CHECK(kept.bandHalfWidth == doctest::Approx(16.f));
+    CHECK(kept.bandStrength == doctest::Approx(0.8f));
 }
 
 TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off clears them [ui][live_gauge]")
@@ -508,49 +559,67 @@ TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off cle
     CHECK(Apply(overrides, L"mp 1"));
     CHECK(Apply(overrides, L"  sd   0.5  "));
     CHECK(Apply(overrides, L"ag 0"));
+    CHECK(Apply(overrides, L"expfill 0.5"));
     CHECK(Apply(overrides, L"cd 3.5"));
     CHECK(Apply(overrides, L"poison on"));
     CHECK(Apply(overrides, L"exp"));
     CHECK(Apply(overrides, L"exp"));
     CHECK(Apply(overrides, L"lvl"));
+    CHECK(Apply(overrides, L"stats"));
+    CHECK(Apply(overrides, L"stats on"));
     REQUIRE(overrides.life.has_value());
     CHECK(*overrides.life == doctest::Approx(0.25f));
     CHECK(*overrides.mana == doctest::Approx(1.f));
     CHECK(*overrides.shield == doctest::Approx(0.5f));
     CHECK(*overrides.skillMana == doctest::Approx(0.f));
+    REQUIRE(overrides.expFill.has_value());
+    CHECK(*overrides.expFill == doctest::Approx(0.5f));
     CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
     CHECK(*overrides.poisoned);
     CHECK(overrides.cooldowns == 1);
     CHECK(overrides.expGains == 2);
     CHECK(overrides.levelUps == 1);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(overrides.statsLog);
 
     CHECK(Apply(overrides, L"poison off"));
     CHECK_FALSE(*overrides.poisoned);
+    CHECK(Apply(overrides, L"stats off"));
+    CHECK_FALSE(overrides.statsLog);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(Apply(overrides, L"stats on"));
 
     // Refused, and nothing changed.
     int index = 0;
-    for (const wchar_t* bad : {L"", L"hp", L"hp 1.5", L"hp -0.1", L"hp half", L"hp 0.5 more", L"xx 0.5", L"cd -1",
-                               L"poison", L"poison maybe", L"off now"})
+    for (const wchar_t* bad :
+         {L"", L"hp", L"hp 1.5", L"hp -0.1", L"hp half", L"hp 0.5 more", L"xx 0.5", L"cd -1", L"poison",
+          L"poison maybe", L"off now", L"expfill", L"expfill 2", L"expfill -0.5", L"stats maybe", L"stats 1"})
     {
         CAPTURE(index);
         CHECK_FALSE(Apply(overrides, bad));
         ++index;
     }
     CHECK(*overrides.life == doctest::Approx(0.25f));
+    CHECK(*overrides.expFill == doctest::Approx(0.5f));
     CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
     CHECK(overrides.cooldowns == 1);
     CHECK(overrides.expGains == 2);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(overrides.statsLog);
 
     CHECK(Apply(overrides, L"off"));
     CHECK_FALSE(overrides.life.has_value());
     CHECK_FALSE(overrides.mana.has_value());
     CHECK_FALSE(overrides.shield.has_value());
     CHECK_FALSE(overrides.skillMana.has_value());
+    CHECK_FALSE(overrides.expFill.has_value());
     CHECK_FALSE(overrides.poisoned.has_value());
     CHECK_FALSE(overrides.cooldownSeconds.has_value());
     CHECK(overrides.cooldowns == 0);
     CHECK(overrides.expGains == 0);
     CHECK(overrides.levelUps == 0);
+    CHECK(overrides.statsRequests == 0);
+    CHECK_FALSE(overrides.statsLog);
 }
 
 TEST_CASE("$hudtest cd plays its cooldown from when it is first seen, each request afresh [ui][live_gauge]")
@@ -596,4 +665,60 @@ TEST_CASE("$hudtest cd plays its cooldown from when it is first seen, each reque
     CHECK(playback.At(overrides, 50.0).has_value());
     REQUIRE(Apply(overrides, L"off"));
     CHECK_FALSE(playback.At(overrides, 50.5).has_value());
+}
+
+TEST_CASE("$hudtest stats counts the syncs, the ticks' rebuilds and the time in 5 s windows [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::FormatStats;
+    using UI::HUD::LiveHudTest::StatsWindow;
+    using UI::HUD::LiveHudTest::SyncStats;
+
+    StatsWindow stats;
+    CHECK(stats.Filled() == 0);
+    CHECK(FormatStats(stats.Latest()) == "HUD stats: no syncs yet");
+
+    // 60 syncs a second from t = 100: every other one past the 1/30 s gate, rebuilding 4 meshes and 10 on the tenth
+    // tick; 40 us each, 900 us on the 5th.
+    stats.Record(100.0, 1000, true, 99);
+    int ticks = 0;
+    for (int i = 1; i <= 300; ++i)
+    {
+        const bool ticked = i % 2 == 0;
+        ticks += ticked ? 1 : 0;
+        const int rebuilds = ticked ? (ticks == 10 ? 10 : 4) : 0;
+        if (i < 300)
+        {
+            stats.Record(100.0 + i / 60.0, i == 5 ? 900 : 40, ticked, rebuilds);
+            CHECK(stats.Filled() == 0);
+            continue;
+        }
+        // The window fills on the sync 5 s after the first, which only started the clock.
+        stats.Record(100.0 + StatsWindow::WindowSeconds, 40, ticked, rebuilds);
+    }
+    REQUIRE(stats.Filled() == 1);
+    const SyncStats& window = stats.Latest();
+    CHECK(window.seconds == doctest::Approx(5.0));
+    CHECK(window.syncs == 300);
+    CHECK(window.ticks == 150);
+    CHECK(window.rebuilds == 149 * 4 + 10);
+    CHECK(window.maxRebuilds == 10);
+    CHECK(window.micros == 299 * 40 + 900);
+    CHECK(window.maxMicros == 900);
+    CHECK(FormatStats(window) == "HUD stats over 5.0 s: 60.0 syncs/s, 30.0 ticks/s; mesh rebuilds per tick avg 4.0, "
+                                 "max 10; sync avg 42 us, max 900 us");
+
+    // The next window runs on its own; the full one stays the latest until it fills.
+    stats.Record(106.0, 5000, true, 20);
+    CHECK(stats.Filled() == 1);
+    CHECK(stats.Latest().maxMicros == 900);
+
+    // A new document starts over; the count of filled windows goes on.
+    stats.Reset();
+    CHECK(stats.Filled() == 1);
+    CHECK(stats.Latest().syncs == 0);
+    stats.Record(200.0, 40, true, 1);
+    stats.Record(201.0, 60, false, 0);
+    CHECK(stats.Latest().syncs == 1);
+    CHECK(stats.Latest().ticks == 0);
+    CHECK(stats.Latest().seconds == doctest::Approx(1.0));
 }
