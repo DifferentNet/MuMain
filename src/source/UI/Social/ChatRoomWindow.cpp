@@ -186,8 +186,19 @@ void CUIChatWindow::SubmitLine(const std::wstring& line)
         m_LastSent = line;
         if (!m_Locked && !line.empty())
         {
-            if (auto* connection = GetCurrentSocket())
+            // A connection that failed or dropped has no chat server functions (ToChatServer() is
+            // null until it connects): sending through it read address 0 (crash of 2026-11-21).
+            auto* connection = GetCurrentSocket();
+            if (connection != nullptr && connection->IsConnected() && connection->ToChatServer() != nullptr)
+            {
                 connection->ToChatServer()->SendChatMessageExt(0, line.c_str());
+            }
+            else
+            {
+                // The room's connection dropped: say so and lock the line, as ConnectToChatServer does.
+                AddChatText(SystemSpeaker, I18N::Game::TheChatServerIsNowUnavailable, 1, 0);
+                Lock(TRUE);
+            }
         }
     }
     if (m_Participants.size() < 2)

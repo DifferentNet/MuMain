@@ -180,9 +180,11 @@ answer (a lost network); OpenMU itself drops a client that stops sending its hea
 
 - Every browser player reaches OpenMU from the bridge's address, so per-address limits and bans
   apply to all of them at once.
-- The friend list's chat windows connect to the chat server's port 55980 (hard-coded in
-  `UI/Social/SocialWindowManager.cpp`), which MU Moldova's bridge doesn't relay; they don't open in
-  the browser. Whispers and the normal chat use the game server and work.
+- The friend list's chat windows connect to the chat server on 45980 (`ChatServerPort` in
+  `UI/Social/SocialWindowManager.cpp`; 55980 until 2026-11-21, where nothing listens). MU Moldova's
+  bridge relays it since then (`--ports` in the server's `docker-compose.signup.yml`); with an older
+  list a room says the chat server is unavailable and locks its line. Whispers and the normal chat
+  use the game server.
 - Phones: iOS browsers all use WebKit, which has no JSPI, so iPhones can't run it. Android Chrome
   has what the game needs (Mali cards through the soft clip shaders) and the page is laid out for
   phones in landscape, but there are no touch controls yet (right-click, hotkeys) and the interface

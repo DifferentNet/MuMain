@@ -27,6 +27,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Camera/CameraProjection.h"
 #include "Core/Utilities/Log/ErrorReport.h"
+#include "Network/IncomingPacketQueue.h"
 #include "I18N/All.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Text/TextWrap.h"
@@ -954,22 +955,33 @@ void TranslateChattingProtocol(DWORD dwWindowUIID, const BYTE* ReceiveBuffer, in
         HeadCode = ReceiveBuffer[3];
     }
 
+    // Each handler reads its whole structure, and ReceiveChatRoomNoticeText writes its last byte:
+    // a short packet reached past the copy HandlePacketS made of it (2026-11-21).
+    const auto fits = [Size](size_t bytes) { return static_cast<size_t>(Size) >= bytes; };
     switch (HeadCode)
     {
     case 0x00:
-        ReceiveChatRoomConnectResult(dwWindowUIID, ReceiveBuffer);
+        if (fits(sizeof(FS_CHAT_JOIN_RESULT)))
+            ReceiveChatRoomConnectResult(dwWindowUIID, ReceiveBuffer);
         break;
     case 0x01:
-        ReceiveChatRoomUserStateChange(dwWindowUIID, ReceiveBuffer);
+        if (fits(sizeof(FS_CHAT_CHANGE_STATE)))
+            ReceiveChatRoomUserStateChange(dwWindowUIID, ReceiveBuffer);
         break;
     case 0x02:
-        ReceiveChatRoomUserList(dwWindowUIID, ReceiveBuffer);
+        if (fits(sizeof(FS_CHAT_USERLIST_HEADER)) &&
+            fits(sizeof(FS_CHAT_USERLIST_HEADER) +
+                 reinterpret_cast<const FS_CHAT_USERLIST_HEADER*>(ReceiveBuffer)->Count * sizeof(FS_CHAT_USERLIST_DATA)))
+            ReceiveChatRoomUserList(dwWindowUIID, ReceiveBuffer);
         break;
     case 0x04:
-        ReceiveChatRoomChatText(dwWindowUIID, ReceiveBuffer);
+        if (fits(offsetof(FS_CHAT_TEXT, Msg)) &&
+            fits(offsetof(FS_CHAT_TEXT, Msg) + reinterpret_cast<const FS_CHAT_TEXT*>(ReceiveBuffer)->MsgSize))
+            ReceiveChatRoomChatText(dwWindowUIID, ReceiveBuffer);
         break;
     case 0x0D:
-        ReceiveChatRoomNoticeText(dwWindowUIID, ReceiveBuffer);
+        if (fits(sizeof(FS_CHAT_TEXT)))
+            ReceiveChatRoomNoticeText(dwWindowUIID, ReceiveBuffer);
         break;
     default:
         break;
@@ -978,9 +990,25 @@ void TranslateChattingProtocol(DWORD dwWindowUIID, const BYTE* ReceiveBuffer, in
 
 void CUIChatWindow::HandlePacketS(int32_t handle, const BYTE* ReceiveBuffer, int32_t Size)
 {
-    // find() was dereferenced unguarded. The Connection registers this callback from its own
-    // constructor, before ConnectToChatServer() below records the handle, so a packet arriving in
-    // that window read end() -- and so did one arriving for a room already closed.
+    // On PC this runs on the network library's thread, and the room's handlers touch its window.
+    // Queue the packet as the game server's are (HandleIncomingPacket); the main loop hands it to
+    // ProcessQueuedPacket next frame. (Before 2026-11-21 no room ever connected, so this never ran.)
+    if (ReceiveBuffer == nullptr || Size <= 0)
+        return;
+    auto packet = std::make_unique<PacketInfo>();
+    packet->ReceiveBuffer = std::make_unique<BYTE[]>(Size);
+    std::copy(ReceiveBuffer, ReceiveBuffer + Size, packet->ReceiveBuffer.get());
+    packet->ConnectionHandle = handle;
+    packet->Size = Size;
+    packet->ChatRoom = true;
+    Network::IncomingPacketQueue::Instance().Push(std::move(packet));
+}
+
+void CUIChatWindow::ProcessQueuedPacket(int32_t handle, const BYTE* ReceiveBuffer, int32_t Size)
+{
+    // find() was dereferenced unguarded. A packet for a room already closed read end(); so could one
+    // arriving before ConnectToChatServer() below recorded the handle, back when this ran straight
+    // from the network callback.
     const auto found = ConnectionHandleToWindowUuid.find(handle);
     if (found == ConnectionHandleToWindowUuid.end() || found->second == 0)
         return;
@@ -991,11 +1019,17 @@ void CUIChatWindow::ConnectToChatServer(const wchar_t* pszIP, DWORD dwRoomNumber
 {
     m_dwRoomNumber = dwRoomNumber;
 
-    _connection = new Connection(MU_C16(pszIP), 55980, true, &HandlePacketS);
+    // MU Moldova: OpenMU's chat server listens on 45980 (its update "MoveServerPortsOutOfDynamicRange"
+    // moved it from 55980). On 55980 a friend's chat room never connected, and the first line typed
+    // into it crashed the client (2026-11-21).
+    constexpr int32_t ChatServerPort = 45980;
+    _connection = new Connection(MU_C16(pszIP), ChatServerPort, true, &HandlePacketS);
 
     if (!_connection->IsConnected())
     {
-        // todo: write message, that it failed?
+        // Nothing reaches this room: say so and lock the line, as LockAllChatWindow does.
+        AddChatText(255, I18N::Game::TheChatServerIsNowUnavailable, 1, 0);
+        Lock(TRUE);
         return;
     }
 
@@ -1014,8 +1048,11 @@ void CUIChatWindow::DisconnectToChatServer()
         }
 
         // Before the connection goes: this entry used to outlive the window, so a late packet on
-        // the handle still resolved to the UIID of a window that no longer exists.
-        ConnectionHandleToWindowUuid.erase(_connection->GetHandle());
+        // the handle still resolved to the UIID of a window that no longer exists. By this window's
+        // UIID, not GetHandle(): a connection the server dropped already reports handle 0.
+        const DWORD windowUiid = GetUIID();
+        std::erase_if(ConnectionHandleToWindowUuid,
+                      [windowUiid](const auto& entry) { return entry.second == windowUiid; });
 
         delete _connection;
         _connection = nullptr;

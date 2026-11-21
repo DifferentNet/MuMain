@@ -18,6 +18,7 @@
 #include "UI/Windows/LoginSceneUpdates.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Social/SocialUpdates.h"
+#include "UI/Social/ChatRoomWindow.h"
 #include <algorithm>
 #include <memory>
 #include <optional>
@@ -15313,13 +15314,19 @@ static void ProcessPacket(const BYTE* ReceiveBuffer, int32_t Size)
 
 void ProcessPacketCallback(const PacketInfo* Packet)
 {
-    if (SocketClient == nullptr || Packet->ConnectionHandle != SocketClient->GetHandle())
+    if (!Packet->ChatRoom && (SocketClient == nullptr || Packet->ConnectionHandle != SocketClient->GetHandle()))
     {
         return;
     }
 
     try
     {
+        if (Packet->ChatRoom)
+        {
+            CUIChatWindow::ProcessQueuedPacket(Packet->ConnectionHandle, Packet->ReceiveBuffer.get(), Packet->Size);
+            return;
+        }
+
         SuppressOptionalPresentation = Packet->SuppressOptionalPresentation;
         ProcessPacket(Packet->ReceiveBuffer.get(), Packet->Size);
     }
