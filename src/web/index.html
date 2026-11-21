@@ -453,7 +453,8 @@
   const copyNoteTimers = new Map();   // button -> the timer that puts its label back
   // The release: its record's name and client commit (a local build has no record) and the Main.wasm
   // hash this page's startup.json gave. Read once: RELEASE_RECORD_DELAY_MS after the page opened, or
-  // sooner when the ⋮ menu opens or a Copy log button is pressed down. A copy never waits for it (Safari
+  // sooner when the ⋮ menu opens, the footer's Copy log is pressed down or the game stops with an error
+  // (gameCrashed: no pointerdown gets through then, blockAfterCrash). A copy never waits for it (Safari
   // gives its clipboard only right after the click): one before it is read says "unknown". A release
   // published since is named with "a newer release is out" (newVersionCheck).
   function readReleaseRecord() {
@@ -998,7 +999,9 @@
     field: 0,
     copy(text) {
       if (this.field === PASSWORD_KEYS) return;
-      writeClipboard(text).then((copied) => { if (!copied) appendLog("Copy: the browser refused its clipboard", true); });
+      // The game copies a frame after the key, outside its handler, where Safari refuses both ways: a
+      // plain line, or each copy there would be one more error kept for Copy log.
+      writeClipboard(text).then((copied) => { if (!copied) appendLog("Copy: the browser refused its clipboard"); });
     },
   };
   // The browser's clipboard: navigator.clipboard (a page served over https or from this computer), else
@@ -1695,7 +1698,6 @@
     const copy = document.createElement("button");
     copy.textContent = COPY_LOG_LABELS.idle[0];
     copy.onclick = () => copyLog(copy, ([full]) => { copy.textContent = full; });
-    copy.addEventListener("pointerdown", readReleaseRecord);
     readReleaseRecord();   // read by the time the button is pressed
     for (const button of [reload, reset, copy]) {
       styleStatusButton(button);
