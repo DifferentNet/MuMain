@@ -13,6 +13,9 @@ class CUIChatWindow : public CUIBaseWindow
     Connection* _connection;
 
 public:
+    // A room's packet, on the main thread: ProcessPacketCallback hands over what HandlePacketS queued.
+    static void ProcessQueuedPacket(int32_t handle, const BYTE* ReceiveBuffer, int32_t Size);
+
     CUIChatWindow();
     virtual ~CUIChatWindow();
 

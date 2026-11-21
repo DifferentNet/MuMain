@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include <map>
+#include <mutex>
 
 #include "Connection.h"
 #include "DotNetMessageFormat.h"
@@ -87,6 +88,14 @@ void InitializeDotNetBridge()
 }
 
 std::map<int32_t, Connection*> connections;
+
+// On PC the managed library calls OnPacketReceivedS and OnDisconnectedS on its own threads, and it
+// reports a disconnect only after Close() has returned. A friend chat room deletes its Connection
+// right after Close(), so the late callback found it still in the map and wrote into freed memory
+// (reachable since the rooms connect, 2026-11-21). Every use of the map holds this lock, and
+// ~Connection takes itself out under it. Recursive because /play calls both callbacks synchronously,
+// from inside beginReceive() and disconnect().
+std::recursive_mutex connectionsMutex;
 
 namespace DotNetBridge
 {
@@ -188,6 +197,8 @@ Send GetSend()
 
 void Connection::OnPacketReceivedS(const int32_t handle, const int32_t size, BYTE* data)
 {
+    // Held through the call, so ~Connection can't free the object while its packet is handled.
+    const std::lock_guard<std::recursive_mutex> lock(connectionsMutex);
     const auto it = connections.find(handle);
     if (it == connections.end())
     {
@@ -202,6 +213,7 @@ void Connection::OnPacketReceivedS(const int32_t handle, const int32_t size, BYT
 
 void Connection::OnDisconnectedS(const int32_t handle)
 {
+    const std::lock_guard<std::recursive_mutex> lock(connectionsMutex);
     const auto it = connections.find(handle);
     if (it == connections.end())
     {
@@ -232,7 +244,10 @@ Connection::Connection(const char16_t* host, int32_t port, bool isEncrypted,
 
     if (IsConnected())
     {
-        connections[this->_handle] = this;
+        {
+            const std::lock_guard<std::recursive_mutex> lock(connectionsMutex);
+            connections[this->_handle] = this;
+        }
         if (const auto beginReceive = GetBeginReceive())
         {
             beginReceive(this->_handle);
@@ -252,16 +267,21 @@ Connection::Connection(const char16_t* host, int32_t port, bool isEncrypted,
 
 Connection::~Connection()
 {
-    if (!IsConnected())
     {
-        return;
+        // Out of the map first: after this no callback of the managed library reaches this object.
+        const std::lock_guard<std::recursive_mutex> lock(connectionsMutex);
+        std::erase_if(connections, [this](const auto& entry) { return entry.second == this; });
     }
 
-    if (const auto disconnect = GetDisconnect())
+    if (IsConnected())
     {
-        disconnect(_handle);
+        if (const auto disconnect = GetDisconnect())
+        {
+            disconnect(_handle);
+        }
     }
 
+    // Also after the server dropped the connection (handle 0): these leaked then.
     SAFE_DELETE(_chatServer);
     SAFE_DELETE(_connectServer);
     SAFE_DELETE(_gameServer);
@@ -310,6 +330,7 @@ void Connection::OnDisconnected()
     }
 
     mu::log::Get("dotnet")->info("NET: OnDisconnected -- handle={}, erasing from connection map", this->_handle);
+    const std::lock_guard<std::recursive_mutex> lock(connectionsMutex);
     connections.erase(this->_handle);
     this->_handle = 0;
 }
