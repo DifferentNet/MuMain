@@ -54,3 +54,10 @@ body { pointer-events: none; }
 
 /* The HUD takes no pointer events where it is placed (base.rcss gives a placed panel them). */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the phone's readable text makes the monsters-passed line
+   longer than its 110-unit box (ru "Пройдено монстров: ( %d/%d )" is about 145), so the box grows to 160 to
+   the left, over the frame's open top-left, and keeps to the frame's right edge (227). */
+@media (theme: mobile) {
+	#dg_passed { left: 67px; width: calc(160px * var(--root-scale)); }
+}
