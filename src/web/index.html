@@ -27,9 +27,10 @@
 <script>
   // The language of the page's own texts (TEXT, in the next script): English, Russian or Romanian, one of
   // them, not two side by side (ghinzuro, 2026-11-21). The site's links carry it (?lang=ru or ?lang=ro,
-  // server/signup/app.py PLAY_HREF), and the page keeps it in the browser (PAGE_LANG_KEY): ?reset, the
-  // installed app and a link without it come back to it. Without either, the first of the browser's
-  // languages the page has; English when none of them.
+  // server/signup/app.py PLAY_HREF), and the page keeps it in the browser (PAGE_LANG_KEY): ?reset and a
+  // link without it come back to it, so does the installed app where it shares the browser's storage
+  // (Android). An iPhone's home-screen app has storage of its own: it starts without the choice. Without
+  // either, the first of the browser's languages the page has; English when none of them.
   const PAGE_LANGS = ["en", "ru", "ro"];
   const PAGE_LANG_KEY = "mu-page-lang";
   function browserPageLang() {
