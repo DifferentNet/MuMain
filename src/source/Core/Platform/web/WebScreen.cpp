@@ -116,34 +116,77 @@ EM_JS(int, MuWeb_PageContactDown, (), {
     return input.down.size > 0 ? 1 : 0;
 });
 
-// Module.muBack: the entry the page keeps on top of its history while armed, and the presses counted.
-// Stepping back from it fires popstate on the same page: a press, and the entry goes on top again.
+// Module.muBack: the entry the page keeps on top of its history while armed (marked with this page's own
+// token), and the presses counted. Stepping back from it fires popstate on the same page: a press, and the
+// page steps forward onto its entry again. It added a new entry after each press before: Chrome's Back skips
+// the entries a page adds without a tap or a key, and after a step back it counts none until the next one
+// (its history manipulation intervention), so a second Back with no tap between left the game, and closed
+// the installed app. For the same reason the entry is added in a tap's or a key's event (a user activation),
+// or at once where there was one since the page loaded and it has not stepped through its history yet (the
+// tap on Play): Chrome counts a tap or a key since the last step. A step forward that doesn't land (no entry
+// ahead) adds a new entry at once, as before.
 EM_JS(void, MuWeb_ArmBack, (int armed), {
     let back = Module.muBack;
     if (!back)
     {
-        back = Module.muBack = {armed : false, pushed : false, presses : 0};
+        // How long a step forward may take before a new entry is added instead.
+        const FORWARD_WAIT_MS = 500;
+        back = Module.muBack = {
+            armed : false,
+            onTop : false,
+            stepped : false,
+            forwardTimer : 0,
+            presses : 0,
+            token : Math.random()
+        };
         back.push = function()
         {
-            if (back.armed && !back.pushed)
-            {
-                history.pushState({muBack : true}, "");
-                back.pushed = true;
-            }
+            history.pushState({muBack : back.token}, "");
+            back.onTop = true;
         };
+        // Where the browser does not say whether there was a user activation, the entry is added at once.
+        back.pushOnActivation = function()
+        {
+            const activation = navigator.userActivation;
+            const active = !activation || activation.isActive || (activation.hasBeenActive && !back.stepped);
+            if (back.armed && !back.onTop && !back.forwardTimer && active)
+                back.push();
+        };
+        const listen = {capture : true, passive : true};
+        for (const type of ["pointerup", "touchend", "mousedown", "keydown"])
+            window.addEventListener(type, back.pushOnActivation, listen);
         window.addEventListener(
-            "popstate", function() {
-                if (!back.pushed)
+            "popstate", function(event) {
+                back.stepped = true;
+                if (event.state && event.state.muBack === back.token)
+                {
+                    // On the entry again: the step forward landed, or the browser stepped forward itself.
+                    back.onTop = true;
+                    clearTimeout(back.forwardTimer);
+                    back.forwardTimer = 0;
                     return;
-                back.pushed = false;
+                }
+                if (!back.onTop)
+                    return;
+                back.onTop = false;
                 if (!back.armed)
                     return;
                 back.presses++;
-                back.push();
+                if (window.navigation && !navigation.canGoForward)
+                {
+                    back.push();
+                    return;
+                }
+                history.forward();
+                back.forwardTimer = setTimeout(function() {
+                    back.forwardTimer = 0;
+                    if (back.armed && !back.onTop)
+                        back.push();
+                }, FORWARD_WAIT_MS);
             });
     }
     back.armed = !!armed;
-    back.push();
+    back.pushOnActivation();
 });
 
 EM_JS(int, MuWeb_TakeBackPresses, (), {

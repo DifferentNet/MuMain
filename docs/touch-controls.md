@@ -266,9 +266,13 @@ page's side):
   a table should; the next touch keeps it on again.
 - The back gesture (or Android's back button) is the game's Back instead of leaving the page: the page
   keeps a history entry of its own on top (`Module.muBack`), and stepping back from it counts a press
-  and puts it back. A press closes the touch menu if it is open, else does what Back does
-  (`TouchControls::PressBack`); out of the world it is Esc. Chrome may let a back gesture skip an entry
-  pushed without a tap; the next tap on the page restores it.
+  and steps forward onto it again. A press closes the touch menu if it is open, else does what Back does
+  (`TouchControls::PressBack`); out of the world it is Esc. The entry is added with a tap or a key behind it
+  (the tap on Play, else the next one), and not again after each press: Chrome's Back skips the entries a
+  page adds with no tap or key since its last step through its history (its history manipulation
+  intervention), so a second Back in a row left the game, and closed the installed app (round 33). Once the
+  game has stopped (Exit, a crash), Back is the browser's again: the first steps off the game's entry, the
+  next leaves the page.
 - Frame pace (`WaitForBrowserFrame` in `Winmain.cpp`): the world runs at the FPS cap of the options
   (60 when none), the menus at 30 at most, loading with no cap; a hidden page runs at 25, its wait timed by a
   small worker (`Module.muHiddenClock`, setTimeout if there are no workers), as browsers slow a
