@@ -103,7 +103,9 @@
   html.phone #status { inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
   html.phone #log { bottom: 0; }
   html.phone #menu { display: block; position: fixed; top: calc(.5rem + env(safe-area-inset-top, 0px)); right: calc(.5rem + env(safe-area-inset-right, 0px)); z-index: 2; width: 3rem; height: 3rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(22,24,31,.6); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
-  html.phone footer { position: fixed; top: calc(.5rem + env(safe-area-inset-top, 0px)); right: calc(4rem + env(safe-area-inset-right, 0px)); z-index: 2; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
+  /* The open menu panel lies over the Play card: on a phone 874-915 px wide the card reached under the
+     panel's left edge and hid the start of its labels ("ality"). */
+  html.phone footer { position: fixed; top: calc(.5rem + env(safe-area-inset-top, 0px)); right: calc(4rem + env(safe-area-inset-right, 0px)); z-index: 3; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
   html.phone footer:not(.open), html.phone footer > span { display: none; }
   html.phone footer button, html.phone footer select { padding: .45rem .9rem; }
   /* Phones, before the game: Play opens it fullscreen and sideways. */
@@ -113,6 +115,9 @@
   #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
   /* The note of a new release (newVersionCheck): in gold, and the menu button on phones too. */
   footer #new-version, html.phone #menu.news { color: var(--gold); border-color: var(--gold); }
+  /* While the note shows, the PC footer line has no room for Copy log: it stays in the phone menu and the
+     crash panel. */
+  html:not(.phone) footer.news #copy-log { display: none; }
   #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden], #play-here[hidden] { display: none; }
   /* The Play card's choice of how the game's files come: Lite (as it is played) or Full (all now). */
   #download-choice { display: flex; flex-direction: column; align-items: center; gap: .3rem; margin-top: .2rem; font-size: .8125rem; color: var(--muted); text-align: center; }
@@ -160,6 +165,7 @@
 <footer>
   <span>MU Online in the browser</span>
   <button id="toggle-log" type="button">Log</button>
+  <button id="copy-log" type="button" title="The log, the browser and the graphics card, for a bug report · Журнал, браузер и видеокарта для сообщения об ошибке"><span class="label-full">Copy log · Копировать журнал</span><span class="label-short">Копировать журнал</span></button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
   <button id="download-game" type="button" hidden><span class="label-full">Download the whole game · Скачать всю игру</span><span class="label-short">Скачать всю игру</span></button>
@@ -425,6 +431,98 @@
   window.muGpuErrors = () =>
     [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  // Copy log (the footer, the ⋮ menu on phones, the crash panel: gameCrashed): what a player sends with
+  // a bug report, to the clipboard. The release, the browser, the graphics card and the screen, the kept
+  // error lines older than the last LOG_COPY_LINES lines, then those lines. No passwords and no account:
+  // nothing typed into the game is logged, and the report leaves out the packet log and the account a
+  // login names (reportLine).
+  // The button says for a moment whether it was copied.
+  const LOG_COPY_LINES = 300;
+  const COPIED_NOTE_MS = 2000;
+  const RELEASE_RECORD = ".manifest.json";      // the release's record (scripts/publish-web.py)
+  const RELEASE_RECORD_HEAD = "bytes=0-1023";   // its release and client come first, then a long file list
+  const RELEASE_RECORD_DELAY_MS = 30000;        // read once the page's own downloads are under way
+  const COPY_LOG_LABELS = {
+    idle: ["Copy log · Копировать журнал", "Копировать журнал"],
+    copied: ["Copied · Скопировано", "Скопировано"],
+    failed: ["Not copied · Не скопировано", "Не скопировано"],
+  };
+  let gpuName = "not checked yet";    // checkGpu()
+  let releaseNote = null;             // readReleaseRecord()
+  let releaseRead = null;
+  const copyNoteTimers = new Map();   // button -> the timer that puts its label back
+  // The release: its record's name and client commit (a local build has no record) and the Main.wasm
+  // hash this page's startup.json gave. Read once: RELEASE_RECORD_DELAY_MS after the page opened, or
+  // sooner when the ⋮ menu opens or a Copy log button is pressed down. A copy never waits for it (Safari
+  // gives its clipboard only right after the click): one before it is read says "unknown". A release
+  // published since is named with "a newer release is out" (newVersionCheck).
+  function readReleaseRecord() {
+    if (releaseRead) return releaseRead;
+    releaseRead = (async () => {
+      let release = "unknown", client = "";
+      try {
+        const response = await fetch(RELEASE_RECORD, { headers: { Range: RELEASE_RECORD_HEAD }, cache: "no-store" });
+        if (response.ok) {
+          const head = await response.text();
+          release = (head.match(/"release":\s*"([^"]+)"/) || [])[1] || release;
+          client = (head.match(/"client":\s*"([^"]+)"/) || [])[1] || "";
+        }
+      } catch (e) { /* no network: unknown */ }
+      const index = await releaseIndexLoad;
+      const wasm = (index && index.code && index.code["Main.wasm"]) || "unknown";
+      releaseNote = `${release}${client ? ", client " + client : ""}; Main.wasm ${wasm}`;
+    })();
+    return releaseRead;
+  }
+  setTimeout(readReleaseRecord, RELEASE_RECORD_DELAY_MS);
+  // The packet log's lines (index.html?packets, Core/Platform/web/WebNetwork.cpp) stay out of a report:
+  // a login packet's bytes hold the account and the password, only XORed. The lines that name the
+  // account a login tries (UI/Windows/LoginWin.cpp) go in without it.
+  const PACKET_LINE = /^NET (?:send|recv) \d+:/;
+  const ACCOUNT_IN_LINE = [
+    [/(> Try to Login ").*(")/, "$1(left out)$2"],
+    [/(Login with the following account: ).*$/, "$1(left out)"],
+  ];
+  function reportLine(text) {
+    return ACCOUNT_IN_LINE.reduce((line, [pattern, replacement]) => line.replace(pattern, replacement), text);
+  }
+  function logReport() {
+    const lines = Array.from(logEl.children).filter((line) => !PACKET_LINE.test(line.textContent));
+    const recent = lines.slice(-LOG_COPY_LINES);
+    const keptBefore = lines.slice(0, -LOG_COPY_LINES).filter((line) => line.dataset.keep);
+    const texts = (list) => list.map((line) => reportLine(line.textContent));
+    const newer = document.getElementById("new-version").hidden ? "" : " (a newer release is out)";
+    const report = [
+      `MU Skynet /play log, ${new Date().toISOString()}`,
+      `Release: ${releaseNote || "unknown"}${newer}`,
+      `Page: ${location.pathname}${location.search}`,
+      `Browser: ${browserName()}; ${navigator.userAgent}`,
+      `GPU adapter: ${gpuName}`,
+      `Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height}, window ` +
+        `${innerWidth}x${innerHeight}, pixel density ${devicePixelRatio}; game ${canvas.width}x${canvas.height}, ` +
+        `quality ${display.quality}; display ${displayMode}${inFullscreen() ? ", fullscreen" : ""}; ` +
+        `network ${navigator.onLine === false ? "offline" : "online"}`,
+    ];
+    if (keptBefore.length) report.push("", `Errors kept from before the last ${LOG_COPY_LINES} lines:`, ...texts(keptBefore));
+    report.push("", `The last ${recent.length} lines:`, ...texts(recent));
+    return report.join("\n");
+  }
+  // logReport() to the clipboard; label(pair) shows one of COPY_LOG_LABELS on the button.
+  async function copyLog(button, label) {
+    clearTimeout(copyNoteTimers.get(button));
+    readReleaseRecord();
+    const copied = await writeClipboard(logReport());
+    if (!copied) appendLog("Log not copied: the browser refused its clipboard", true);
+    label(copied ? COPY_LOG_LABELS.copied : COPY_LOG_LABELS.failed);
+    copyNoteTimers.set(button, setTimeout(() => label(COPY_LOG_LABELS.idle), COPIED_NOTE_MS));
+  }
+  const copyLogButton = document.getElementById("copy-log");
+  // On a phone the ⋮ menu stays open: the button's note is seen there.
+  copyLogButton.addEventListener("pointerdown", readReleaseRecord);
+  copyLogButton.onclick = () => {
+    copyLog(copyLogButton, ([full, short]) => setFooterLabel(copyLogButton, full, short));
+    canvas.focus();
+  };
   const displayMode = ["fullscreen", "standalone", "minimal-ui", "browser"]
     .find((mode) => matchMedia(`(display-mode: ${mode})`).matches) || "unknown";
   appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
@@ -492,7 +590,9 @@
     footer.classList.remove("open");
     canvas.focus();
   };
-  document.getElementById("menu").onclick = () => footer.classList.toggle("open");
+  document.getElementById("menu").onclick = () => {
+    if (footer.classList.toggle("open")) readReleaseRecord();   // for its Copy log
+  };
   canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
 
   // View: the game's layout, Auto / PC / Phone, the same choice as its Options → Interface, on a
@@ -721,8 +821,12 @@
     keyboardKeysAsked = keys;
   }
 
+  // A key's event on the window, where SDL listens; `more`: the event's other fields (ctrlKey).
+  function sendKey(type, key, code, keyCode, more) {
+    window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true, ...more }));
+  }
   function pressKey(key, code, keyCode, holdMs) {
-    const send = (type) => window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true }));
+    const send = (type) => sendKey(type, key, code, keyCode);
     send("keydown");
     if (holdMs) setTimeout(() => send("keyup"), holdMs);
     else send("keyup");
@@ -873,6 +977,143 @@
       }, KEYBOARD_HIDE_DELAY_MS);
     },
   };
+
+  // Paste and copy in the game's text fields from a keyboard (a phone's own paste types into #keyboard
+  // above). SDL has no clipboard in the browser and keeps Ctrl+V and Ctrl+C from it, so while a game
+  // field has the keys (muClipboard.field: its FIELD_KEYS number, which the game sets each frame,
+  // Core/Platform/web/WebClipboard.h) the page takes them. Ctrl+V (Cmd+V on a Mac) is left to the
+  // browser, whose paste goes to the field as typed text, on one line (pasteLine); where the browser
+  // sends no paste within PASTE_WAIT_MS, the game pastes what it copied itself, as before. The paste can
+  // come a little after the key (a Mac's Cmd+V goes through its menu first, Firefox pastes on the key's
+  // keypress): sooner, the game would paste once more. Ctrl+C and Ctrl+X go to the game as Ctrl and the
+  // Latin letter, so they work in any keyboard layout and with Cmd, and what the field copies comes back
+  // in muClipboard.copy() for the browser's clipboard. Nothing is copied out of a password field, here
+  // or in the game (Render/RmlUi/RmlUiSystemInterface.cpp), and Ctrl+X does not cut there either.
+  const PASSWORD_KEYS = FIELD_KEYS.indexOf("password");
+  const PASTE_MAX_CHARS = 1000;          // more than any of the game's fields takes
+  const PASTE_WAIT_MS = 300;             // how long a Ctrl+V waits for the browser's paste
+  const CLIPBOARD_LETTERS = { KeyV: "v", KeyC: "c", KeyX: "x" };   // by the key's place, in any layout
+  let pasteAwaited = 0;                  // a Ctrl+V the browser has not answered with its paste yet (timer)
+  window.muClipboard = {
+    field: 0,
+    copy(text) {
+      if (this.field === PASSWORD_KEYS) return;
+      writeClipboard(text).then((copied) => { if (!copied) appendLog("Copy: the browser refused its clipboard", true); });
+    },
+  };
+  // The browser's clipboard: navigator.clipboard (a page served over https or from this computer), else
+  // the old copy command from an unseen field. True once copied.
+  async function writeClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) { /* refused: the copy command may still be allowed */ }
+    }
+    return copyByCommand(text);
+  }
+  function copyByCommand(text) {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.readOnly = true;
+    field.style.cssText = "position: fixed; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none;";
+    const focused = document.activeElement;
+    document.body.appendChild(field);
+    field.select();
+    let copied = false;
+    try { copied = document.execCommand("copy"); } catch (e) { /* not copied */ }
+    field.remove();
+    if (focused && focused !== document.body && focused.focus) focused.focus({ preventScroll: true });
+    return copied;
+  }
+  // Ctrl and a letter's key, as the game reads a shortcut. When the player's own Ctrl is not down (Cmd
+  // on a Mac, or a late paste's Ctrl+V), the page presses Ctrl too and holds it until the player's next
+  // key or click without Cmd (followPlayerModifiers): the game reads the keys a frame later and asks
+  // then whether Ctrl is down.
+  let shortcutCtrlHeld = false;
+  function pressShortcut(letter, code, addCtrl) {
+    const keyCode = letter.toUpperCase().charCodeAt(0);
+    if (addCtrl && !shortcutCtrlHeld) {
+      sendKey("keydown", "Control", "ControlLeft", 17, { ctrlKey: true, location: 1 });
+      shortcutCtrlHeld = true;
+    }
+    sendKey("keydown", letter, code, keyCode, { ctrlKey: true });
+    sendKey("keyup", letter, code, keyCode, { ctrlKey: true });
+  }
+  function releaseShortcutCtrl() {
+    if (!shortcutCtrlHeld) return;
+    shortcutCtrlHeld = false;
+    sendKey("keyup", "Control", "ControlLeft", 17, { location: 1 });
+  }
+  // Any key or click of the player's without Cmd lets that Ctrl go, before the game sees it: a Mac may
+  // send no keyup for Cmd, and the paste's own Ctrl+V comes PASTE_WAIT_MS late, maybe after it. A held
+  // Ctrl would make a click an attack on a player and a typed letter a shortcut. Mouse moves keep it: a
+  // Ctrl let go in the frame the game reads the paste's V in would lose the paste.
+  let playerCtrl = false;   // the player's own Ctrl is down, as their last key or click said
+  function followPlayerModifiers(event) {
+    if (!event.isTrusted) return;
+    playerCtrl = event.ctrlKey;
+    if (!event.metaKey) releaseShortcutCtrl();
+  }
+  for (const type of ["keydown", "keyup", "pointerdown"]) addEventListener(type, followPlayerModifiers, true);
+  addEventListener("blur", releaseShortcutCtrl);
+  addEventListener("keydown", (event) => {
+    const letter = CLIPBOARD_LETTERS[event.code];
+    if (!letter || !event.isTrusted || crashed || !window.muClipboard.field) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;   // AltGr is Ctrl+Alt: a letter of its own
+    if (window.muClipboard.field === PASSWORD_KEYS) {
+      if (letter === "c") return;   // the game copies nothing out of it
+      if (letter === "x") {
+        // The game would cut: copy nothing, and delete the selected part all the same.
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        return;
+      }
+    }
+    // The game never sees the key: with the browser's paste it would paste twice.
+    event.stopImmediatePropagation();
+    if (letter === "v") {
+      clearTimeout(pasteAwaited);
+      // By then the player may have let Ctrl go: the page holds its own.
+      pasteAwaited = setTimeout(() => { pasteAwaited = 0; pressShortcut("v", event.code, !playerCtrl); }, PASTE_WAIT_MS);
+      return;
+    }
+    event.preventDefault();
+    pressShortcut(letter, event.code, !event.ctrlKey);
+  }, true);
+  // A paste for the game's field: one has the keys, and no field of the page's own (#keyboard on a
+  // phone) is the one pasted into.
+  function pasteForGame(event) {
+    const target = event.target;
+    const pageField = target instanceof Element &&
+      (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+    return !crashed && window.muClipboard.field !== 0 && !pageField;
+  }
+  // Safari sends a paste where nothing can be edited only to a page that asks for it so.
+  document.addEventListener("beforepaste", (event) => { if (pasteForGame(event)) event.preventDefault(); });
+  document.addEventListener("paste", (event) => {
+    clearTimeout(pasteAwaited);
+    pasteAwaited = 0;
+    if (!pasteForGame(event)) return;
+    event.preventDefault();
+    const text = pasteLine(event.clipboardData ? event.clipboardData.getData("text/plain") : "");
+    if (text) typeText(text);
+  });
+  // A paste's text on one line: line breaks at its ends dropped, those inside it and tabs a space, other
+  // control characters dropped; at most PASTE_MAX_CHARS characters.
+  function pasteLine(text) {
+    const line = text.replace(/^[\r\n]+|[\r\n]+$/g, "").replace(/\r\n|[\r\n\t]/g, " ")
+      .replace(/[\u0000-\u001f\u007f]/g, "");
+    return Array.from(line).slice(0, PASTE_MAX_CHARS).join("");
+  }
+
+  // The network back (the browser's `online`): the game's reconnect tries at once instead of after its
+  // 5 s wait, and while the browser has none it says "No network" instead of counting down. It still
+  // tries every 5 s meanwhile: a browser can say it has no network when it has one
+  // (Network/Reconnect/ReconnectManager.cpp, Core/Platform/web/WebServerProbe.h).
+  window.muNetwork = { back: false };
+  addEventListener("online", () => { window.muNetwork.back = true; appendLog("Network: back"); });
+  addEventListener("offline", () => appendLog("Network: gone"));
 
   // Sound on phones and tablets. Safari plays a page's sound as "ambient", which an iPhone's ring/silent
   // switch mutes, and most iPhones stay on silent: "playback" plays it as a video's sound is played.
@@ -1451,7 +1692,12 @@
     const reset = document.createElement("button");
     reset.textContent = "Reset settings and reload · Сбросить настройки и обновить";
     reset.onclick = () => { location.search = "?reset"; };
-    for (const button of [reload, reset]) {
+    const copy = document.createElement("button");
+    copy.textContent = COPY_LOG_LABELS.idle[0];
+    copy.onclick = () => copyLog(copy, ([full]) => { copy.textContent = full; });
+    copy.addEventListener("pointerdown", readReleaseRecord);
+    readReleaseRecord();   // read by the time the button is pressed
+    for (const button of [reload, reset, copy]) {
       styleStatusButton(button);
       box.appendChild(button);
     }
@@ -1690,11 +1936,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     const browser = browserName();
     if (!adapter) {
+      gpuName = `none (${tried.join(", ")})`;
       appendLog(`WebGPU: the browser gave no graphics adapter (${tried.join(", ")}); browser: ${browser}`, true);
       return { ok: false, gpu: "none", browser, missing: [] };
     }
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
+    gpuName = gpu;
     const missing = needed.filter((name) => !adapter.features.has(name));
     let clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
     let clipNote = clipDistances ? "yes" : "no, soft clip shaders";
@@ -1844,6 +2092,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (!latest || latest === running) return;
         appendLog(`New version on the server (Main.wasm ${latest}, this page runs ${running}): "New version: reload" shown`);
         newVersionButton.hidden = false;
+        footer.classList.add("news");
         document.getElementById("menu").classList.add("news");
       }).catch(() => {});
     }

@@ -14538,4 +14538,7 @@
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Artesanía</value>
   </data>
+  <data name="No network" xml:space="preserve">
+    <value>Sin red</value>
+  </data>
 </root>

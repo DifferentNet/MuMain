@@ -4,6 +4,7 @@
 
 #include "Core/Platform/web/WebNetwork.h"
 
+#include <emscripten.h>
 #include <emscripten/websocket.h>
 
 #include <cstdint>
@@ -49,6 +50,16 @@ EM_BOOL OnClose(int, const EmscriptenWebSocketCloseEvent*, void* userData)
     Settle(userData, ServerProbeResult::Down);
     return EM_TRUE;
 }
+
+EM_JS(int, MuWeb_BrowserOnline, (), { return navigator.onLine === false ? 0 : 1; });
+
+// index.html sets window.muNetwork.back on the browser's `online` event.
+EM_JS(int, MuWeb_TakeNetworkBack, (), {
+    if (!window.muNetwork || !window.muNetwork.back)
+        return 0;
+    window.muNetwork.back = false;
+    return 1;
+});
 } // namespace
 
 std::int32_t mu::web::StartServerProbe(std::uint16_t port)
@@ -97,4 +108,14 @@ void mu::web::CloseServerProbe(std::int32_t probe)
     emscripten_websocket_close(it->second.socket, NormalClosure, "");
     emscripten_websocket_delete(it->second.socket);
     g_probes.erase(it);
+}
+
+bool mu::web::BrowserOnline()
+{
+    return MuWeb_BrowserOnline() != 0;
+}
+
+bool mu::web::TakeNetworkBack()
+{
+    return MuWeb_TakeNetworkBack() != 0;
 }
