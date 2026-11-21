@@ -14538,6 +14538,14 @@
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Крафт</value>
   </data>
+  <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
+  <data name="TooltipShiftForDetails" xml:space="preserve">
+    <value>Детально — тримай Shift</value>
+  </data>
+  <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
+  <data name="HudEffects" xml:space="preserve">
+    <value>Анімація панелі</value>
+  </data>
   <data name="No network" xml:space="preserve">
     <value>Немає мережі</value>
   </data>

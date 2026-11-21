@@ -51,10 +51,10 @@ Rml::TextureHandle RmlUiRenderInterface::LoadTexture(Rml::Vector2i& texture_dime
     // caller of Bitmaps.LoadImage passes backslash-separated paths (e.g. "Interface\\Foo.jpg"),
     // matching this codebase's own path-handling convention -- normalize rather than assume
     // forward-slash tolerance extends to this legacy loader too.
-    std::string normalized = m_ResolveTextureFile ? m_ResolveTextureFile(source) : source;
-    if (normalized.empty())
+    const std::string normalizedSource = m_ResolveTextureFile ? m_ResolveTextureFile(source) : source;
+    if (normalizedSource.empty())
         return 0;
-    const std::wstring wpath = BitmapPath(std::move(normalized)); // Rml::String is std::string (RmlUi/Config/Config.h)
+    const std::wstring wpath = BitmapPath(normalizedSource); // Rml::String is std::string (RmlUi/Config/Config.h)
     // LoadImageExclusive, NOT LoadImage: this handle is cached indefinitely (by RmlUi's compiled
     // geometry, and by m_FileBackedBitmapIndexByHandle below) for as long as the document lives,
     // which today is the whole process -- but plain LoadImage() would find-and-share an existing
@@ -81,8 +81,14 @@ Rml::TextureHandle RmlUiRenderInterface::LoadTexture(Rml::Vector2i& texture_dime
     const bool timed = Core::FirstOpenTiming::Active();
     const double loadStartedAt = timed ? Core::FirstOpenTiming::NowMs() : 0.0;
 #endif
+    // A theme can change the file's pixels before the upload (a theme's [Reforge] list); the changed
+    // copy is its own entry, never shared with the plain file.
+    const CGlobalBitmap::ImageChange change =
+        m_TextureImageChange ? m_TextureImageChange(normalizedSource) : CGlobalBitmap::ImageChange{};
     const GLuint bitmapIndex =
-        Bitmaps.LoadImageExclusive(wpath, GL_LINEAR, GL_CLAMP_TO_EDGE, PadToPowerOfTwo, PremultiplyAlpha);
+        change ? Bitmaps.LoadChangedImageExclusive(wpath, GL_LINEAR, GL_CLAMP_TO_EDGE, PadToPowerOfTwo,
+                                                   PremultiplyAlpha, change)
+               : Bitmaps.LoadImageExclusive(wpath, GL_LINEAR, GL_CLAMP_TO_EDGE, PadToPowerOfTwo, PremultiplyAlpha);
 #ifdef __EMSCRIPTEN__
     if (timed)
     {

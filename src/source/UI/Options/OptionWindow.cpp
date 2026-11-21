@@ -900,6 +900,9 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("overhead_titles_label", &model.overheadTitlesLabel);
     c.Bind("title_effects", &model.titleEffects);
     c.Bind("title_effects_label", &model.titleEffectsLabel);
+    c.Bind("hud_effects", &model.hudEffects);
+    c.Bind("hud_effects_label", &model.hudEffectsLabel);
+    c.Bind("hud_effects_shown", &model.hudEffectsShown);
     c.Bind("background_sound", &model.backgroundSound);
     c.Bind("background_sound_label", &model.backgroundSoundLabel);
     c.Bind("titles_towns_only", &model.titlesTownsOnly);
@@ -1105,6 +1108,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleOverheadTitles(); });
     c.BindEventCallback("option_toggle_title_effects",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTitleEffects(); });
+    c.BindEventCallback("option_toggle_hud_effects",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHudEffects(); });
     c.BindEventCallback("option_toggle_background_sound",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleBackgroundSound(); });
     c.BindEventCallback("option_toggle_titles_towns_only",
@@ -2593,6 +2598,13 @@ void mu::ui::window::COptionWindow::RmlToggleTitleEffects()
     config.Save();
 }
 
+void mu::ui::window::COptionWindow::RmlToggleHudEffects()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetHudEffects(!config.GetHudEffects());
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::RmlToggleBackgroundSound()
 {
     GameConfig& config = GameConfig::GetInstance();
@@ -3188,6 +3200,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.overheadNpcNamesLabel, "overhead_npc_names_label", I18N::Game::OverheadNpcNames);
     syncLabel(model.overheadTitlesLabel, "overhead_titles_label", I18N::Game::OverheadTitles);
     syncLabel(model.titleEffectsLabel, "title_effects_label", I18N::Game::TitleEffects);
+    syncLabel(model.hudEffectsLabel, "hud_effects_label", I18N::Game::HudEffects);
     syncLabel(model.backgroundSoundLabel, "background_sound_label", I18N::Game::BackgroundSound);
     syncLabel(model.titlesTownsOnlyLabel, "titles_towns_only_label", I18N::Game::TitlesTownsOnly);
     syncLabel(model.themeRowLabel, "theme_row_label", I18N::Game::UITheme);
@@ -3495,6 +3508,18 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.overheadTitles != overheadTitles) { model.overheadTitles = overheadTitles; m_RmlView.MarkDirty("overhead_titles"); }
     const bool titleEffects = GameConfig::GetInstance().GetTitleEffects();
     if (model.titleEffects != titleEffects) { model.titleEffects = titleEffects; m_RmlView.MarkDirty("title_effects"); }
+    const bool hudEffects = GameConfig::GetInstance().GetHudEffects();
+    if (model.hudEffects != hudEffects)
+    {
+        model.hudEffects = hudEffects;
+        m_RmlView.MarkDirty("hud_effects");
+    }
+    const bool hudEffectsShown = UI::RmlBridge::ThemeHasLiveHud() && !UI::Mobile::ReplacesPcHud();
+    if (model.hudEffectsShown != hudEffectsShown)
+    {
+        model.hudEffectsShown = hudEffectsShown;
+        m_RmlView.MarkDirty("hud_effects_shown");
+    }
     const bool backgroundSound = GameConfig::GetInstance().GetBackgroundSound();
     if (model.backgroundSound != backgroundSound) { model.backgroundSound = backgroundSound; m_RmlView.MarkDirty("background_sound"); }
     const bool titlesTownsOnly = GameConfig::GetInstance().GetTitlesTownsOnly();

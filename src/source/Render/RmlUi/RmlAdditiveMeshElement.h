@@ -19,23 +19,31 @@ namespace Render::RmlUi
 class AdditiveMeshElement final : public Rml::Element
 {
 public:
+    RMLUI_RTTI_DeclareWithParent(AdditiveMeshElement, Rml::Element);
+
     explicit AdditiveMeshElement(const Rml::String& tag);
 
     // source: the image as an <img> src names it; quads: four vertices each, positions relative to the element's
     // border box; their colours are multiplied by opacity.
     void SetMesh(const Rml::String& source, std::span<const Render::Renderer::RecordedVertex> quads, float opacity,
                  bool additive = true);
+    // The same quads without a texture: each vertex is its colour alone (u and v unused), added or blended as
+    // SetMesh() does. The live HUD draws its sockets and rims so.
+    void SetPlainMesh(std::span<const Render::Renderer::RecordedVertex> quads, float opacity, bool additive);
 
 protected:
     void OnRender() override;
 
 private:
+    void FillMesh(std::span<const Render::Renderer::RecordedVertex> quads, float opacity, bool additive);
+
     Rml::String m_source;
     Rml::Texture m_texture;
     Rml::Mesh m_mesh;
     Rml::Geometry m_geometry;
     bool m_textureDirty = false;
     bool m_meshDirty = false;
+    bool m_plain = false;
 };
 
 // Makes <additive-mesh> an AdditiveMeshElement. Call once after Rml::Initialise().

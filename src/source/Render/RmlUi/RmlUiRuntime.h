@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Render/RmlUi/RmlTouchScroll.h"
+#include "Render/Sprites/GlobalBitmap.h"
 #include <RmlUi/Core/Context.h>
 #include <functional>
 #include <memory>
@@ -45,6 +46,8 @@ struct RmlUiRuntimeHooks
     std::function<bool(const Rml::String& source, void*& texture, int& width, int& height)> resolveTexture;
     // Resolves file texture paths without coupling the renderer to the UI theme implementation.
     std::function<Rml::String(const Rml::String&)> resolveTextureFile;
+    // The change a resolved texture file gets before its upload; an empty change loads it as it is.
+    std::function<CGlobalBitmap::ImageChange(const Rml::String& resolvedFile)> textureImageChange;
     // Optional application resource provider; installed before Rml::Initialise().
     std::function<std::unique_ptr<Rml::FileInterface>()> createFileInterface;
 };

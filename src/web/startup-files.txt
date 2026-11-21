@@ -28,6 +28,11 @@ fonts/LiberationSans-Regular.ttf
 fonts/LiberationSans-Bold.ttf
 Data/Interface/RmlUi/themes/legacy/theme.ini
 Data/Interface/RmlUi/themes/legacy/tokens.ini
+Data/Interface/RmlUi/themes/skynet/theme.ini
+Data/Interface/RmlUi/themes/skynet/tokens.ini
+Data/Interface/RmlUi/themes/skynet/tooltip.rml
+Data/Interface/RmlUi/themes/skynet/tooltip_rich.rcss
+Data/Interface/RmlUi/themes/skynet/main_frame_live.rcss
 Data/Interface/RmlUi/themes/legacy/base.rcss
 Data/Render/Look.json
 Data/Maps/LightMood.json
@@ -1713,6 +1718,7 @@ Data/Interface/RmlUi/main_frame.rml
 Data/Interface/RmlUi/themes/legacy/skill_icons.rcss
 Data/Interface/RmlUi/themes/legacy/master_skill_icons.rcss
 Data/Interface/RmlUi/themes/legacy/main_frame.rcss
+Data/Interface/RmlUi/themes/legacy/main_frame_live.rcss
 Data/Interface/RmlUi/main_frame_top.rml
 Data/Interface/RmlUi/themes/legacy/main_frame_top.rcss
 Data/Interface/newui_item_box.OZT
@@ -2529,6 +2535,7 @@ Data/Interface/RmlUi/themes/modern/lucky_coin_registration_rows.rcss
 Data/Interface/RmlUi/themes/modern/lucky_item.rcss
 Data/Interface/RmlUi/themes/modern/lucky_item.rml
 Data/Interface/RmlUi/themes/modern/main_frame.rcss
+Data/Interface/RmlUi/themes/modern/main_frame_live.rcss
 Data/Interface/RmlUi/themes/modern/main_frame_top.rcss
 Data/Interface/RmlUi/themes/modern/map_name.rcss
 Data/Interface/RmlUi/themes/modern/master_level.rcss

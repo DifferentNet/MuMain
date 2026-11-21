@@ -2,6 +2,8 @@
 
 #include "stdafx.h"
 
+#include "GameLogic/Items/ItemRarity.h"
+#include "UI/RmlBridge/RmlTooltipLine.h"
 #include "UI/Scaling/UITransform.h"
 
 #include <optional>
@@ -23,48 +25,6 @@
 // RmlUi's own "renders once, last, every frame" main-context pass.
 namespace UI::RmlBridge::Tooltip
 {
-    // Superset of every color capability across the five prior mechanisms -- the item tooltip's
-    // own palette (TEXT_COLOR_*, Core/Globals/_define.h) was already the richest, so nothing loses
-    // capability by unifying onto it. The four *Highlight values keep their original meaning: text
-    // renders in the color RenderTipTextList() used for it (white, except GreenBlue's own green),
-    // on top of a colored highlight bar behind the line.
-    enum class LineColor
-    {
-        White,
-        Blue,
-        Gray,
-        Red,
-        Yellow,
-        Green,
-        Purple,
-        RedPurple,
-        Violet,
-        Orange,
-        DarkRedHighlight,
-        DarkBlueHighlight,
-        DarkYellowHighlight,
-        GreenBlueHighlight,
-    };
-
-    struct Line
-    {
-        // A spacer line renders no text at all -- `text` is ignored for these two kinds. Replaces
-        // RenderItemInfo()'s old convention of sniffing the first character of a native text
-        // buffer ('\n' for a half-height spacer, a lone ' ' for a full-height one) with an
-        // explicit field.
-        enum class Kind
-        {
-            Text,
-            HalfSpacer,
-            FullSpacer,
-        };
-
-        std::string text;
-        LineColor color = LineColor::White;
-        bool bold = false;
-        Kind kind = Kind::Text;
-    };
-
     // Where the tooltip is anchored before edge-clamping: BelowLeft grows down-right from
     // (anchorX, anchorY) (the common case -- a slot/button's own top-left or bottom edge);
     // AboveLeft grows up-right instead, matching RenderTipTextList()'s STRP_BOTTOMCENTER callers
@@ -133,6 +93,14 @@ namespace UI::RmlBridge::Tooltip
         // first frame nothing shows it again, so it goes when the window that drew it closes, or
         // stops drawing it, without a Hide() of its own on that path.
         bool refreshEachFrame = false;
+
+        // An item tooltip laid out richly (UI/Tooltip/ItemTooltipLayout.h), set only when the theme declares
+        // RichItemTooltip=1: the theme styles the header by the item's rarity and frames +13..+15 in gold. Taller
+        // than the window, it is drawn with smaller text until it fits (no smaller than 3/4), and still too tall
+        // there without its shadow and glow (tt-tall).
+        bool rich = false;
+        GameLogic::Items::Rarity::Tier rarity = GameLogic::Items::Rarity::Tier::Normal;
+        GameLogic::Items::Rarity::UpgradeBand band = GameLogic::Items::Rarity::UpgradeBand::None;
     };
 
     // Show()'s edge-clamping always wins over `anchor`/`centerHorizontally`'s preferred direction:

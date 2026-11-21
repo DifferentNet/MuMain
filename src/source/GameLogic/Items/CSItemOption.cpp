@@ -1195,6 +1195,7 @@ int CSItemOption::RenderSetOptionListInItem(const ITEM* ip, int TextNum, bool bI
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
     mu_swprintf(TextList[TNum], L"%ls %ls", I18N::Game::Set, I18N::Game::ItemOptionInfo);
     TextListColor[TNum] = TEXT_COLOR_YELLOW;
+    TextListRole[TNum] = TR_SECTION;
     TNum++;
 
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
@@ -1385,12 +1386,15 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
     mu_swprintf(TextList[textIndex], L"%ls", I18N::Game::PowerOfTheAncients);
     TextListColor[textIndex] = TEXT_COLOR_YELLOW;
     TextBold[textIndex] = false;
+    TextListRole[textIndex] = TR_SECTION;
     textIndex++;
     for (const auto& bonus : bonuses)
     {
+        const bool active = fullSetWorn && bonus.weaponWorn;
         mu_swprintf(TextList[textIndex], bonus.format, bonus.percent, bonus.lessDamageTaken);
-        TextListColor[textIndex] = fullSetWorn && bonus.weaponWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
+        TextListColor[textIndex] = active ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
         TextBold[textIndex] = false;
+        TextListRole[textIndex] = active ? TR_NONE : TR_DETAIL;
         textIndex++;
     }
 
@@ -1464,6 +1468,7 @@ int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex
         mu_swprintf(TextList[textIndex], L"%ls", text);
         TextListColor[textIndex] = header ? TEXT_COLOR_YELLOW : (fullSetWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY);
         TextBold[textIndex] = false;
+        TextListRole[textIndex] = header ? TR_SECTION : (fullSetWorn ? TR_NONE : TR_DETAIL);
         textIndex++;
     };
 
@@ -1559,6 +1564,7 @@ int CSItemOption::RenderExcellentSetBonus(const ITEM* item, int textIndex) const
     mu_swprintf(TextList[textIndex], L"\n");
     textIndex++;
     mu_swprintf(line, I18N::Game::FullExcellentSetBonusD, box);
+    TextListRole[textIndex] = TR_SECTION;
     add(line, TEXT_COLOR_YELLOW);
     const DWORD color = fullSetWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
     mu_swprintf(line, I18N::Game::FullAncientSetHealthD, 4 * steps);
@@ -1601,6 +1607,7 @@ int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex
     mu_swprintf(TextList[textIndex], I18N::Game::SetItemPieces, static_cast<int>(owned), static_cast<int>(pieces.size()));
     TextListColor[textIndex] = TEXT_COLOR_YELLOW;
     TextBold[textIndex] = false;
+    TextListRole[textIndex] = TR_SECTION;
     textIndex++;
 
     for (const auto& piece : pieces)
@@ -1615,6 +1622,7 @@ int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex
         mu_swprintf(TextList[textIndex], L"%ls", name);
         TextListColor[textIndex] = piece.owned ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
         TextBold[textIndex] = false;
+        TextListRole[textIndex] = piece.owned ? TR_PIECE_OWNED : TR_PIECE_MISSING;
         textIndex++;
     }
 

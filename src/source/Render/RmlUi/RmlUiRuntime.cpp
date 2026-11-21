@@ -159,6 +159,7 @@ void RmlUiRuntime::Create(int windowWidth, int windowHeight)
     m_RenderInterface = std::make_unique<RmlUiRenderInterface>(device, window);
     m_RenderInterface->SetTextureSourceResolver(m_Hooks.resolveTexture);
     m_RenderInterface->SetTextureFileResolver(m_Hooks.resolveTextureFile);
+    m_RenderInterface->SetTextureImageChange(m_Hooks.textureImageChange);
     m_SystemInterface = std::make_unique<RmlUiSystemInterface>(window);
     if (m_Hooks.createFileInterface)
         m_FileInterface = m_Hooks.createFileInterface();

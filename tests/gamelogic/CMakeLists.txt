@@ -172,6 +172,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/LootFilter.cpp
 )
 
+# An item's rarity tier and upgrade band, from the old tooltip name colour chain (GameLogic/Items/ItemRarity).
+mu_add_test(
+    NAME test_item_rarity
+    SOURCES
+        test_item_rarity.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/ItemRarity.cpp
+)
+
 # The server's "#UPL|<name>|<levels>" line: other characters' exact +14/+15 (GameLogic/Items/AncientLook, EnchantFx).
 mu_add_test(
     NAME test_exact_level_line

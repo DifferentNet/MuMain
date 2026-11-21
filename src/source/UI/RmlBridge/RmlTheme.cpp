@@ -4,6 +4,7 @@
 #include "RmlStackingOrder.h"
 #include "UI/RmlBridge/ThemeInheritance.h"
 #include "UI/RmlBridge/ThemeFonts.h"
+#include "UI/RmlBridge/ThemeReforge.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Core/Platform/WinIni.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -70,11 +71,21 @@ namespace UI::RmlBridge
             return name;
         }
 
-        bool ComputeUsesNativeTextSize(const std::string& themeName)
+        bool ComputeCapability(const std::string& themeName, const char* key)
         {
             const ThemeInheritance theme(std::filesystem::path("Data/Interface/RmlUi/themes") / themeName);
-            const auto setting = theme.GetSetting("Capabilities", "NativeTextSize");
+            const auto setting = theme.GetSetting("Capabilities", key);
             return setting && std::strtol(setting->value.c_str(), nullptr, 10) != 0;
+        }
+
+        constexpr const char* NativeTextSizeKey = "NativeTextSize";
+        constexpr const char* RichItemTooltipKey = "RichItemTooltip";
+        constexpr const char* ItemRarityCellsKey = "ItemRarityCells";
+        constexpr const char* LiveHudKey = "LiveHud";
+
+        bool ComputeUsesNativeTextSize(const std::string& themeName)
+        {
+            return ComputeCapability(themeName, NativeTextSizeKey);
         }
 
         bool& UsesNativeTextSizeStorage()
@@ -83,6 +94,23 @@ namespace UI::RmlBridge
             return usesNativeTextSize;
         }
 
+        bool& HasRichItemTooltipStorage()
+        {
+            static bool hasRichItemTooltip = ComputeCapability(ActiveThemeNameStorage(), RichItemTooltipKey);
+            return hasRichItemTooltip;
+        }
+
+        bool& HasItemRarityCellsStorage()
+        {
+            static bool hasItemRarityCells = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
+            return hasItemRarityCells;
+        }
+
+        bool& HasLiveHudStorage()
+        {
+            static bool hasLiveHud = ComputeCapability(ActiveThemeNameStorage(), LiveHudKey);
+            return hasLiveHud;
+        }
     }
 
     const std::string& GetActiveThemeName()
@@ -92,10 +120,15 @@ namespace UI::RmlBridge
 
     std::string ResolveStartupThemeName(const std::string& savedName)
     {
+        return ResolveStartupThemeName(savedName, UI::Mobile::IsHandheld());
+    }
+
+    std::string ResolveStartupThemeName(const std::string& savedName, bool handheld)
+    {
         // A phone or tablet plays the legacy theme whatever was saved (the saved one waits for a computer):
         // the modern theme's windows are not ready for a phone yet (ghinzuro 2026-11-11).
         constexpr const char* handheldTheme = "legacy";
-        if (UI::Mobile::IsHandheld() && ThemeExists(handheldTheme))
+        if (handheld && ThemeExists(handheldTheme))
             return handheldTheme;
 
         const std::string name = ToLower(savedName);
@@ -119,10 +152,29 @@ namespace UI::RmlBridge
         return UsesNativeTextSizeStorage();
     }
 
+    bool ThemeHasRichItemTooltip()
+    {
+        return HasRichItemTooltipStorage();
+    }
+
+    bool ThemeHasItemRarityCells()
+    {
+        return HasItemRarityCellsStorage();
+    }
+
+    bool ThemeHasLiveHud()
+    {
+        return HasLiveHudStorage();
+    }
+
     void SetActiveThemeName(const std::string& themeName)
     {
         ActiveThemeNameStorage() = ToLower(themeName);
         UsesNativeTextSizeStorage() = ComputeUsesNativeTextSize(ActiveThemeNameStorage());
+        HasRichItemTooltipStorage() = ComputeCapability(ActiveThemeNameStorage(), RichItemTooltipKey);
+        HasItemRarityCellsStorage() = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
+        HasLiveHudStorage() = ComputeCapability(ActiveThemeNameStorage(), LiveHudKey);
+        InvalidateActiveReforge();
 
         // Both themes deliberately reuse the same <template name="..."> for a shared concept
         // (e.g. "window_shell_bg") in their own themes/<theme>/ copy. Rml::TemplateCache caches a

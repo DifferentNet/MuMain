@@ -54,6 +54,7 @@
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Inventory/InventoryCtrl.h"
+#include "UI/Tooltip/ItemTooltipTexts.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 #include "UI/Scaling/UITransform.h"
 #include "UI/Inventory/MyShopInventory.h" // ShowPersonalShopItemValueDialog
@@ -62,6 +63,8 @@
 #include "World/MapInfra/PortalMgr.h"
 #include "UI/Core/WindowSystem.h"
 #include "Network/Server/ServerListManager.h"
+#include "Core/Utilities/StringUtils.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
@@ -201,6 +204,7 @@ int getLevelGeneration(int level, unsigned int* color)
 wchar_t TextList[MAX_TEXT_LIST_LINES][100];
 int  TextListColor[MAX_TEXT_LIST_LINES];
 int  TextBold[MAX_TEXT_LIST_LINES];
+int TextListRole[MAX_TEXT_LIST_LINES];
 SIZE Size[MAX_TEXT_LIST_LINES];
 
 int RenderTextList(int sx, int sy, int TextNum, int Tab, int iSort = RT3_SORT_CENTER)
@@ -1902,6 +1906,7 @@ static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::Com
     }
 
     TextBold[TextNum] = true;
+    TextListRole[TextNum] = TR_COMBAT_POWER;
     TextNum++;
 
     if (item.IsAncient)
@@ -1936,6 +1941,137 @@ static void RenderItemCombatPower(const ITEM* ip)
     }
 }
 
+GameLogic::Items::Rarity::Facts DescribeForRarity(const ITEM* ip)
+{
+    const int type = ip->Type;
+    GameLogic::Items::Rarity::Facts facts;
+    facts.namedSpecial = type == ITEM_JEWEL_OF_BLESS || type == ITEM_JEWEL_OF_SOUL || type == ITEM_JEWEL_OF_CHAOS ||
+                         type == ITEM_JEWEL_OF_GUARDIAN || COMGEM::isCompiledGem(ip) ||
+                         GameLogic::Items::IsThirdClassQuestItem(ip) || type == ITEM_FLAME_OF_CONDOR ||
+                         type == ITEM_FEATHER_OF_CONDOR || type == ITEM_POTION + 100 ||
+                         (type >= ITEM_POTION + 141 && type <= ITEM_POTION + 144) ||
+                         GameLogic::Items::IsLuckyItemTicket(ip) || type == ITEM_JEWEL_OF_ANCIENT ||
+                         type == ITEM_JEWEL_OF_FATE || type == ITEM_JEWEL_OF_LIFE || type == ITEM_JEWEL_OF_CREATION;
+    facts.divine = GameLogic::Items::IsDivineArchangelWeapon(ip);
+    facts.eventPart = GameLogic::Items::IsDevilSquareItem(ip) || GameLogic::Items::IsBloodCastleTicketPart(ip);
+    facts.ancient = ip->AncientDiscriminator > 0;
+    facts.socket = g_SocketItemMgr.IsSocketItem(ip);
+    facts.excellentOptions = ip->ExcellentFlags > 0;
+    facts.hasOptions = ip->SpecialNum > 0;
+    facts.wingLike = (type >= ITEM_WINGS_OF_SPIRITS && type <= ITEM_WINGS_OF_DARKNESS) || type == ITEM_CAPE_OF_LORD ||
+                     (type >= ITEM_WING_OF_STORM && type <= ITEM_CAPE_OF_EMPEROR) ||
+                     (type >= ITEM_WINGS_OF_DESPAIR && type <= ITEM_WING_OF_DIMENSION) ||
+                     (type >= ITEM_CAPE_OF_FIGHTER && type <= ITEM_CAPE_OF_OVERRULE);
+    facts.jewelGem = COMGEM::Check_Jewel(type) != COMGEM::NOGEM;
+    facts.level = ip->Level;
+    return facts;
+}
+
+GameLogic::Items::Rarity::Tier ItemRarityOf(const ITEM* ip)
+{
+    return GameLogic::Items::Rarity::Classify(DescribeForRarity(ip));
+}
+
+namespace
+{
+using GameLogic::Items::LootFilter::Category;
+
+// Only gear is upgraded: other items keep a variant in their level (the Box of Luck, the seasonal Fenrir).
+bool IsUpgradedGear(Category category)
+{
+    return category == Category::Weapon || category == Category::Shield || category == Category::Armour ||
+           category == Category::Wings;
+}
+
+bool ShowsRarityOnCell(Category category)
+{
+    return IsUpgradedGear(category) || category == Category::Jewellery;
+}
+} // namespace
+
+// The cell keeps the item's own tier (Classify), not the tooltip's FromFinalNameColor: cells are marked without
+// building the tooltip's lines, so they never see the few names the tooltip recolours late (Fenrir, seeds, named
+// items). Kept so on purpose: such an item's cell may show another tier than its tooltip header.
+GameLogic::Items::Rarity::CellLook ItemCellLookOf(const ITEM* ip)
+{
+    const Category category = GameLogic::Items::LootFilterRuntime::CategoryOfItem(*ip);
+    GameLogic::Items::Rarity::CellLook look;
+    if (ShowsRarityOnCell(category))
+        look.tier = ItemRarityOf(ip);
+    if (IsUpgradedGear(category))
+        look.band = GameLogic::Items::Rarity::BandOf(ip->Level);
+    return look;
+}
+
+static int ToTextColor(GameLogic::Items::Rarity::NameColor color)
+{
+    using GameLogic::Items::Rarity::NameColor;
+    switch (color)
+    {
+    case NameColor::Blue:
+        return TEXT_COLOR_BLUE;
+    case NameColor::Yellow:
+        return TEXT_COLOR_YELLOW;
+    case NameColor::Green:
+        return TEXT_COLOR_GREEN;
+    case NameColor::GreenBlue:
+        return TEXT_COLOR_GREEN_BLUE;
+    case NameColor::Violet:
+        return TEXT_COLOR_VIOLET;
+    case NameColor::Purple:
+        return TEXT_COLOR_PURPLE;
+    case NameColor::White:
+    default:
+        return TEXT_COLOR_WHITE;
+    }
+}
+
+// The name colours the tooltip can end with; any other counts as white.
+static GameLogic::Items::Rarity::NameColor ToNameColor(int textColor)
+{
+    using GameLogic::Items::Rarity::NameColor;
+    switch (textColor)
+    {
+    case TEXT_COLOR_BLUE:
+        return NameColor::Blue;
+    case TEXT_COLOR_YELLOW:
+        return NameColor::Yellow;
+    case TEXT_COLOR_GREEN:
+        return NameColor::Green;
+    case TEXT_COLOR_GREEN_BLUE:
+        return NameColor::GreenBlue;
+    case TEXT_COLOR_VIOLET:
+        return NameColor::Violet;
+    case TEXT_COLOR_PURPLE:
+        return NameColor::Purple;
+    default:
+        return NameColor::White;
+    }
+}
+
+// Shift held, or touch or a gamepad played last (they have no Shift): the full view.
+static bool WantsDetailedItemInfo()
+{
+    return mu::ui::window::IsPress(VK_SHIFT) || mu::ui::window::IsRepeat(VK_SHIFT) || UI::Mobile::IsTouchControls() ||
+           UI::Mobile::IsGamepadInUse();
+}
+
+// What a rich item tooltip shows besides its lines; `nameColor` is the colour the name line ended with. Built every
+// frame while an item is hovered: the item is classified once, and the texts are the per-language ones
+// (ItemTooltipTexts.h), so nothing is allocated here.
+static UI::Tooltip::ItemPresentation DescribeItemPresentation(const ITEM* ip, int nameColor)
+{
+    const Category category = GameLogic::Items::LootFilterRuntime::CategoryOfItem(*ip);
+    UI::Tooltip::ItemPresentation presentation;
+    presentation.rarity = GameLogic::Items::Rarity::FromFinalNameColor(ItemRarityOf(ip), ToNameColor(nameColor));
+    if (IsUpgradedGear(category))
+        presentation.band = GameLogic::Items::Rarity::BandOf(ip->Level);
+    presentation.layout.kind = UI::Tooltip::ItemKindText(category, presentation.rarity);
+    presentation.layout.detailed = WantsDetailedItemInfo();
+    presentation.layout.hint = UI::Tooltip::ShiftForDetailsHint();
+    return presentation;
+}
+
 // (sx, sy) in the screen's 640x480 stretch, `screen`. With `aboveRow` the tooltip goes there instead (in window
 // pixels, UI/Tooltip/LegacyTextListTooltip.h).
 static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy, ITEM* ip, bool Sell, int Inventype,
@@ -1964,6 +2100,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     ITEM_ATTRIBUTE* p = &ItemAttribute[ip->Type];
     TextNum = 0;
     SkipNum = 0;
+    std::fill(std::begin(TextListRole), std::end(TextListRole), TR_NONE);
 
     ZeroMemory(TextListColor, 20 * sizeof(int));
     for (int i = 0; i < 30; i++)
@@ -2002,87 +2139,8 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
 
     int Level = ip->Level;
-    int Color;
-
-    if (ip->Type == ITEM_JEWEL_OF_BLESS || ip->Type == ITEM_JEWEL_OF_SOUL || ip->Type == ITEM_JEWEL_OF_CHAOS || ip->Type == ITEM_JEWEL_OF_GUARDIAN ||
-        (COMGEM::isCompiledGem(ip)) ||
-        GameLogic::Items::IsThirdClassQuestItem(ip) ||
-        ip->Type == ITEM_FLAME_OF_CONDOR || ip->Type == ITEM_FEATHER_OF_CONDOR ||
-        ip->Type == ITEM_POTION + 100 ||
-        (ip->Type >= ITEM_POTION + 141 && ip->Type <= ITEM_POTION + 144) ||
-        GameLogic::Items::IsLuckyItemTicket(ip) ||
-        (ip->Type == ITEM_JEWEL_OF_ANCIENT || ip->Type == ITEM_JEWEL_OF_FATE) ||
-        ip->Type == ITEM_JEWEL_OF_LIFE || ip->Type == ITEM_JEWEL_OF_CREATION)
-    {
-        Color = TEXT_COLOR_YELLOW;
-    }
-    else if (GameLogic::Items::IsDivineArchangelWeapon(ip))
-    {
-        Color = TEXT_COLOR_PURPLE;
-    }
-    else if (GameLogic::Items::IsDevilSquareItem(ip))
-    {
-        Color = TEXT_COLOR_YELLOW;
-    }
-    else if (GameLogic::Items::IsBloodCastleTicketPart(ip))
-    {
-        Color = TEXT_COLOR_YELLOW;
-    }
-    else if (ip->AncientDiscriminator > 0)
-    {
-        Color = TEXT_COLOR_GREEN_BLUE;
-    }
-    else if (g_SocketItemMgr.IsSocketItem(ip))
-    {
-        Color = TEXT_COLOR_VIOLET;
-    }
-    else if (ip->SpecialNum > 0 && ip->ExcellentFlags > 0)
-    {
-        Color = TEXT_COLOR_GREEN;
-    }
-    else if (Level >= 7)
-    {
-        Color = TEXT_COLOR_YELLOW;
-    }
-    else
-    {
-        if (ip->SpecialNum > 0)
-        {
-            Color = TEXT_COLOR_BLUE;
-        }
-        else
-        {
-            Color = TEXT_COLOR_WHITE;
-        }
-    }
-
-    if ((ip->Type >= ITEM_WINGS_OF_SPIRITS && ip->Type <= ITEM_WINGS_OF_DARKNESS) || ip->Type == ITEM_CAPE_OF_LORD
-        || (ip->Type >= ITEM_WING_OF_STORM && ip->Type <= ITEM_CAPE_OF_EMPEROR)
-        || (ip->Type >= ITEM_WINGS_OF_DESPAIR && ip->Type <= ITEM_WING_OF_DIMENSION)
-        || (ip->Type >= ITEM_CAPE_OF_FIGHTER && ip->Type <= ITEM_CAPE_OF_OVERRULE))
-    {
-        if (Level >= 7)
-        {
-            Color = TEXT_COLOR_YELLOW;
-        }
-        else
-        {
-            if (ip->SpecialNum > 0)
-            {
-                Color = TEXT_COLOR_BLUE;
-            }
-            else
-            {
-                Color = TEXT_COLOR_WHITE;
-            }
-        }
-    }
-
+    int Color = ToTextColor(GameLogic::Items::Rarity::ColorOf(ItemRarityOf(ip)));
     int nGemType = COMGEM::Check_Jewel(ip->Type);
-    if (nGemType != COMGEM::NOGEM)
-    {
-        Color = TEXT_COLOR_YELLOW;
-    }
 
     if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_NPCSHOP) && !GameLogic::Items::IsSellingBan(ip))
     {
@@ -2526,7 +2584,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
     }
 
-    TextListColor[TextNum] = Color; TextBold[TextNum] = true; TextNum++;
+    TextListColor[TextNum] = Color;
+    TextBold[TextNum] = true;
+    TextListRole[TextNum] = TR_NAME;
+    TextNum++;
+    const int nameColor = Color;
     mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
 
     if (ip->Type == ITEM_WEAPON_OF_ARCHANGEL)
@@ -5540,17 +5602,23 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
     bool isrendertooltip = true;
 
+    // Built only for a theme that uses it: the legacy and modern tooltips do no more work than before.
+    std::optional<UI::Tooltip::ItemPresentation> presentation;
+    if (UI::Tooltip::UsesRichItemLayout())
+        presentation = DescribeItemPresentation(ip, nameColor);
+    const UI::Tooltip::ItemPresentation* presentationOrNull = presentation ? &*presentation : nullptr;
+
     if (isrendertooltip && aboveRow != nullptr)
     {
-        UI::Tooltip::ShowLegacyTextListAboveRow(TextNum, *aboveRow);
+        UI::Tooltip::ShowLegacyTextListAboveRow(TextNum, *aboveRow, UI::Tooltip::ItemInfoOwner(), presentationOrNull);
     }
     else if (isrendertooltip)
     {
-        UI::Tooltip::ShowLegacyTextList(
-            TextNum,
-            UI::Scaling::PositionX(screen, static_cast<float>(sx)),
-            UI::Scaling::PositionY(screen, static_cast<float>(sy)),
-            bItemTextListBoxUse ? UI::Tooltip::Placement::Above : UI::Tooltip::Placement::Below);
+        UI::Tooltip::ShowLegacyTextList(TextNum, UI::Scaling::PositionX(screen, static_cast<float>(sx)),
+                                        UI::Scaling::PositionY(screen, static_cast<float>(sy)),
+                                        bItemTextListBoxUse ? UI::Tooltip::Placement::Above
+                                                            : UI::Tooltip::Placement::Below,
+                                        UI::Tooltip::ItemInfoOwner(), presentationOrNull);
     }
 }
 

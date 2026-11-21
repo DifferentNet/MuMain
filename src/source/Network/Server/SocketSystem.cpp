@@ -212,6 +212,7 @@ int CSocketItemMgr::AttachToolTipForSocketItem(const ITEM* pItem, int iTextNum)
     mu_swprintf(TextList[iTextNum], L"%ls %ls", I18N::Game::Socket, I18N::Game::ItemOptionInfo);
     TextListColor[iTextNum] = TEXT_COLOR_PURPLE;
     TextBold[iTextNum] = false;
+    TextListRole[iTextNum] = TR_SECTION;
     ++iTextNum;
     mu_swprintf(TextList[iTextNum], L"\n"); ++iTextNum; ++SkipNum;
 

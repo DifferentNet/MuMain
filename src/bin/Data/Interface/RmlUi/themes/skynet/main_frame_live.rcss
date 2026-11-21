@@ -1,0 +1,134 @@
+/* Skynet's live HUD (theme.ini LiveHud=1, UI/HUD/LiveHud.h), over legacy's main_frame.rcss (linked first): each
+   gauge group's gem is 1.2x the original's, cut to an octagon, its liquid drawn by C++ into main_frame.rml's
+   .live-only meshes over a plate that covers the strip's baked sockets; the skill slots and the EXP bar get their
+   live parts too. Only what changes is here; potions, skills, buttons and EXP stay where legacy puts them. The
+   meshes' shapes and timings are theme.ini's [LiveHud]. */
+
+/* The ring round each gem stands 12.4dp above the strip: the HUD's unit keeps that room clear of windows. */
+#hud_layout { height: 64dp; }
+
+/* The ring's box, 62x62 round the gem, from 14.4dp above the group's box; every mesh layer fills it. */
+.orb { position: absolute; left: 0; top: -14.4dp; width: 62dp; height: 62dp; pointer-events: none; }
+.orb-layer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+/* The gem's rect, centred in the ring, its bottom on the group box's. */
+.orb-gem-box { position: absolute; left: 4dp; top: 7.6dp; width: 54dp; height: 46.8dp; pointer-events: none; }
+/* Over the group's box, hiding the strip art's sockets round the bigger gem. */
+.orb-plate {
+	position: absolute;
+	left: 0;
+	top: 14.4dp;
+	width: 62dp;
+	height: 40dp;
+	background-color: token(hud-orb-plate);
+	pointer-events: none;
+}
+
+/* Life and mana: the gem's rect is their hint's target; the meshes replace the fills. SD and AG: the ring's box,
+   catching nothing itself; their hint's targets are the .arc-hits segments along the ring's track. */
+#bar_hp, #bar_mp { left: 4dp; top: -6.8dp; width: 54dp; height: 46.8dp; }
+#bar_sd, #bar_ag { left: 0; top: -14.4dp; width: 62dp; height: 62dp; pointer-events: none; }
+.gauge-fill { display: none; }
+
+/* The ring's track, 27.5..31dp from the ring's centre from 140 degrees over 260 clockwise (theme.ini [LiveHud]),
+   as 13 rotated rectangles of 20 degrees each: they cover the band and stand at most 0.5dp past it, so the gap at
+   the bottom and the corners of the ring's box stay open to the world. They stand over the gem's rect where the ring
+   crosses it (#bar_mp comes after #bar_ag in main_frame.rml). */
+.arc-hits { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.arc-hits div { position: absolute; width: 10.77dp; height: 3.92dp; pointer-events: auto; }
+.arc-hits div:nth-child(1) { left: 0.47dp; top: 43.56dp; transform: rotate(240deg); }
+.arc-hits div:nth-child(2) { left: -2.98dp; top: 34.08dp; transform: rotate(260deg); }
+.arc-hits div:nth-child(3) { left: -2.98dp; top: 24dp; transform: rotate(280deg); }
+.arc-hits div:nth-child(4) { left: 0.47dp; top: 14.52dp; transform: rotate(300deg); }
+.arc-hits div:nth-child(5) { left: 6.95dp; top: 6.79dp; transform: rotate(320deg); }
+.arc-hits div:nth-child(6) { left: 15.68dp; top: 1.75dp; transform: rotate(340deg); }
+.arc-hits div:nth-child(7) { left: 25.62dp; top: 0dp; transform: rotate(0deg); }
+.arc-hits div:nth-child(8) { left: 35.55dp; top: 1.75dp; transform: rotate(20deg); }
+.arc-hits div:nth-child(9) { left: 44.28dp; top: 6.79dp; transform: rotate(40deg); }
+.arc-hits div:nth-child(10) { left: 50.77dp; top: 14.52dp; transform: rotate(60deg); }
+.arc-hits div:nth-child(11) { left: 54.22dp; top: 24dp; transform: rotate(80deg); }
+.arc-hits div:nth-child(12) { left: 54.22dp; top: 34.08dp; transform: rotate(100deg); }
+.arc-hits div:nth-child(13) { left: 50.77dp; top: 43.56dp; transform: rotate(120deg); }
+
+/* The life and mana numbers centred on the gem, 3dp under legacy's height and with nothing behind them, so even a
+   low liquid shows above and round the digits; the outline keeps them readable on any colour. */
+#bar_hp .gauge-num.value-current, #bar_mp .gauge-num.value-current {
+	left: 50%;
+	top: 40.8dp;
+	width: auto;
+	transform: translateX(-50%) scaleX(0.91);
+	font-effect: outline(1px #000000);
+}
+/* SD over the life gem and AG over the mana gem, small in the gem's upper part, inside the ring. */
+#bar_sd .gauge-num, #bar_ag .gauge-num {
+	left: -17dp;
+	top: 16.4dp;
+	font-size: 9dp;
+	line-height: 10dp;
+}
+#bar_sd .gauge-num { color: token(hud-sd-num); }
+#bar_ag .gauge-num { color: token(hud-ag-num); }
+
+/* The open skill grid clears the ring. */
+#skill_list { bottom: 65dp; }
+
+/* The skill row's cooldowns: a dark sweep drawn by C++ over the slot replaces the old wipe (the open grid's cells
+   keep theirs), the whole seconds left stand in the middle while two or more remain, and a slot that is ready again
+   flashes for 0.4 s (C++ gives it the class "ready" as long). The flash is a gold rim round the icon that fades out
+   (its opacity, 0 at rest) and a faint gold added over the icon that goes down to black with it, which for an added
+   colour is its opacity going from 1 to 0: the additive-fill decorator does not read opacity. The icon and the hotkey
+   number stay readable under it. The flash takes the box of legacy main_frame.rcss's .skill-icon in each slot (6dp in
+   from a hotkey slot's corner; the current-skill slot is the icon itself), so the frame between the slots stays dark.
+   Ten seconds and more (C++ gives the number the class "long") are drawn smaller, clear of the hotkey number. */
+#skill_slots .cooldown-wipe { display: none; }
+.skill-sweep, .skill-ready {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+.skill-ready {
+	left: 6dp;
+	top: 6dp;
+	width: 20dp;
+	height: 28dp;
+	box-sizing: border-box;
+	border: 2dp token(hud-ready-rim);
+	opacity: 0;
+}
+#current_skill_slot .skill-ready { left: 0; top: 0; }
+#skill_slots .ready .skill-ready { animation: 0.4s linear-in-out skill-ready-flash; }
+@keyframes skill-ready-flash {
+	from { opacity: 1; decorator: additive-fill(token(hud-ready-flash)); }
+	to { opacity: 0; decorator: additive-fill(#000000); }
+}
+.skill-cd-secs {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 100%;
+	height: 14dp;
+	margin-top: -7dp;
+	text-align: center;
+	color: token(hud-cd-secs);
+	font-family: "token(font-body)";
+	font-weight: bold;
+	font-effect: outline(1px #000000);
+	font-size: 14dp;
+	line-height: 14dp;
+	white-space: nowrap;
+	pointer-events: none;
+}
+.skill-cd-secs.long { font-size: 11dp; }
+
+/* The EXP bar's spark at the fill's end and the level-up band, drawn by C++ over the track; the glow reaches past it. */
+#exp_spark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* The phone's HUD (theme flag "mobile-hud") has no bar: this sheet comes after legacy's phone rules, so it puts back
+   what it changed above and hides the gems. */
+@media (theme: mobile-hud) {
+	#hud_layout { height: 0; }
+	#skill_list { bottom: 118dp; }
+	.live-only { display: none; }
+}

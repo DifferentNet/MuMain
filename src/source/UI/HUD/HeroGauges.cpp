@@ -80,6 +80,7 @@ Experience ReadExperience()
     const bool master = gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level);
 
     Experience experience;
+    experience.master = master;
     if (master)
     {
         experience.level = static_cast<std::int64_t>(Master_Level_Data.nMLevel);

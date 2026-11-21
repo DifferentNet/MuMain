@@ -1,5 +1,8 @@
 #pragma once
 
+#include "GameLogic/Items/ItemRarity.h"
+#include "UI/Tooltip/ItemTooltipLayout.h"
+
 namespace UI::Tooltip
 {
 enum class Placement
@@ -12,10 +15,24 @@ enum class Placement
 // the pet's): the default below, so a window that stops showing an item hides that and nothing else.
 const void* ItemInfoOwner();
 
+// What an item information tooltip shows besides its lines, for a theme that lays item tooltips out richly.
+struct ItemPresentation
+{
+    GameLogic::Items::Rarity::Tier rarity = GameLogic::Items::Rarity::Tier::Normal;
+    GameLogic::Items::Rarity::UpgradeBand band = GameLogic::Items::Rarity::UpgradeBand::None;
+    RichInput layout;
+};
+
+// Whether item information tooltips are laid out richly now: the theme declares RichItemTooltip=1 and the view is
+// not the phone one. Only then is an ItemPresentation worth building.
+bool UsesRichItemLayout();
+
 // Presents the current TextList/TextListColor/TextBold contents as a hover tooltip.
 // The anchor is already in screen pixels; callers convert from their own coordinate space.
-void ShowLegacyTextList(int lineCount, float anchorX, float anchorY,
-                        Placement placement = Placement::Below, const void* owner = ItemInfoOwner());
+// With `presentation` (item information only) and UsesRichItemLayout(), the lines get the rich layout, their roles
+// read from TextListRole.
+void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement placement = Placement::Below,
+                        const void* owner = ItemInfoOwner(), const ItemPresentation* presentation = nullptr);
 void HideLegacyTextList(const void* owner = ItemInfoOwner());
 
 // Where an item tooltip goes above a row instead of its window's usual place (an item's name in the chat log), in
@@ -27,5 +44,6 @@ struct AboveRow
     float bottomY = 0.f;
     float besideX = 0.f;
 };
-void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner = ItemInfoOwner());
+void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner = ItemInfoOwner(),
+                                const ItemPresentation* presentation = nullptr);
 }

@@ -10,6 +10,7 @@
 	<link type="text/rcss" href="skill_icons.rcss"/>
 	<link type="text/rcss" href="master_skill_icons.rcss"/>
 	<link type="text/rcss" href="main_frame.rcss"/>
+	<link type="text/rcss" href="main_frame_live.rcss"/>
 </head>
 <body data-model="main_frame">
 	<!-- CMainFrameWindow's HUD, shared by every theme. #hud_layout is the one unit the workspace
@@ -42,6 +43,20 @@
 	<!-- Each gauge carries its readout twice, current value (.value-current) and current/max
 	     (.value-full); a theme shows one. -->
 	<div id="gauges_left" class="hud-part">
+		<!-- The live gems (theme capability LiveHud, the skynet theme): every other theme's
+		     main_frame_live.rcss hides .live-only. UI::HUD::LiveHud fills the meshes; they share the
+		     ring's box (.orb), and #orb_*_box is the gem's rect in it. The SD and AG gauges' .arc-hits
+		     segments are their hints' targets along the drawn ring. -->
+		<div id="orb_left" class="orb live-only">
+			<div class="orb-plate"></div>
+			<additive-mesh id="orb_hp_under" class="orb-layer"/>
+			<additive-mesh id="orb_hp_halo" class="orb-layer"/>
+			<additive-mesh id="orb_sd_arc" class="orb-layer" data-src="/Data/Interface/newui_menu_sd.jpg"/>
+			<additive-mesh id="orb_sd_cap" class="orb-layer"/>
+			<div id="orb_hp_box" class="orb-gem-box"></div>
+			<additive-mesh id="orb_hp_body" class="orb-layer" data-src="/Data/Interface/newui_menu_red.jpg" data-src-alt="/Data/Interface/newui_menu_green.jpg"/>
+			<additive-mesh id="orb_hp_shine" class="orb-layer"/>
+		</div>
 		<div id="bar_hp" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="hp_tooltip">
 			<div id="bar_hp_fill" class="gauge-fill gauge-fill-hp gauge-fill-vertical" data-class-poisoned="poisoned" data-style-height="hp_fraction * 100 + '%'"></div>
 			<div class="gauge-fill gauge-fill-hp gauge-fill-horizontal" data-class-poisoned="poisoned" data-style-width="hp_fraction * 100 + '%'"></div>
@@ -53,14 +68,26 @@
 			<div class="gauge-fill gauge-fill-sd gauge-fill-horizontal" data-style-width="sd_fraction * 100 + '%'"></div>
 			<span class="gauge-num value-current">{{sd_current_text}}</span>
 			<span class="gauge-num value-full">{{sd_text}}</span>
+			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>
 	</div>
 	<div id="gauges_right" class="hud-part">
+		<div id="orb_right" class="orb live-only">
+			<div class="orb-plate"></div>
+			<additive-mesh id="orb_mp_under" class="orb-layer"/>
+			<additive-mesh id="orb_mp_halo" class="orb-layer"/>
+			<additive-mesh id="orb_ag_arc" class="orb-layer" data-src="/Data/Interface/newui_menu_ag.jpg"/>
+			<additive-mesh id="orb_ag_cap" class="orb-layer"/>
+			<div id="orb_mp_box" class="orb-gem-box"></div>
+			<additive-mesh id="orb_mp_body" class="orb-layer" data-src="/Data/Interface/newui_menu_blue.jpg"/>
+			<additive-mesh id="orb_mp_shine" class="orb-layer"/>
+		</div>
 		<div id="bar_ag" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="ag_tooltip">
 			<div class="gauge-fill gauge-fill-ag gauge-fill-vertical" data-style-height="ag_fraction * 100 + '%'"></div>
 			<div class="gauge-fill gauge-fill-ag gauge-fill-horizontal" data-style-width="ag_fraction * 100 + '%'"></div>
 			<span class="gauge-num value-current">{{ag_current_text}}</span>
 			<span class="gauge-num value-full">{{ag_text}}</span>
+			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>
 		<div id="bar_mp" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="mp_tooltip">
 			<div class="gauge-fill gauge-fill-mp gauge-fill-vertical" data-style-height="mp_fraction * 100 + '%'"></div>
@@ -101,6 +128,8 @@
 		<div id="exp_frame_right" class="exp-frame"></div>
 		<div id="exp_track" class="slot-frame slot-fill">
 			<div id="exp_fill" data-style-transform="'scaleX(' + exp_fraction + ')'"></div>
+			<!-- The live HUD's spark at the fill's end and its level-up band (UI::HUD::LiveHud, the skynet theme). -->
+			<additive-mesh id="exp_spark" class="live-only"/>
 		</div>
 		<span id="exp_digit">{{exp_digit}}</span>
 	</div>
@@ -117,15 +146,17 @@
 	</div>
 	<!-- The skill row: the upper-set highlight, then per slot the skill icon (a
 	     skill_icons.rcss/master_skill_icons.rcss sprite bound by C++), its hotkey number and the
-	     cooldown wipe. data-class-selected marks the slot holding the current skill. -->
+	     cooldown wipe. data-class-selected marks the slot holding the current skill. The live HUD
+	     (UI::HUD::LiveHud, the skynet theme) adds the .live-only cooldown sweep, the ready flash
+	     (the slot's class "ready") and the seconds left. -->
 	<div id="skill_slots" class="hud-part">
 		<div id="skill_list_highlight" data-class-hidden="!skill_list_up"></div>
-		<div id="skill_slot_0" class="slot-frame" data-class-selected="skill_slot_0_selected" data-event-click="skill_hotkey_click(0)" data-event-mouseover="skill_hotkey_hover(0)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_0_icon"></div><span class="skill-hotkey-label">{{skill_slot_0_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_0_cooldown + ')'"></div></div>
-		<div id="skill_slot_1" class="slot-frame" data-class-selected="skill_slot_1_selected" data-event-click="skill_hotkey_click(1)" data-event-mouseover="skill_hotkey_hover(1)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_1_icon"></div><span class="skill-hotkey-label">{{skill_slot_1_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_1_cooldown + ')'"></div></div>
-		<div id="skill_slot_2" class="slot-frame" data-class-selected="skill_slot_2_selected" data-event-click="skill_hotkey_click(2)" data-event-mouseover="skill_hotkey_hover(2)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_2_icon"></div><span class="skill-hotkey-label">{{skill_slot_2_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_2_cooldown + ')'"></div></div>
-		<div id="skill_slot_3" class="slot-frame" data-class-selected="skill_slot_3_selected" data-event-click="skill_hotkey_click(3)" data-event-mouseover="skill_hotkey_hover(3)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_3_icon"></div><span class="skill-hotkey-label">{{skill_slot_3_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_3_cooldown + ')'"></div></div>
-		<div id="skill_slot_4" class="slot-frame" data-class-selected="skill_slot_4_selected" data-event-click="skill_hotkey_click(4)" data-event-mouseover="skill_hotkey_hover(4)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_4_icon"></div><span class="skill-hotkey-label">{{skill_slot_4_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_4_cooldown + ')'"></div></div>
-		<div id="current_skill_slot" class="slot-frame" data-event-click="skill_current_click" data-event-mouseover="skill_current_hover" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="current_skill_icon"></div><span class="skill-hotkey-label">{{current_skill_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + current_skill_cooldown + ')'"></div></div>
+		<div id="skill_slot_0" class="slot-frame" data-class-selected="skill_slot_0_selected" data-event-click="skill_hotkey_click(0)" data-event-mouseover="skill_hotkey_hover(0)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_0_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{skill_slot_0_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_0_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
+		<div id="skill_slot_1" class="slot-frame" data-class-selected="skill_slot_1_selected" data-event-click="skill_hotkey_click(1)" data-event-mouseover="skill_hotkey_hover(1)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_1_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{skill_slot_1_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_1_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
+		<div id="skill_slot_2" class="slot-frame" data-class-selected="skill_slot_2_selected" data-event-click="skill_hotkey_click(2)" data-event-mouseover="skill_hotkey_hover(2)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_2_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{skill_slot_2_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_2_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
+		<div id="skill_slot_3" class="slot-frame" data-class-selected="skill_slot_3_selected" data-event-click="skill_hotkey_click(3)" data-event-mouseover="skill_hotkey_hover(3)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_3_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{skill_slot_3_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_3_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
+		<div id="skill_slot_4" class="slot-frame" data-class-selected="skill_slot_4_selected" data-event-click="skill_hotkey_click(4)" data-event-mouseover="skill_hotkey_hover(4)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_4_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{skill_slot_4_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_4_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
+		<div id="current_skill_slot" class="slot-frame" data-event-click="skill_current_click" data-event-mouseover="skill_current_hover" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="current_skill_icon"></div><additive-mesh class="skill-sweep live-only"/><div class="skill-ready live-only"></div><span class="skill-hotkey-label">{{current_skill_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + current_skill_cooldown + ')'"></div><span class="skill-cd-secs live-only"></span></div>
 	</div>
 
 	<!-- The skill list the current-skill slot opens: the learned skills and the pet's commands.

@@ -24,6 +24,7 @@ OverheadPlayerNames=1
 OverheadNpcNames=0
 OverheadTitles=1
 TitleEffects=1
+HudEffects=1
 TitlesTownsOnly=1
 [Camera]
 Zoom=1735

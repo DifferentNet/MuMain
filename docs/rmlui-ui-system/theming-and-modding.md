@@ -242,6 +242,202 @@ way) before assuming something else is wrong.
 Plain-image loading is not implemented for theme assets. A custom theme must supply the
 containers described above.
 
+## Reforge: recolouring the game's own sprites
+
+A theme can give the game's interface art other colours without shipping any image: its
+`theme.ini` lists sprites in a `[Reforge]` section, each with a preset, and the client recolours
+the decoded pixels as RmlUi loads the texture, before the upload. The original and its HD copy
+(Remaster) go through the same preset, scaled to the copy's size, so both look alike. The bundled
+`skynet` theme (`Base=legacy`) is built this way: legacy's documents, stylesheets and art, forged.
+
+```ini
+[Reforge]
+newui_msgbox_back=stone
+newui_item_table01(l)=metal-flat
+partcharge1/newui_menu03=gild
+```
+
+- **Key**: the sprite's path under `Data/Interface/`, lower-case, without its extension
+  (`.tga`/`.OZT` and `.jpg`/`.OZJ` all match). `../../../newui_msgbox_back.jpg` in a stylesheet is
+  `newui_msgbox_back`; `Data/Interface/partCharge1/newui_menu03.OZJ` is `partcharge1/newui_menu03`.
+  A theme's own art (under `Data/Interface/RmlUi/themes/`) is never reforged.
+- **Presets** (`Render/Textures/SpriteReforge.h`): `metal` (frames: dark iron, antique gold on the
+  light curls, deeper relief, a warm glow), `metal-flat` (the same colours without relief or glow,
+  for thin and tiling pieces and buttons), `metal-bright` (`metal-flat` lifted, for buttons with a
+  light icon such as the HUD's menu buttons, so the icon stays readable), `cell` (the inventory
+  lattice: dark bronze lines), `stone` (window bodies, lit from the top), `socket` (equipment
+  slots), `gild` (the HUD's current-skill box: `metal`, its green frame gold and its green fill
+  deep bronze, so a skill icon on it stands out) and `none`. They recolour the grey parts only
+  (`cell` recolours all, `gild` its green too): saturated pixels (coloured gems, painted marks)
+  keep their colour, and `metal` and `stone` also keep bright text.
+  The blurred parts (`metal`'s relief and glow, `stone`'s softening) are worked out on the
+  original's grid and spread over an HD copy, so a copy at four times the size costs little more
+  than one pass over its pixels.
+  A `metal` piece that shows a seam where it meets its neighbour (its relief and glow blur within
+  the sprite) goes to `metal-flat`.
+- **Inheritance**: the section merges down the chain like any other; a child replaces a parent's
+  entry and `none` turns one off. An unknown preset name is logged once in `MuError.log` and the
+  sprite is drawn as it is.
+- **Scope**: only textures RmlUi loads. A window still drawn by native code keeps the original
+  colours, since RmlUi loads its own copy of each sprite (`LoadChangedImageExclusive`).
+- **Theme switch**: RmlUi keeps a texture by its source path, which is the same in every theme, so
+  `UI::Theme::Select` releases the sprites whose preset changes at once (no frame draws them
+  with the old preset); RmlUi loads them again, with the new preset, when it next draws them. No
+  restart.
+- **Colours that go with the art** stay tokens: `skynet/tokens.ini` sets the window titles
+  (`window-title-color`, `window-title-effect`), the window shadow (`window-shadow`), the item cell
+  tint (`cell-tint-normal`), the character window's stats (`stat-accent`) and `text-heading`;
+  `legacy/tokens.ini` holds the literals those stylesheets had, so legacy draws as before.
+
+Code: `UI/RmlBridge/ThemeReforge.h` (keys, the list, the switch), the `textureImageChange` hook
+(`RmlRuntimeHooks.cpp` → `RmlUiRenderInterface::LoadTexture`), `CGlobalBitmap::ImageChange`.
+Tests: `tests/render/test_sprite_reforge.cpp` (`sprite_reforge_tests`) and
+`tests/ui/test_theme_reforge.cpp` (`theme_file_interface_tests`); the latter also checks that
+every `skynet` key names a sprite that exists. `sprite_reforge_preview` (built with the tests)
+forges one raw RGBA image, to look at a preset on real art without starting the game.
+
+## Rich item tooltips and rarity cells
+
+Two `theme.ini` capabilities change how items look, with no image of their own. `skynet` declares
+both; legacy and modern declare neither, so their documents, classes and pixels stay as they were.
+C++ reads the capability, never the theme's name.
+
+```ini
+[Capabilities]
+RichItemTooltip=1
+ItemRarityCells=1
+```
+
+- **`RichItemTooltip=1`**: the item tooltip (`RenderItemInfo` → `UI::Tooltip::ShowLegacyTextList`)
+  keeps writing the same lines, a few with a role (`TextListRole`: name, Combat Power, section,
+  inactive detail, set piece). With the capability on and outside the phone view,
+  `UI::Tooltip::ArrangeRich` (`UI/Tooltip/ItemTooltipLayout.h`) reorders them: a header of the
+  name, the item's kind ("Ancient · Armour", the loot filter's words) and its Combat Power; each
+  run of blank lines as one divider; a divider before each section; ✓ / – before the set pieces.
+  While Shift is not held, three or more inactive set lines (grey Power of the Ancients and full
+  set bonus lines) give way to a "Hold Shift for details" line; touch and the pad always show
+  everything. `Tooltip::Config` then carries `rich`, the rarity tier and the upgrade band, and the
+  model offers `rich`, `name_px`, `rar_*`, `up_gold` and per line `role_*`, `head`, `head_last`.
+  The theme forks `tooltip.rml` to bind them and styles them in its own sheet
+  (`themes/skynet/tooltip_rich.rcss`). The line divs must stay `#tooltip_panel`'s first children;
+  extra elements (skynet's gold frame and corner diamonds) go after them. The rarity is the name
+  colour's (`GameLogic/Items/ItemRarity.h`): ancient, excellent, socket, +7, options, special,
+  divine; the band is +7..+12 or +13..+15, for weapons, shields, armour and wings only.
+- **`ItemRarityCells=1`**: every native item grid's cells and the worn slots also carry
+  `rar-exc` / `rar-anc` / `rar-socket`, `rf` (has a frame), `up-fine` / `up-gold` and, on a grid,
+  the item's outer edges `re-t` / `re-b` / `re-l` / `re-r` (`UI/Inventory/ItemCellRarityClass.h`).
+  Only gear and jewellery get them. `themes/legacy/item_grid.rcss` and `my_inventory.rcss` style
+  them with the `cell-tint-*` and `cell-frame-*` tokens, which are neutral in
+  `legacy/tokens.ini` (no frame, the normal tint); a theme sets its own values. The rarity tint
+  replaces only `tint-normal`, so wear and untradeable tints still show, and the frame is the
+  drop preview element's border, so the drop colours are untouched.
+
+A rich tooltip taller than the window is laid out again with smaller text (`text_px`, `name_px`,
+the line heights and the padding, down to 3/4) until it and its shadow and glow fit, in the same
+frame; still too tall, `#tooltip_panel` gets `tt-tall` (model `tall`), which skynet uses to drop
+the shadow and the gold glow. The +13..+15 cell and slot frame is `cell-frame-gold-width` wide
+(skynet 2px, neutral 0px), the other frames `cell-frame-width`.
+
+Tests: `tests/gamelogic/test_item_rarity.cpp`, `tests/ui/test_item_tooltip_layout.cpp`,
+`tests/ui/test_item_cell_classes.cpp`, and in `tests/ui/test_theme_reforge.cpp` the capabilities,
+the neutral tokens and the layout of skynet's rich tooltip (header bars, dividers, the Combat
+Power pill, the diamonds and the gold frame).
+
+## Live HUD
+
+`LiveHud=1` makes the PC HUD live (`UI::RmlBridge::ThemeHasLiveHud()`, `UI::HUD::LiveHud` in
+`UI/HUD/LiveHud.h`). `skynet` declares it; legacy and modern do not, so their HUD keeps its
+documents, classes and pixels. C++ reads the capability, never the theme's name.
+
+```ini
+[Capabilities]
+LiveHud=1
+```
+
+- **What it draws.** Life and mana gems filled with liquid: an eased level, a wave and slosh, a
+  crest, a glass highlight and a sheen; a damage ghost on the life gem; a halo that pulses while
+  life is low. SD and AG rings round the gems, the SD one with its own ghost. On the skill row a
+  dark sweep over the cooldown left, the whole seconds left, and a short gold flash when a slot is
+  ready again. On the EXP bar a spark breathes at the fill's end and flares on each EXP gain; a
+  level-up sends a band of light across the bar and the sheen over both gems (none in the first 2 s
+  after the HUD binds, the hero changes or the master level starts: the master level comes in its
+  own packet).
+- **Markup.** `main_frame.rml` is shared by every theme. Its live parts carry `live-only`: per gem
+  `orb_hp_*` / `orb_mp_*` (`_box`, `_under`, `_halo`, `_body`, `_shine`), the rings
+  `orb_sd_arc` / `orb_ag_arc` and their `_cap`, per skill slot `.skill-sweep`, `.skill-ready` and
+  `.skill-cd-secs`, and `#exp_spark`. The meshes are `<additive-mesh>` elements; C++ builds their
+  geometry (`UI/HUD/LiveGaugeMesh.h`) at most every 1/30 s, and only when what they show changed.
+- **`main_frame_live.rcss` in every theme.** `main_frame.rml` links it, so a theme without a
+  `Base=` must ship one. Legacy's and modern's hold only `.live-only { display: none; }`. Skynet's
+  shows and places the parts, hides the old cooldown wipe on the skill row (the open grid keeps
+  it), animates `.skill-ready` on the slot's icon while C++ gives the slot the class `ready` (0.4 s:
+  a 2dp rim fading out and a faint additive fill), draws `.skill-cd-secs` smaller while C++ gives it
+  the class `long` (10 s and more), and hides the parts again under `@media (theme: mobile-hud)`.
+- **Phones.** A phone or tablet always plays legacy (`ResolveStartupThemeName`), and the phone's
+  HUD (`UI::Mobile::ReplacesPcHud()`) never syncs the live HUD, so there is none there.
+
+`[LiveHud]` in `theme.ini` tunes it (`UI::HUD::LiveGauge::LiveHudConfig`). Every key is optional;
+a missing value, or one out of range or not a number, keeps its default. Do not put a comment after
+a value: `ThemeInheritance` keeps it, and the value is refused. Sizes are dp, times seconds, angles
+degrees clockwise from 3 o'clock, colours `#rrggbb` (`SweepShade` `#rrggbbaa`).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `GemOutline` | `25,3 75,3 96,32 96,70 68,97 32,97 5,70 5,32` | the gem's convex outline, x,y in percent of its box |
+| `GemZoom` | 1.32 | the gem art's zoom about its centre (cuts off its corner curls), at least 1 |
+| `EmptyShade` | 0.30 | the art's brightness above the liquid |
+| `CrestTint` | 0.30 | the crest's brightness at the liquid's surface |
+| `WaveAmplitude` | 1.2 | the surface wave's height |
+| `WavePeriodLife`, `WavePeriodMana` | 2.6, 3.3 | the wave's period in each gem |
+| `ArcStart`, `ArcSweep`, `ArcWidth` | 140, 260, 3.5 | the SD and AG rings: start angle, extent, width |
+| `LowLife`, `PulsePeriod`, `PulseStrength` | 0.30, 1.2, 0.22 | the life gem pulses under this share of life |
+| `HaloLife`, `HaloMana`, `HaloPoison` | `#ff3418`, `#2870ff`, `#30c040` | the glow round each gem |
+| `SweepShade` | `#060403cc` | the skill cooldown's shade |
+| `RimOuter`, `RimInner`, `RimWidth` | `#5c462a`, `#0b0907`, 1.5 | the socket's rim round each gem; the colours also draw the rings' track |
+| `SparkColour` | `#ffd778` | the EXP spark's and the level-up band's colour |
+| `SparkRadius`, `SparkPeak` | 5, 0.6 | the EXP spark's size and its brightness (0..1) at the top of its breathing |
+| `SparkPeriod`, `SparkStill` | 1.4, 0.825 | the breathing's cycle; the brightness with HudEffects off, a share of `SparkPeak` |
+| `FlareTime`, `FlareRadius`, `FlareBrightness` | 0.8, 1.8, 1.5 | an EXP gain's flare: how long it takes to fall back, how many times as big and as bright the spark starts (at least 1) |
+| `BandTime`, `BandHalfWidth`, `BandStrength` | 0.9, 16, 0.8 | the level-up: the run of the band and the gems' sheen, the band's reach either side of its line, its brightness (0..1) |
+
+The colours drawn by the stylesheet are `hud-*` tokens in the theme's `tokens.ini`:
+`hud-orb-plate` (the plate over the strip's sockets round the bigger gems), `hud-sd-num` and
+`hud-ag-num` (the SD and AG numbers), `hud-ready-rim` (the ready flash's rim), `hud-ready-flash`
+(the colour the flash adds over the slot at its start) and `hud-cd-secs` (the seconds left).
+Legacy and modern have none.
+
+**HUD animation.** Options > Interface "HUD animation" (`config.ini` `[UI] HudEffects`, on by
+default) shows only while the live HUD runs. Off: the liquid lies flat, and there is no sheen, no
+low-life pulse, no ready flash and no level-up cue; the spark stands still at `SparkStill` without
+its flare. The levels still ease, the ghosts still drain, and the cooldowns still show their sweep
+and seconds.
+
+**`$hudtest`** (chat, `UI/HUD/LiveHudTest.h`) puts local values in place of the hero's, to show
+and screenshot every state; nothing goes to the server, and leaving the game scene clears it all.
+A form it does not know answers with the usage line.
+
+| Command | Effect |
+|---|---|
+| `$hudtest hp\|mp\|sd\|ag <0..1>` | a gauge's fill |
+| `$hudtest expfill <0..1>` | the EXP bar's fill (within its tenth), and with it the spark |
+| `$hudtest cd <seconds>` | every skill slot cooling down for that long (at most 3600 s), from now; `cd 0` stops it |
+| `$hudtest exp` | an EXP gain (the spark's flare) |
+| `$hudtest lvl` | a level-up (the band and the sheen) |
+| `$hudtest poison on\|off` | the hero poisoned or not (the life gem's poisoned art and halo) |
+| `$hudtest stats` | one system line with the live HUD's cost over the last full 5 s window |
+| `$hudtest stats on\|off` | that line also logged at every full window (`MU_LOG_INFO`: `MuError.log`, and the browser console on the web) |
+| `$hudtest off` | the hero's own values again, and the stats log off |
+
+The stats line reads `HUD stats over 5.0 s: 60.0 syncs/s, 30.0 ticks/s; mesh rebuilds per tick avg
+4.0, max 10; sync avg 42 us, max 900 us`: `LiveHud::Sync()` calls per second, the syncs past the
+1/30 s gate, the meshes rebuilt per such tick, and each sync's own time (binding left out). Before
+the first window is full it shows the running one; where no live HUD runs it says so.
+
+Tests: `tests/ui/test_live_gauge_math.cpp` and `tests/ui/test_live_gauge_mesh.cpp` (the motion,
+`[LiveHud]` parsing, `$hudtest`, the stats window and the meshes), and in
+`tests/ui/test_theme_reforge.cpp` the capability, skynet's `[LiveHud]` values and the live parts'
+layout in each theme and on the phone.
+
 ## Design tokens: `themes/<theme>/tokens.ini`
 
 Both built-in themes have a `tokens.ini` file (`[Tokens]` section, plain `name=value` lines) that a theme's own `.rcss`

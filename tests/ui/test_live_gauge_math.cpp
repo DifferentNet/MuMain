@@ -1,0 +1,820 @@
+#include "doctest.h"
+
+#include "UI/HUD/LiveGaugeMath.h"
+#include "UI/HUD/LiveHudTest.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace UI::HUD::LiveGauge;
+
+namespace
+{
+constexpr float Frame = 1.f / 60.f;
+
+bool SameOutline(const std::vector<OutlinePoint>& a, const std::vector<OutlinePoint>& b)
+{
+    if (a.size() != b.size())
+        return false;
+    for (std::size_t i = 0; i < a.size(); ++i)
+    {
+        if (std::fabs(a[i].x - b[i].x) > 1e-6f || std::fabs(a[i].y - b[i].y) > 1e-6f)
+            return false;
+    }
+    return true;
+}
+} // namespace
+
+TEST_CASE("the shown level eases toward the hero's and lands on it [ui][live_gauge]")
+{
+    SUBCASE("rising and falling, it never passes the target")
+    {
+        for (const auto [from, to] : {std::pair{0.f, 1.f}, std::pair{1.f, 0.f}, std::pair{0.2f, 0.65f}})
+        {
+            CAPTURE(from);
+            CAPTURE(to);
+            float shown = from;
+            float distance = std::fabs(to - from);
+            int frames = 0;
+            while (shown != to && frames < 600)
+            {
+                shown = EaseToward(shown, to, Frame);
+                const float next = std::fabs(to - shown);
+                CHECK(next < distance);
+                CHECK(((to > from) ? shown <= to : shown >= to));
+                distance = next;
+                ++frames;
+            }
+            CHECK(shown == to);
+            // About eight time constants of 0.12 s to come within 0.001.
+            CHECK(frames > 30);
+            CHECK(frames < 90);
+        }
+    }
+
+    SUBCASE("a long frame is one step of 0.1 s, a negative one none")
+    {
+        CHECK(EaseToward(0.f, 1.f, 5.f) == doctest::Approx(EaseToward(0.f, 1.f, 0.1f)));
+        CHECK(EaseToward(0.f, 1.f, 0.1f) < 1.f);
+        CHECK(EaseToward(0.3f, 1.f, -1.f) == doctest::Approx(0.3f));
+        CHECK(EaseToward(0.5f, 0.5f, Frame) == 0.5f);
+    }
+
+    SUBCASE("one time constant covers 63 % of the way")
+    {
+        CHECK(EaseToward(0.f, 1.f, 0.1f) == doctest::Approx(1.f - std::exp(-0.1f / 0.12f)));
+    }
+}
+
+TEST_CASE("the damage ghost holds the level before a drop, then drains [ui][live_gauge]")
+{
+    SUBCASE("no ghost for a drop under 2 % or for a gain")
+    {
+        GhostTracker ghost;
+        ghost.Update(1.f, 1.f, 0.0);
+        ghost.Update(0.99f, 0.99f, 0.1);
+        CHECK_FALSE(ghost.Active());
+        CHECK(ghost.Level() == doctest::Approx(0.99f));
+        ghost.Update(0.98f, 0.98f, 0.2);
+        CHECK_FALSE(ghost.Active());
+        // The hit's own frame, the gem not moved yet: the ghost waits above it.
+        ghost.Update(0.5f, 0.98f, 0.3);
+        CHECK(ghost.Active());
+        ghost.Update(0.5f, 0.9f, 0.32);
+        CHECK(ghost.Level() == doctest::Approx(0.98f));
+
+        GhostTracker gain;
+        gain.Update(0.5f, 0.5f, 0.0);
+        gain.Update(0.9f, 0.6f, 0.1);
+        CHECK_FALSE(gain.Active());
+        CHECK(gain.Level() == doctest::Approx(0.6f));
+    }
+
+    SUBCASE("a hit: held 0.35 s, drained at 1.2 a second, never under the shown level")
+    {
+        GhostTracker ghost;
+        ghost.Update(1.f, 1.f, 0.0);
+        // The hit lands; the gem has started to ease down.
+        ghost.Update(0.5f, 0.9f, 0.1);
+        CHECK(ghost.Active());
+        CHECK(ghost.Level() == doctest::Approx(1.f));
+        ghost.Update(0.5f, 0.6f, 0.3);
+        CHECK(ghost.Level() == doctest::Approx(1.f));
+        ghost.Update(0.5f, 0.55f, 0.45);
+        CHECK(ghost.Level() == doctest::Approx(1.f));
+        // Drained 0.1 s past the hold's end (0.45).
+        ghost.Update(0.5f, 0.5f, 0.55);
+        CHECK(ghost.Active());
+        CHECK(ghost.Level() == doctest::Approx(1.f - 1.2f * 0.1f));
+        ghost.Update(0.5f, 0.5f, 0.75);
+        CHECK(ghost.Level() == doctest::Approx(1.f - 1.2f * 0.3f));
+        // It would pass the shown level: the ghost is gone.
+        ghost.Update(0.5f, 0.5f, 2.0);
+        CHECK_FALSE(ghost.Active());
+        CHECK(ghost.Level() == doctest::Approx(0.5f));
+    }
+
+    SUBCASE("a second hit while the ghost shows keeps the higher ghost and holds again")
+    {
+        GhostTracker ghost;
+        ghost.Update(1.f, 1.f, 0.0);
+        ghost.Update(0.6f, 0.95f, 0.1);
+        ghost.Update(0.6f, 0.6f, 0.3);
+        ghost.Update(0.3f, 0.55f, 0.4);
+        CHECK(ghost.Level() == doctest::Approx(1.f));
+        ghost.Update(0.3f, 0.3f, 0.7);
+        CHECK(ghost.Level() == doctest::Approx(1.f));
+    }
+
+    SUBCASE("the ghost never shows under the shown level")
+    {
+        GhostTracker ghost;
+        ghost.Update(1.f, 1.f, 0.0);
+        ghost.Update(0.4f, 1.f, 0.1);
+        // Healed above the ghost while it holds.
+        ghost.Update(1.f, 1.f, 0.2);
+        CHECK(ghost.Level() >= 1.f);
+    }
+}
+
+TEST_CASE("the liquid's wave fades at empty and full and stays within its amplitude [ui][live_gauge]")
+{
+    CHECK(WaveFade(0.f) == 0.f);
+    CHECK(WaveFade(1.f) == 0.f);
+    CHECK(WaveFade(0.02f) == doctest::Approx(0.5f));
+    CHECK(WaveFade(0.98f) == doctest::Approx(0.5f));
+    CHECK(WaveFade(0.5f) == 1.f);
+    CHECK(WaveFade(0.04f) == doctest::Approx(1.f));
+
+    constexpr float Period = 2.6f;
+    constexpr float Amplitude = 1.2f;
+    float largest = 0.f;
+    for (int step = 0; step < 400; ++step)
+    {
+        const double t = step * 0.037;
+        for (const float x : {0.f, 0.1f, 0.33f, 0.5f, 0.77f, 1.f})
+        {
+            CHECK(WaveOffset(x, t, Period, 0.f, Amplitude) == 0.f);
+            CHECK(WaveOffset(x, t, Period, 1.f, Amplitude) == 0.f);
+            const float offset = WaveOffset(x, t, Period, 0.5f, Amplitude);
+            CHECK(std::fabs(offset) <= Amplitude + 1e-5f);
+            largest = std::max(largest, std::fabs(offset));
+        }
+    }
+    // It moves: not a flat line.
+    CHECK(largest > 0.5f * Amplitude);
+    CHECK(WaveOffset(0.3f, 1.0, 0.f, 0.5f, Amplitude) == 0.f);
+}
+
+TEST_CASE("the wave repeats after seven periods, where both sines do [ui][live_gauge]")
+{
+    constexpr float Period = 3.3f;
+    for (const double t : {0.0, 1.234, 17.5, 3600.25})
+    {
+        CAPTURE(t);
+        for (const float x : {0.f, 0.21f, 0.5f, 0.9f})
+        {
+            CAPTURE(x);
+            CHECK(WaveOffset(x, t + 7.0 * Period, Period, 0.5f, 1.f) ==
+                  doctest::Approx(WaveOffset(x, t, Period, 0.5f, 1.f)).epsilon(1e-3));
+        }
+    }
+}
+
+TEST_CASE("a change sloshes the wave for 0.6 s, a stronger change taking over [ui][live_gauge]")
+{
+    CHECK(SloshGain(0.f, 0.0) == 1.f);
+    CHECK(SloshGain(0.05f, 0.0) == doctest::Approx(1.6f));
+    CHECK(SloshGain(-0.05f, 0.0) == doctest::Approx(1.6f));
+    CHECK(SloshGain(0.5f, 0.0) == doctest::Approx(2.5f));
+    CHECK(SloshGain(0.05f, 0.3) == doctest::Approx(1.3f));
+    CHECK(SloshGain(0.05f, 0.6) == doctest::Approx(1.f));
+    CHECK(SloshGain(0.05f, 5.0) == doctest::Approx(1.f));
+    CHECK(SloshGain(0.05f, -1.0) == doctest::Approx(1.6f));
+
+    SloshTracker slosh;
+    CHECK(slosh.Gain(10.0) == 1.f);
+    slosh.Kick(0.1f, 0.0);
+    CHECK(slosh.Gain(0.0) == doctest::Approx(2.2f));
+    // A small tick while the big one still sloshes harder: ignored.
+    slosh.Kick(0.01f, 0.1);
+    CHECK(slosh.Gain(0.1) == doctest::Approx(1.f + 1.2f * (1.f - 0.1f / 0.6f)));
+    // Nearly faded: the small one takes over.
+    slosh.Kick(0.01f, 0.59);
+    CHECK(slosh.Gain(0.59) == doctest::Approx(1.12f));
+    CHECK(slosh.Gain(2.0) == doctest::Approx(1.f));
+}
+
+TEST_CASE("an arc spans its level's share of the sweep [ui][live_gauge]")
+{
+    const ArcRange empty = ArcSpan(0.f, 140.f, 260.f);
+    CHECK(empty.startDegrees == 140.f);
+    CHECK(empty.endDegrees == 140.f);
+    CHECK(ArcSpan(0.5f, 140.f, 260.f).endDegrees == doctest::Approx(270.f));
+    CHECK(ArcSpan(1.f, 140.f, 260.f).endDegrees == doctest::Approx(400.f));
+    CHECK(ArcSpan(-0.5f, 140.f, 260.f).endDegrees == 140.f);
+    CHECK(ArcSpan(3.f, 140.f, 260.f).endDegrees == doctest::Approx(400.f));
+}
+
+TEST_CASE("the life gem pulses only while life is low and not zero [ui][live_gauge]")
+{
+    constexpr float LowLife = 0.3f;
+    constexpr float Period = 1.2f;
+    CHECK(PulseLevel(0.5f, LowLife, Period, 0.3) == 0.f);
+    CHECK(PulseLevel(0.3f, LowLife, Period, 0.3) == 0.f);
+    CHECK(PulseLevel(0.f, LowLife, Period, 0.3) == 0.f);
+    CHECK(PulseLevel(0.2f, LowLife, 0.f, 0.3) == 0.f);
+    CHECK(PulseLevel(0.2f, LowLife, Period, 0.0) == doctest::Approx(0.5f));
+    CHECK(PulseLevel(0.2f, LowLife, Period, 0.3) == doctest::Approx(1.f));
+    CHECK(PulseLevel(0.2f, LowLife, Period, 0.9) == doctest::Approx(0.f).epsilon(1e-5));
+    for (int step = 0; step < 100; ++step)
+    {
+        const float pulse = PulseLevel(0.1f, LowLife, Period, step * 0.071);
+        CHECK(pulse >= 0.f);
+        CHECK(pulse <= 1.f);
+    }
+}
+
+TEST_CASE("low life is above zero and under the threshold [ui][live_gauge]")
+{
+    CHECK(IsLowLife(0.29f, 0.3f));
+    CHECK(IsLowLife(0.01f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.3f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.31f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.f, 0.3f));
+    CHECK_FALSE(IsLowLife(-0.1f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.2f, 0.f));
+}
+
+TEST_CASE("a halo glows with its gem's level, and from 0.25 to 0.60 while it pulses [ui][live_gauge]")
+{
+    CHECK(HaloStrength(0.f, false, 0.f) == doctest::Approx(0.10f));
+    CHECK(HaloStrength(0.5f, false, 0.f) == doctest::Approx(0.225f));
+    CHECK(HaloStrength(1.f, false, 0.f) == doctest::Approx(0.35f));
+    CHECK(HaloStrength(2.f, false, 0.f) == doctest::Approx(0.35f));
+    CHECK(HaloStrength(-1.f, false, 0.f) == doctest::Approx(0.10f));
+    CHECK(HaloStrength(1.f, false, 1.f) == doctest::Approx(0.35f));
+    // While it pulses the level doesn't matter.
+    CHECK(HaloStrength(0.2f, true, 0.f) == doctest::Approx(0.25f));
+    CHECK(HaloStrength(0.2f, true, 1.f) == doctest::Approx(0.60f));
+    CHECK(HaloStrength(0.1f, true, 0.5f) == doctest::Approx(0.425f));
+    CHECK(HaloStrength(0.1f, true, 3.f) == doctest::Approx(0.60f));
+    CHECK(HaloStrength(0.1f, true, -1.f) == doctest::Approx(0.25f));
+}
+
+TEST_CASE("a skill's ready flash fires once when its cooldown ends [ui][live_gauge]")
+{
+    ReadyFlash flash;
+    CHECK_FALSE(flash.Update(0.f));
+    CHECK_FALSE(flash.Update(0.5f));
+    CHECK_FALSE(flash.Update(0.2f));
+    CHECK(flash.Update(0.f));
+    CHECK_FALSE(flash.Update(0.f));
+    CHECK_FALSE(flash.Update(-0.1f));
+    CHECK_FALSE(flash.Update(1.f));
+    CHECK(flash.Update(-0.1f));
+}
+
+TEST_CASE("a level-up counts only the same hero's level rising, counted the same way, after the quiet start "
+          "[ui][live_gauge]")
+{
+    REQUIRE(LevelUpQuietTime == doctest::Approx(2.0));
+    LevelUpDetector levels;
+    CHECK_FALSE(levels.Update(1, false, 10, 0.0));
+    CHECK_FALSE(levels.Update(1, false, 10, 2.5));
+    CHECK(levels.Update(1, false, 11, 3.0));
+    CHECK_FALSE(levels.Update(1, false, 11, 3.1));
+    CHECK_FALSE(levels.Update(1, false, 9, 3.2));
+    CHECK(levels.Update(1, false, 10, 3.3));
+
+    // Another character: only recorded, and a rise in its first 2 s too.
+    CHECK_FALSE(levels.Update(2, false, 50, 10.0));
+    CHECK_FALSE(levels.Update(2, false, 51, 11.9));
+    CHECK(levels.Update(2, false, 52, 12.0));
+    CHECK_FALSE(levels.Update(2, false, 40, 13.0));
+
+    // The master level starting (another count): it starts over, so its first value (0 until its packet comes) and
+    // the real one in the next 2 s play nothing; later master levels do.
+    CHECK_FALSE(levels.Update(2, true, 0, 20.0));
+    CHECK_FALSE(levels.Update(2, true, 57, 20.4));
+    CHECK_FALSE(levels.Update(2, true, 57, 22.5));
+    CHECK(levels.Update(2, true, 58, 23.0));
+    // Back to the normal level: starts over again.
+    CHECK_FALSE(levels.Update(2, false, 400, 24.0));
+    CHECK_FALSE(levels.Update(2, false, 401, 25.0));
+    CHECK(levels.Update(2, false, 402, 26.5));
+
+    // A login: the first frames see a stale master level, then the real one for the same hero; no cue.
+    LevelUpDetector login;
+    CHECK_FALSE(login.Update(7, true, 1, 100.0));
+    CHECK_FALSE(login.Update(7, true, 120, 100.3));
+    CHECK_FALSE(login.Update(7, true, 120, 102.5));
+    CHECK(login.Update(7, true, 121, 103.0));
+}
+
+TEST_CASE("a skill's live cooldown is its delay left, the share above 0 exactly while some is left [ui][live_gauge]")
+{
+    SkillCooldown cooldown = SkillCooldownOf(3000, 4000);
+    CHECK(cooldown.fraction == doctest::Approx(0.75f));
+    CHECK(cooldown.remainingMs == 3000);
+    cooldown = SkillCooldownOf(1, 60000);
+    CHECK(cooldown.fraction > 0.f);
+    CHECK(cooldown.remainingMs == 1);
+    // More delay left than the skill's own: a full turn.
+    cooldown = SkillCooldownOf(5000, 4000);
+    CHECK(cooldown.fraction == doctest::Approx(1.f));
+    CHECK(cooldown.remainingMs == 5000);
+    // Nothing left, or no delay to take a share of: none.
+    for (const std::pair<int, int>& none :
+         {std::pair{0, 4000}, std::pair{-16, 4000}, std::pair{2000, 0}, std::pair{2000, -1}})
+    {
+        CAPTURE(none.first);
+        CAPTURE(none.second);
+        cooldown = SkillCooldownOf(none.first, none.second);
+        CHECK(cooldown.fraction == 0.f);
+        CHECK(cooldown.remainingMs == 0);
+    }
+
+    // A 4 s delay counted down frame by frame flashes once, when it runs out, and not before.
+    ReadyFlash flash;
+    int flashes = 0;
+    int flashedAt = 1;
+    for (int left = 4000; left >= -32; left -= 16)
+    {
+        if (flash.Update(SkillCooldownOf(left, 4000).fraction))
+        {
+            ++flashes;
+            flashedAt = left;
+        }
+    }
+    CHECK(flashes == 1);
+    CHECK(flashedAt <= 0);
+    CHECK(flashedAt > -16);
+}
+
+TEST_CASE("a cooldown shows its whole seconds left, rounded up, until its last second [ui][live_gauge]")
+{
+    CHECK(CooldownSeconds(5000) == 5);
+    CHECK(CooldownSeconds(4001) == 5);
+    CHECK(CooldownSeconds(4000) == 4);
+    CHECK(CooldownSeconds(3500) == 4);
+    CHECK(CooldownSeconds(2001) == 3);
+    CHECK(CooldownSeconds(2000) == 2);
+    CHECK(CooldownSeconds(1001) == 2);
+    CHECK(CooldownSeconds(1000) == 0);
+    CHECK(CooldownSeconds(1) == 0);
+    CHECK(CooldownSeconds(0) == 0);
+    CHECK(CooldownSeconds(-500) == 0);
+    CHECK(CooldownSeconds(60000) == 60);
+
+    // Ten seconds and more are drawn smaller (two digits); none shown (0) and 2..9 are not.
+    CHECK_FALSE(IsLongCooldownNumber(-1));
+    CHECK_FALSE(IsLongCooldownNumber(0));
+    CHECK_FALSE(IsLongCooldownNumber(9));
+    CHECK(IsLongCooldownNumber(10));
+    CHECK(IsLongCooldownNumber(CooldownSeconds(90000)));
+    CHECK(IsLongCooldownNumber(100));
+
+    // A 5 s cooldown counted down frame by frame: 5, 4, 3, 2, then no number, each a change of the text.
+    std::vector<int> shown;
+    for (int ms = 5000; ms >= 0; ms -= 16)
+    {
+        const int seconds = CooldownSeconds(ms);
+        if (shown.empty() || shown.back() != seconds)
+            shown.push_back(seconds);
+    }
+    CHECK(shown == std::vector<int>{5, 4, 3, 2, 0});
+}
+
+TEST_CASE("the EXP spark breathes between 0.65 and 1 on its period [ui][live_gauge]")
+{
+    constexpr float Period = 1.4f;
+    float lowest = 2.f;
+    float highest = -1.f;
+    for (int step = 0; step <= 1400; ++step)
+    {
+        const double t = step * 0.001;
+        const float breath = SparkBreath(t, Period);
+        lowest = std::min(lowest, breath);
+        highest = std::max(highest, breath);
+        CHECK(SparkBreath(t + Period, Period) == doctest::Approx(breath).epsilon(1e-4));
+    }
+    CHECK(lowest == doctest::Approx(0.65f).epsilon(1e-3));
+    CHECK(highest == doctest::Approx(1.f).epsilon(1e-3));
+    CHECK(SparkBreath(0.0, Period) == doctest::Approx(0.825f));
+    // A long uptime keeps the same breath.
+    CHECK(SparkBreath(1.4e5 + 0.35, Period) == doctest::Approx(1.f).epsilon(1e-3));
+    CHECK(SparkBreath(3.0, 0.f) == doctest::Approx(1.f));
+}
+
+TEST_CASE("an EXP gain's flare falls from 1 to 0 over its time, fast at first [ui][live_gauge]")
+{
+    constexpr float Time = 0.8f;
+    CHECK(FlareLeft(0.0, Time) == doctest::Approx(1.f));
+    CHECK(FlareLeft(0.2, Time) == doctest::Approx(0.5625f));
+    CHECK(FlareLeft(0.4, Time) == doctest::Approx(0.25f));
+    CHECK(FlareLeft(0.8, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(5.0, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(-0.1, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(0.1, 0.f) == doctest::Approx(0.f));
+    float last = 2.f;
+    for (int step = 0; step < 80; ++step)
+    {
+        const float left = FlareLeft(step * 0.01, Time);
+        CHECK(left < last);
+        last = left;
+    }
+}
+
+TEST_CASE("a one-off run goes 0 to 1 over its time and is -1 outside it [ui][live_gauge]")
+{
+    constexpr float Run = 0.9f;
+    CHECK(RunPhase(0.0, Run) == doctest::Approx(0.f));
+    CHECK(RunPhase(0.45, Run) == doctest::Approx(0.5f));
+    CHECK(RunPhase(0.89, Run) == doctest::Approx(0.98889f).epsilon(1e-3));
+    CHECK(RunPhase(0.9, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(3.0, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(-0.01, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(0.1, 0.f) == doctest::Approx(-1.f));
+}
+
+TEST_CASE("a gem outline is a convex polygon in percent, or the octagon [ui][live_gauge]")
+{
+    const std::vector<OutlinePoint> octagon = DefaultOutline();
+    REQUIRE(octagon.size() == 8);
+    CHECK(SameOutline(ParseOutline("25,3 75,3 96,32 96,70 68,97 32,97 5,70 5,32"), octagon));
+
+    const std::vector<OutlinePoint> triangle = ParseOutline("  10,20   90,20 50,90 ");
+    REQUIRE(triangle.size() == 3);
+    CHECK(triangle[0].x == doctest::Approx(0.1f));
+    CHECK(triangle[0].y == doctest::Approx(0.2f));
+    CHECK(triangle[2].x == doctest::Approx(0.5f));
+    CHECK(triangle[2].y == doctest::Approx(0.9f));
+    // Either winding.
+    CHECK(ParseOutline("50,90 90,20 10,20").size() == 3);
+
+    for (const char* bad :
+         {"", "10,10 90,10", "10,10 90,10 x,90", "10,10 190,10 50,90", "10,10 90,10 50,-5", "10;10 90,10 50,90",
+          "10,10 90,10 50,90 junk", "0,0 50,50 100,100", "0,0 100,0 50,20 100,100 0,100"})
+    {
+        CAPTURE(bad);
+        CHECK(SameOutline(ParseOutline(bad), octagon));
+    }
+}
+
+TEST_CASE("theme colours are #rrggbb or #rrggbbaa [ui][live_gauge]")
+{
+    constexpr std::uint32_t Fallback = 0x12345678u;
+    CHECK(ParseColour("#ff3418", Fallback) == 0xFF1834FFu);
+    CHECK(ParseColour("#FF3418", Fallback) == 0xFF1834FFu);
+    CHECK(ParseColour("#2870ff", Fallback) == 0xFFFF7028u);
+    CHECK(ParseColour("#060403cc", Fallback) == 0xCC030406u);
+    for (const char* bad : {"", "#", "ff3418", "#ff341", "#ff34180", "#gg3418", "#ff3418 ; red"})
+    {
+        CAPTURE(bad);
+        CHECK(ParseColour(bad, Fallback) == Fallback);
+    }
+}
+
+TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][live_gauge]")
+{
+    const LiveHudConfig defaults = ReadLiveHudConfig({});
+    CHECK(SameOutline(defaults.gemOutline, DefaultOutline()));
+    CHECK(defaults.gemZoom == doctest::Approx(1.32f));
+    CHECK(defaults.emptyShade == doctest::Approx(0.30f));
+    CHECK(defaults.waveAmplitude == doctest::Approx(1.2f));
+    CHECK(defaults.wavePeriodLife == doctest::Approx(2.6f));
+    CHECK(defaults.wavePeriodMana == doctest::Approx(3.3f));
+    CHECK(defaults.arcStart == doctest::Approx(140.f));
+    CHECK(defaults.arcSweep == doctest::Approx(260.f));
+    CHECK(defaults.arcWidth == doctest::Approx(3.5f));
+    CHECK(defaults.lowLife == doctest::Approx(0.30f));
+    CHECK(defaults.pulsePeriod == doctest::Approx(1.2f));
+    CHECK(defaults.pulseStrength == doctest::Approx(0.22f));
+    CHECK(defaults.haloLife == 0xFF1834FFu);
+    CHECK(defaults.haloMana == 0xFFFF7028u);
+    CHECK(defaults.haloPoison == 0xFF40C030u);
+    CHECK(defaults.sweepShade == 0xCC030406u);
+    CHECK(defaults.rimOuter == 0xFF2A465Cu);
+    CHECK(defaults.rimInner == 0xFF07090Bu);
+    CHECK(defaults.rimWidth == doctest::Approx(1.5f));
+    CHECK(defaults.crestTint == doctest::Approx(0.30f));
+    CHECK(defaults.sparkColour == 0xFF78D7FFu);
+    CHECK(defaults.sparkRadius == doctest::Approx(5.f));
+    CHECK(defaults.sparkPeriod == doctest::Approx(1.4f));
+    CHECK(defaults.sparkStill == doctest::Approx(0.825f));
+    CHECK(defaults.sparkPeak == doctest::Approx(0.6f));
+    CHECK(defaults.flareTime == doctest::Approx(0.8f));
+    CHECK(defaults.flareRadius == doctest::Approx(1.8f));
+    CHECK(defaults.flareBrightness == doctest::Approx(1.5f));
+    CHECK(defaults.bandTime == doctest::Approx(0.9f));
+    CHECK(defaults.bandHalfWidth == doctest::Approx(16.f));
+    CHECK(defaults.bandStrength == doctest::Approx(0.8f));
+
+    const std::map<std::string, std::string> set = {{"gemoutline", "10,20 90,20 50,90"},
+                                                    {"gemzoom", "1.3"},
+                                                    {"emptyshade", "0.4"},
+                                                    {"waveamplitude", "2"},
+                                                    {"waveperiodlife", "1.5"},
+                                                    {"waveperiodmana", " 4 "},
+                                                    {"arcstart", "-90"},
+                                                    {"arcsweep", "360"},
+                                                    {"arcwidth", "5"},
+                                                    {"lowlife", "0.25"},
+                                                    {"pulseperiod", "0.8"},
+                                                    {"pulsestrength", "0.5"},
+                                                    {"halolife", "#00ff00"},
+                                                    {"halomana", "#0000ff"},
+                                                    {"halopoison", "#ffff00"},
+                                                    {"sweepshade", "#00000080"},
+                                                    {"rimouter", "#102030"},
+                                                    {"riminner", "#40506070"},
+                                                    {"rimwidth", "2.5"},
+                                                    {"cresttint", "0.6"},
+                                                    {"sparkcolour", "#80c0ff"},
+                                                    {"sparkradius", "7"},
+                                                    {"sparkperiod", "2"},
+                                                    {"sparkstill", "0.5"},
+                                                    {"sparkpeak", "0.9"},
+                                                    {"flaretime", "1.2"},
+                                                    {"flareradius", "2.5"},
+                                                    {"flarebrightness", "1"},
+                                                    {"bandtime", "0.5"},
+                                                    {"bandhalfwidth", "0"},
+                                                    {"bandstrength", "1"}};
+    const LiveHudConfig read = ReadLiveHudConfig(set);
+    CHECK(read.gemOutline.size() == 3);
+    CHECK(read.gemZoom == doctest::Approx(1.3f));
+    CHECK(read.emptyShade == doctest::Approx(0.4f));
+    CHECK(read.waveAmplitude == doctest::Approx(2.f));
+    CHECK(read.wavePeriodLife == doctest::Approx(1.5f));
+    CHECK(read.wavePeriodMana == doctest::Approx(4.f));
+    CHECK(read.arcStart == doctest::Approx(-90.f));
+    CHECK(read.arcSweep == doctest::Approx(360.f));
+    CHECK(read.arcWidth == doctest::Approx(5.f));
+    CHECK(read.lowLife == doctest::Approx(0.25f));
+    CHECK(read.pulsePeriod == doctest::Approx(0.8f));
+    CHECK(read.pulseStrength == doctest::Approx(0.5f));
+    CHECK(read.haloLife == 0xFF00FF00u);
+    CHECK(read.haloMana == 0xFFFF0000u);
+    CHECK(read.haloPoison == 0xFF00FFFFu);
+    CHECK(read.sweepShade == 0x80000000u);
+    CHECK(read.rimOuter == 0xFF302010u);
+    CHECK(read.rimInner == 0x70605040u);
+    CHECK(read.rimWidth == doctest::Approx(2.5f));
+    CHECK(read.crestTint == doctest::Approx(0.6f));
+    CHECK(read.sparkColour == 0xFFFFC080u);
+    CHECK(read.sparkRadius == doctest::Approx(7.f));
+    CHECK(read.sparkPeriod == doctest::Approx(2.f));
+    CHECK(read.sparkStill == doctest::Approx(0.5f));
+    CHECK(read.sparkPeak == doctest::Approx(0.9f));
+    CHECK(read.flareTime == doctest::Approx(1.2f));
+    CHECK(read.flareRadius == doctest::Approx(2.5f));
+    CHECK(read.flareBrightness == doctest::Approx(1.f));
+    CHECK(read.bandTime == doctest::Approx(0.5f));
+    CHECK(read.bandHalfWidth == doctest::Approx(0.f));
+    CHECK(read.bandStrength == doctest::Approx(1.f));
+
+    // Out of range, not a number, a trailing comment, an upper-case key (ThemeInheritance lower-cases them).
+    const std::map<std::string, std::string> bad = {
+        {"gemzoom", "0.9"},       {"emptyshade", "1.5"},      {"waveamplitude", "-1"},
+        {"waveperiodlife", "0"},  {"arcsweep", "400"},        {"lowlife", "0.3 ; life"},
+        {"pulseperiod", "fast"},  {"halolife", "red"},        {"GemOutline", "10,20 90,20 50,90"},
+        {"rimouter", "#5c46"},    {"riminner", "bronze"},     {"rimwidth", "-1"},
+        {"cresttint", "1.5"},     {"sparkradius", "-2"},      {"sparkperiod", "0"},
+        {"sparkstill", "1.2"},    {"sparkpeak", "bright"},    {"flaretime", "0"},
+        {"flareradius", "0.5"},   {"flarebrightness", "0.9"}, {"bandtime", "-0.9"},
+        {"bandhalfwidth", "-16"}, {"bandstrength", "2"},      {"sparkcolour", "gold"}};
+    const LiveHudConfig kept = ReadLiveHudConfig(bad);
+    CHECK(SameOutline(kept.gemOutline, DefaultOutline()));
+    CHECK(kept.gemZoom == doctest::Approx(1.32f));
+    CHECK(kept.emptyShade == doctest::Approx(0.30f));
+    CHECK(kept.waveAmplitude == doctest::Approx(1.2f));
+    CHECK(kept.wavePeriodLife == doctest::Approx(2.6f));
+    CHECK(kept.arcSweep == doctest::Approx(260.f));
+    CHECK(kept.lowLife == doctest::Approx(0.30f));
+    CHECK(kept.pulsePeriod == doctest::Approx(1.2f));
+    CHECK(kept.haloLife == 0xFF1834FFu);
+    CHECK(kept.rimOuter == 0xFF2A465Cu);
+    CHECK(kept.rimInner == 0xFF07090Bu);
+    CHECK(kept.rimWidth == doctest::Approx(1.5f));
+    CHECK(kept.crestTint == doctest::Approx(0.30f));
+    CHECK(kept.sparkColour == 0xFF78D7FFu);
+    CHECK(kept.sparkRadius == doctest::Approx(5.f));
+    CHECK(kept.sparkPeriod == doctest::Approx(1.4f));
+    CHECK(kept.sparkStill == doctest::Approx(0.825f));
+    CHECK(kept.sparkPeak == doctest::Approx(0.6f));
+    CHECK(kept.flareTime == doctest::Approx(0.8f));
+    CHECK(kept.flareRadius == doctest::Approx(1.8f));
+    CHECK(kept.flareBrightness == doctest::Approx(1.5f));
+    CHECK(kept.bandTime == doctest::Approx(0.9f));
+    CHECK(kept.bandHalfWidth == doctest::Approx(16.f));
+    CHECK(kept.bandStrength == doctest::Approx(0.8f));
+}
+
+TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off clears them [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::Apply;
+    using UI::HUD::LiveHudTest::Overrides;
+
+    Overrides overrides;
+    CHECK(Apply(overrides, L"hp 0.25"));
+    CHECK(Apply(overrides, L"mp 1"));
+    CHECK(Apply(overrides, L"  sd   0.5  "));
+    CHECK(Apply(overrides, L"ag 0"));
+    CHECK(Apply(overrides, L"expfill 0.5"));
+    CHECK(Apply(overrides, L"cd 3.5"));
+    CHECK(Apply(overrides, L"poison on"));
+    CHECK(Apply(overrides, L"exp"));
+    CHECK(Apply(overrides, L"exp"));
+    CHECK(Apply(overrides, L"lvl"));
+    CHECK(Apply(overrides, L"stats"));
+    CHECK(Apply(overrides, L"stats on"));
+    REQUIRE(overrides.life.has_value());
+    CHECK(*overrides.life == doctest::Approx(0.25f));
+    CHECK(*overrides.mana == doctest::Approx(1.f));
+    CHECK(*overrides.shield == doctest::Approx(0.5f));
+    CHECK(*overrides.skillMana == doctest::Approx(0.f));
+    REQUIRE(overrides.expFill.has_value());
+    CHECK(*overrides.expFill == doctest::Approx(0.5f));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
+    CHECK(*overrides.poisoned);
+    CHECK(overrides.cooldowns == 1);
+    CHECK(overrides.expGains == 2);
+    CHECK(overrides.levelUps == 1);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(overrides.statsLog);
+
+    CHECK(Apply(overrides, L"poison off"));
+    CHECK_FALSE(*overrides.poisoned);
+    CHECK(Apply(overrides, L"stats off"));
+    CHECK_FALSE(overrides.statsLog);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(Apply(overrides, L"stats on"));
+
+    // Refused, and nothing changed.
+    int index = 0;
+    for (const wchar_t* bad :
+         {L"", L"hp", L"hp 1.5", L"hp -0.1", L"hp half", L"hp 0.5 more", L"xx 0.5", L"cd -1", L"poison",
+          L"poison maybe", L"off now", L"expfill", L"expfill 2", L"expfill -0.5", L"stats maybe", L"stats 1"})
+    {
+        CAPTURE(index);
+        CHECK_FALSE(Apply(overrides, bad));
+        ++index;
+    }
+    CHECK(*overrides.life == doctest::Approx(0.25f));
+    CHECK(*overrides.expFill == doctest::Approx(0.5f));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
+    CHECK(overrides.cooldowns == 1);
+    CHECK(overrides.expGains == 2);
+    CHECK(overrides.statsRequests == 1);
+    CHECK(overrides.statsLog);
+
+    CHECK(Apply(overrides, L"off"));
+    CHECK_FALSE(overrides.life.has_value());
+    CHECK_FALSE(overrides.mana.has_value());
+    CHECK_FALSE(overrides.shield.has_value());
+    CHECK_FALSE(overrides.skillMana.has_value());
+    CHECK_FALSE(overrides.expFill.has_value());
+    CHECK_FALSE(overrides.poisoned.has_value());
+    CHECK_FALSE(overrides.cooldownSeconds.has_value());
+    CHECK(overrides.cooldowns == 0);
+    CHECK(overrides.expGains == 0);
+    CHECK(overrides.levelUps == 0);
+    CHECK(overrides.statsRequests == 0);
+    CHECK_FALSE(overrides.statsLog);
+}
+
+TEST_CASE("$hudtest cd plays its cooldown from when it is first seen, each request afresh [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::Apply;
+    using UI::HUD::LiveHudTest::CooldownPlayback;
+    using UI::HUD::LiveHudTest::Overrides;
+
+    Overrides overrides;
+    CooldownPlayback playback;
+    CHECK_FALSE(playback.At(overrides, 1.0).has_value());
+
+    REQUIRE(Apply(overrides, L"cd 5"));
+    auto left = playback.At(overrides, 10.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    CHECK(left->remainingMs == 5000);
+    left = playback.At(overrides, 12.5);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(0.5f));
+    CHECK(left->remainingMs == 2500);
+    left = playback.At(overrides, 14.9995);
+    REQUIRE(left.has_value());
+    CHECK(left->remainingMs == 1);
+    CHECK_FALSE(playback.At(overrides, 15.0).has_value());
+    CHECK_FALSE(playback.At(overrides, 30.0).has_value());
+
+    // The same request again starts over when it is seen.
+    REQUIRE(Apply(overrides, L"cd 5"));
+    left = playback.At(overrides, 40.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    // A new length cuts the running one short.
+    REQUIRE(Apply(overrides, L"cd 2"));
+    left = playback.At(overrides, 41.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    CHECK(left->remainingMs == 2000);
+    REQUIRE(Apply(overrides, L"cd 0"));
+    CHECK_FALSE(playback.At(overrides, 41.5).has_value());
+
+    REQUIRE(Apply(overrides, L"cd 5"));
+    CHECK(playback.At(overrides, 50.0).has_value());
+    REQUIRE(Apply(overrides, L"off"));
+    CHECK_FALSE(playback.At(overrides, 50.5).has_value());
+}
+
+TEST_CASE("$hudtest cd plays an hour at most, so its milliseconds fit [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::Apply;
+    using UI::HUD::LiveHudTest::CooldownPlayback;
+    using UI::HUD::LiveHudTest::MaxCooldownSeconds;
+    using UI::HUD::LiveHudTest::Overrides;
+
+    REQUIRE(MaxCooldownSeconds == doctest::Approx(3600.f));
+    Overrides overrides;
+    CooldownPlayback playback;
+    REQUIRE(Apply(overrides, L"cd 3600"));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
+    const wchar_t* const longer[] = {L"cd 3601", L"cd 3000000", L"cd 1e30"};
+    for (std::size_t i = 0; i < std::size(longer); ++i)
+    {
+        CAPTURE(i);
+        REQUIRE(Apply(overrides, longer[i]));
+        CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
+        const auto left = playback.At(overrides, 100.0);
+        REQUIRE(left.has_value());
+        CHECK(left->fraction == doctest::Approx(1.f));
+        CHECK(left->remainingMs == 3600000);
+    }
+    // Past what a float holds it is no number at all.
+    CHECK_FALSE(Apply(overrides, L"cd 1e40"));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
+}
+
+TEST_CASE("$hudtest stats counts the syncs, the ticks' rebuilds and the time in 5 s windows [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::FormatStats;
+    using UI::HUD::LiveHudTest::StatsWindow;
+    using UI::HUD::LiveHudTest::SyncStats;
+
+    StatsWindow stats;
+    CHECK(stats.Filled() == 0);
+    CHECK(FormatStats(stats.Latest()) == "HUD stats: no syncs yet");
+
+    // 60 syncs a second from t = 100: every other one past the 1/30 s gate, rebuilding 4 meshes and 10 on the tenth
+    // tick; 40 us each, 900 us on the 5th.
+    stats.Record(100.0, 1000, true, 99);
+    int ticks = 0;
+    for (int i = 1; i <= 300; ++i)
+    {
+        const bool ticked = i % 2 == 0;
+        ticks += ticked ? 1 : 0;
+        const int rebuilds = ticked ? (ticks == 10 ? 10 : 4) : 0;
+        if (i < 300)
+        {
+            stats.Record(100.0 + i / 60.0, i == 5 ? 900 : 40, ticked, rebuilds);
+            CHECK(stats.Filled() == 0);
+            continue;
+        }
+        // The window fills on the sync 5 s after the first, which only started the clock.
+        stats.Record(100.0 + StatsWindow::WindowSeconds, 40, ticked, rebuilds);
+    }
+    REQUIRE(stats.Filled() == 1);
+    const SyncStats& window = stats.Latest();
+    CHECK(window.seconds == doctest::Approx(5.0));
+    CHECK(window.syncs == 300);
+    CHECK(window.ticks == 150);
+    CHECK(window.rebuilds == 149 * 4 + 10);
+    CHECK(window.maxRebuilds == 10);
+    CHECK(window.micros == 299 * 40 + 900);
+    CHECK(window.maxMicros == 900);
+    CHECK(FormatStats(window) == "HUD stats over 5.0 s: 60.0 syncs/s, 30.0 ticks/s; mesh rebuilds per tick avg 4.0, "
+                                 "max 10; sync avg 42 us, max 900 us");
+
+    // The next window runs on its own; the full one stays the latest until it fills.
+    stats.Record(106.0, 5000, true, 20);
+    CHECK(stats.Filled() == 1);
+    CHECK(stats.Latest().maxMicros == 900);
+
+    // A new document starts over; the count of filled windows goes on.
+    stats.Reset();
+    CHECK(stats.Filled() == 1);
+    CHECK(stats.Latest().syncs == 0);
+    stats.Record(200.0, 40, true, 1);
+    stats.Record(201.0, 60, false, 0);
+    CHECK(stats.Latest().syncs == 1);
+    CHECK(stats.Latest().ticks == 0);
+    CHECK(stats.Latest().seconds == doctest::Approx(1.0));
+}

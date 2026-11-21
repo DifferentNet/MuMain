@@ -184,6 +184,11 @@ bool IsExcellent(const ITEM& item)
     return (item.ExcellentFlags & 63) != 0 && !IsWingItem(&item) && item.Type != ITEM_HORN_OF_FENRIR;
 }
 
+Category CategoryOfItem(const ITEM& item)
+{
+    return CategoryOf(item);
+}
+
 Facts BuildFacts(OBJECT& object, ITEM& item)
 {
     Facts facts;

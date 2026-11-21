@@ -28,6 +28,7 @@
 	width: 190px;
 	height: 429px;
 	font-family: "token(font-body)";
+	box-shadow: token(window-shadow);
 }
 /* The page tabs (BagPages.h) and the sort button (InventorySort.h) sit on the grid's top edge: the grid and the
    gold move down 8 and the buttons 5, over the gold's and the buttons' bottom shadows, clear of the frame's bottom
@@ -55,7 +56,8 @@
 	width: 190px;
 	text-align: center;
 	transform-origin: center top;
-	color: token(text-primary);
+	color: token(window-title-color);
+	font-effect: token(window-title-effect);
 	font-weight: bold;
 }
 /* The title's middle on the plate's (y 12-26, the character window's #name), at any panel scale. */
@@ -216,6 +218,15 @@
 .equip-slot.durability-30 .equip-slot-item { background-color: rgba(255, 128, 0, 64); }
 .equip-slot.durability-50 .equip-slot-item { background-color: rgba(255, 255, 0, 64); }
 .equip-slot.refused .equip-slot-item { background-color: rgba(230, 26, 26, 102); }
+/* A worn item's rarity frame, as on its cells (item_grid.rcss; ItemRarityCells=1 only, neutral tokens here): gold at
+   +13..+15 (cell-frame-gold-width wide), else the rarity's colour, else +7..+12's thin yellow, round the whole slot.
+   CMyInventory reads the element's border box, so the frame moves nothing. */
+.equip-slot.rf .equip-slot-item { border-width: token(cell-frame-width); }
+.equip-slot.rf.up-fine .equip-slot-item { border-color: token(cell-frame-fine); }
+.equip-slot.rf.rar-exc .equip-slot-item { border-color: token(cell-frame-exc); }
+.equip-slot.rf.rar-anc .equip-slot-item { border-color: token(cell-frame-anc); }
+.equip-slot.rf.rar-socket .equip-slot-item { border-color: token(cell-frame-socket); }
+.equip-slot.rf.up-gold .equip-slot-item { border-color: token(cell-frame-gold); border-width: token(cell-frame-gold-width); }
 #item_grid, #item_grid_counts, #bag_lock { left: 15px; top: calc(200px + var(--bag-tabs-shift, 0px)); width: calc(8 * var(--item-cell)); height: calc(8 * var(--item-cell)); }
 
 /* Bag page 2 while not bought (BagPages.h): a dark cover over the grid with three centred lines and

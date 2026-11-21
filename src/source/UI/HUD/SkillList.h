@@ -4,6 +4,7 @@
 
 #include "UI/Core/WindowManager.h"
 #include "UI/Core/WindowObject.h"
+#include "UI/HUD/LiveGaugeMath.h"
 #include "Render/Textures/ZzzTexture.h"
 #include <RmlUi/Core/Types.h>
 
@@ -95,6 +96,12 @@ namespace mu::ui::window
         // Per-slot cooldown fraction for the compact hotkey row + current-skill slot (0 = ready).
         float GetHotKeySlotCooldownFraction(int iSlotIndex);
         float GetCurrentSkillCooldownFraction();
+        // The same slots' cooldowns for the live HUD's sweep, seconds and ready flash (UI/HUD/LiveHud.h): the share
+        // and the milliseconds left of the skill's own delay. Unlike the fractions above they ignore the Fenrir's
+        // Plasma Storm's target check (CheckAttack(), which follows the monster under the cursor), so its cooldown
+        // does not end and start again as the cursor moves.
+        UI::HUD::LiveGauge::SkillCooldown GetHotKeySlotLiveCooldown(int iSlotIndex);
+        UI::HUD::LiveGauge::SkillCooldown GetCurrentSkillLiveCooldown();
 
         // The slot helpers follow the bar's set, which switches with the current skill (a cast from
         // the MU Helper, too). The touch controls' skill buttons keep their set, so they ask by the

@@ -265,6 +265,15 @@ measurements. Exact options and palette belong in the header; depths belong in `
 Skill tooltip content remains domain-specific in `UI/HUD/Skills/SkillTooltip.h`; it builds lines
 for this presentation mechanism. Item help and the help window remain separate persistent views.
 
+Item tooltips come from `RenderItemInfo` through `UI::Tooltip::ShowLegacyTextList`. A theme that
+declares `RichItemTooltip=1` gets them arranged by `UI::Tooltip::ArrangeRich`
+(`UI/Tooltip/ItemTooltipLayout.h`: a rarity header, dividers, a short view with a Shift hint) and
+styles them in its own `tooltip.rml` fork; see
+[Theming & Modding](theming-and-modding.md#rich-item-tooltips-and-rarity-cells). Pet, repair and
+skill tooltips stay plain lines. A rich tooltip taller than the window shrinks its text to fit
+(down to 3/4, `UI::Tooltip::FitScale`), else gets `tt-tall` without shadow and glow; the gold cell
+frame's width is the `cell-frame-gold-width` token.
+
 ## Dragging
 
 **Component:** [`MakeDraggable()`](../../src/source/UI/RmlBridge/RmlDraggable.h) attaches a
@@ -412,6 +421,17 @@ resolve normal/master skill atlas sprites and lit/grey states. Link `skill_icons
 `master_skill_icons.rcss`, then bind the resolved `image(...)` decorator.
 The skill HUD, master tree and MU Helper provide references. Skill meaning and availability stay
 in the feature; this helper resolves presentation assets.
+
+## Live HUD
+
+**Feature driver:** [`UI::HUD::LiveHud`](../../src/source/UI/HUD/LiveHud.h), owned by
+`CMainFrameWindow`, fills `main_frame.rml`'s `live-only` `<additive-mesh>` elements (the gems, the
+SD and AG rings, the skill sweeps and the EXP spark) and sets the skill slots' `ready` class and
+seconds, under a theme that declares `LiveHud=1`. The geometry lives in `UI/HUD/LiveGaugeMesh.h`,
+the timing in `UI/HUD/LiveGaugeMath.h`. Every theme ships `main_frame_live.rcss`; a theme without
+the capability hides `.live-only` there. It is not a general mesh component: see
+[Theming & Modding](theming-and-modding.md#live-hud) for the capability, the `[LiveHud]` keys,
+the `hud-*` tokens, the HUD animation option and `$hudtest`. Phones never show it.
 
 ## Sprite digits
 

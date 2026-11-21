@@ -730,6 +730,18 @@ Rml::String HotKeyText(int hotkey)
     namespace KeyBindings = Core::Input::KeyBindings;
     return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::SkillSlotAction(hotkey)));
 }
+
+// The live HUD's cooldown (CSkillList::GetHotKeySlotLiveCooldown()): the wipe's skills, straight from the delay left,
+// except that the Fenrir's Plasma Storm skips the wipe's target check (CheckAttack(), which follows the monster under
+// the cursor), so its cooldown does not end and start again as the cursor moves.
+UI::HUD::LiveGauge::SkillCooldown ComputeLiveSkillCooldown(int iIndex)
+{
+    const int iSkillType = CharacterAttribute->Skill[iIndex];
+    if (iSkillType != AT_SKILL_PLASMA_STORM_FENRIR && ComputeSkillCooldownFraction(iIndex) <= 0.f)
+        return {};
+    return UI::HUD::LiveGauge::SkillCooldownOf(CharacterAttribute->SkillDelay[iIndex],
+                                               SkillAttribute[iSkillType].Delay);
+}
 } // namespace
 
 std::vector<int> mu::ui::window::CSkillList::GetListedSkills() const
@@ -861,6 +873,18 @@ float mu::ui::window::CSkillList::GetHotKeyCooldownFraction(int iHotKey)
 float mu::ui::window::CSkillList::GetCurrentSkillCooldownFraction()
 {
     return ComputeSkillCooldownFraction(Hero->CurrentSkill);
+}
+
+UI::HUD::LiveGauge::SkillCooldown mu::ui::window::CSkillList::GetHotKeySlotLiveCooldown(int iSlotIndex)
+{
+    const int iHotKey = SlotHotKey(iSlotIndex);
+    return IsHotKeyShown(iHotKey) ? ComputeLiveSkillCooldown(m_iHotKeySkillType[iHotKey])
+                                  : UI::HUD::LiveGauge::SkillCooldown{};
+}
+
+UI::HUD::LiveGauge::SkillCooldown mu::ui::window::CSkillList::GetCurrentSkillLiveCooldown()
+{
+    return ComputeLiveSkillCooldown(Hero->CurrentSkill);
 }
 
 // Click/hover entry points bound from main_frame.rml's data-event-click/mouseover/mouseout (CMainFrameWindow::BuildRmlUi()).
