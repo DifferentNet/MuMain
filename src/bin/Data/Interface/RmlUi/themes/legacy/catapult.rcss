@@ -96,3 +96,50 @@
 .cp-title { width: calc(100% * var(--root-scale)); }
 .cp-line { width: calc(100% * var(--root-scale)); }
 #btn_fire .cp-label { width: calc(108px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide, so the title and the
+   lines the phone's readable text makes longer keep to it, and the target table widens round the middle.
+   The three gate areas grow to 54 x 42 for a finger (the same picture, scaled evenly) and the defence's
+   areas move 55 units right to stay centred; an area's name may take two lines inside its button. Shoot is
+   126 x 40, drawn from newui_btn_empty's stretch-safe middle so its art is not stretched out of shape. The
+   frame's ends keep their art while its plain middle repeats (docked_panel_frame.rcss), and the parchment
+   repeats. */
+@spritesheet cp-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty.tga";
+	cp-phone-btn-up: 0px 0px 108px 29px; cp-phone-btn-up-inner: 10px 7px 88px 15px;
+	cp-phone-btn-over: 0px 29px 108px 29px; cp-phone-btn-over-inner: 10px 36px 88px 15px;
+	cp-phone-btn-down: 0px 58px 108px 29px; cp-phone-btn-down-inner: 10px 65px 88px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+
+	.t-tl, .t-bl, .t-edge-left { left: 30px; }
+	.t-tr, .t-br, .t-edge-right { left: 256px; }
+	.t-edge-top, .t-edge-bottom { left: 43px; width: 213px; }
+
+	.cp-areas.attack .cp-area:nth-child(1) { left: 61px; top: 132px; width: 54px; height: 42px; }
+	.cp-areas.attack .cp-area:nth-child(2) { left: 123px; top: 132px; width: 54px; height: 42px; }
+	.cp-areas.attack .cp-area:nth-child(3) { left: 185px; top: 132px; width: 54px; height: 42px; }
+	.cp-areas.attack .cp-area:nth-child(4) { left: 112px; top: 182px; }
+	.cp-areas.defense .cp-area { margin-left: 55px; }
+	.cp-area-label { width: calc(54px * var(--root-scale)); white-space: normal; }
+	.cp-area.big .cp-area-label { width: calc(77px * var(--root-scale)); }
+
+	#btn_fire {
+		left: 87px;
+		top: 250px;
+		width: 126px;
+		height: 40px;
+		decorator: ninepatch(cp-phone-btn-up, cp-phone-btn-up-inner);
+	}
+	#btn_fire:hover { decorator: ninepatch(cp-phone-btn-over, cp-phone-btn-over-inner); }
+	#btn_fire:active { decorator: ninepatch(cp-phone-btn-down, cp-phone-btn-down-inner); }
+	#btn_fire.locked, #btn_fire.locked:hover, #btn_fire.locked:active {
+		decorator: ninepatch(cp-phone-btn-up, cp-phone-btn-up-inner);
+		image-color: #646464;
+	}
+	#btn_fire .cp-label { width: calc(126px * var(--root-scale)); }
+}

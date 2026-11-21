@@ -133,18 +133,21 @@ body {
 	   the first skill button. Centred on the frame's middle (320 units) they covered the hero, who stands in
 	   the screen's middle at that height (874 x 402), so each starts 64 units right of the middle (384), clear
 	   of the hero and of the cards' column at the right edge. The Doppelganger bar (227 x 87) stays centred
-	   under them, below the hero's feet (they never run together). */
+	   under them, its top 24 units lower than before so it stands below the hero's feet, not on them (they
+	   never run together). */
 	.event-hud .slot[data-window="blood_castle_time"],
 	.event-hud .slot[data-window="chaos_castle_time"],
 	.event-hud .slot[data-window="empire_guardian_timer"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="battle_soccer"],
 	.event-hud .slot[data-window="duel"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="kanturu_info"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
-	.event-hud .slot[data-window="doppelganger_frame"] { left: calc(207px * var(--hud-scale)); top: calc(181px * var(--hud-scale)); }
+	.event-hud .slot[data-window="doppelganger_frame"] { left: calc(207px * var(--hud-scale)); top: calc(205px * var(--hud-scale)); }
 	/* A duel watcher's spectator list (57 wide, 18 a name) sat in the bottom-right corner, under the skill
-	   buttons. Its slot is the list's bottom-left corner and the names stack upwards from it: centred on the
-	   frame's middle, the server's most spectators (10, OpenMU MaximumSpectatorsPerDuelRoom) fill 96 to 276
-	   under the buffs, over the events' place (a watcher sees none of those events, and the duel score is
-	   the duellists' own); right of the joystick's area and left of the skill buttons. */
-	.event-hud .slot[data-window="duel_watch_users"] { left: calc(292px * var(--hud-scale)); top: calc(276px * var(--hud-scale)); }
+	   buttons. Its slot is the list's bottom-left corner and the names stack upwards from it. While a duel is
+	   watched, the watched duel's frame (51 high) stands in the main HUD's place and lifts this region by 51,
+	   so the slot stands 51 lower: the server's most spectators (10, OpenMU MaximumSpectatorsPerDuelRoom)
+	   then fill 96 to 276 on screen in the events' lane, 64 units right of the middle (a watcher sees none of
+	   those events, and the duel score is the duellists' own), clear of the hero, whom the list covered
+	   when centred on the middle, and left of the party's cards and the skill buttons. */
+	.event-hud .slot[data-window="duel_watch_users"] { left: calc(384px * var(--hud-scale)); top: calc(327px * var(--hud-scale)); }
 }

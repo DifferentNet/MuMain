@@ -140,3 +140,27 @@ body { pointer-events: none; }
    button is the frame art's own, so it draws nothing of its own. */
 .team, .order-button, .scroll, #alpha_button, #scale_button { pointer-events: auto; cursor: pointer; }
 #scale_button { position: absolute; left: 134px; top: 7px; width: 13px; height: 12px; }
+
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud"). At its PC place the map's frame and its time
+   frame lay over Loot, Target and Auto at the bottom right. The whole HUD goes up beside the hero instead,
+   where the events' timers stand on a phone (workspace.rcss: 64 units right of the middle, under the buffs
+   and the notice ticker, left of the party's cards): the battle-skill frame above the map ends at 96, the
+   time frame at 344, above the pills. The dots, the commands and the pointer's command are placed from
+   #siege_hud by C++ and move with it; C++ hit-tests the frames where they are drawn. A commander's team
+   buttons grow to 34 x 28 and stand left of the frame's art, the command buttons beside the chosen team to
+   40 x 28 (icons centred), so a finger can hit them. */
+@media (theme: mobile-hud) {
+	#siege_hud { left: 384px; top: 149px; }
+	#teams { left: -10px; }
+	.team { width: 34px; height: 28px; }
+	.team .button-label { width: calc(34px * var(--root-scale)); line-height: calc(28px * var(--root-scale)); }
+	#orders { left: 24px; }
+	#orders.chosen-1 { top: 33px; }
+	#orders.chosen-2 { top: 61px; }
+	#orders.chosen-3 { top: 89px; }
+	#orders.chosen-4, #orders.chosen-5, #orders.chosen-6 { top: 117px; }
+	.order, .order-button { width: 40px; height: 28px; }
+	.order-icon.attack { left: 13px; top: 7px; }
+	.order-icon.defence { left: 11px; top: 6px; }
+	.order-icon.wait { left: 14px; top: 8px; }
+}

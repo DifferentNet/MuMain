@@ -82,3 +82,14 @@ body { pointer-events: none; }
 
 /* The HUD takes no pointer events where it is placed (base.rcss gives a placed panel them). */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): Exit keeps its art and place, but takes a finger 8 units
+   past its edges on every side, as the docked windows' exit does (docked_panel_frame.rcss). */
+@media (theme: mobile) {
+	#exit {
+		margin: -8px;
+		padding: 8px;
+		decorator: image(dwf-exit-up) content-box;
+	}
+	#exit:active { decorator: image(dwf-exit-down) content-box; }
+}

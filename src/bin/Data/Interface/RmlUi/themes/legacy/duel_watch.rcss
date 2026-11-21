@@ -71,3 +71,35 @@
 .room-player.room-player-2 { width: calc(70px * var(--root-scale)); }
 .room-empty { width: calc(190px * var(--root-scale)); }
 .watch-label { width: calc(53px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide, so the prompt and the
+   names the phone's readable text makes longer keep to it: each colosseum's lines are centred on the
+   wider window, its two players in 120-unit boxes either side of "VS", and the separators move 55 units
+   right to stay centred. Watch is 90 x 36 for a finger, drawn from newui_btn_empty_small's stretch-safe
+   middle so its art is not stretched out of shape; a locked one keeps its tint. The frame's ends keep
+   their art while its plain middle repeats (docked_panel_frame.rcss), and the parchment repeats. */
+@spritesheet dw-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	dw-phone-btn-up: 0px 0px 64px 29px; dw-phone-btn-up-inner: 10px 7px 44px 15px;
+	dw-phone-btn-over: 0px 29px 64px 29px; dw-phone-btn-over-inner: 10px 36px 44px 15px;
+	dw-phone-btn-down: 0px 58px 64px 29px; dw-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#title { left: 0; width: calc(300px * var(--root-scale)); }
+	#subtitle { width: calc(300px * var(--root-scale)); }
+	.line { left: 56px; }
+
+	.room { width: 300px; }
+	.room-heading, .room-vs, .room-empty { width: calc(300px * var(--root-scale)); }
+	.room-player.room-player-1 { left: 20px; width: calc(120px * var(--root-scale)); }
+	.room-player.room-player-2 { left: 160px; width: calc(120px * var(--root-scale)); }
+
+	.watch-btn { left: 105px; top: 97px; width: 90px; height: 36px; decorator: ninepatch(dw-phone-btn-up, dw-phone-btn-up-inner); }
+	.watch-btn.enabled:hover { decorator: ninepatch(dw-phone-btn-over, dw-phone-btn-over-inner); }
+	.watch-btn.enabled:active { decorator: ninepatch(dw-phone-btn-down, dw-phone-btn-down-inner); }
+	.watch-label { width: calc(90px * var(--root-scale)); }
+}
