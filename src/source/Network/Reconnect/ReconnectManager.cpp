@@ -117,6 +117,10 @@ void ReconnectManager::RequestBegin()
     // Probe straight away instead of waiting out the first interval, so a brief
     // blip recovers quickly.
     m_phaseStartTime = WorldTime - PROBE_INTERVAL_MS;
+#ifdef __EMSCRIPTEN__
+    // The browser's network coming back before this drop is no news for it.
+    mu::web::TakeNetworkBack();
+#endif
 }
 
 void ReconnectManager::Begin()
@@ -215,6 +219,8 @@ void ReconnectManager::UpdateProbing()
     {
         return;
     }
+
+    TryNowIfNetworkBack(PROBE_INTERVAL_MS);
 
     if (m_probeSocket == NO_PROBE)
     {
@@ -469,6 +475,8 @@ void ReconnectManager::UpdateJoining()
 
 void ReconnectManager::UpdateRetrying()
 {
+    TryNowIfNetworkBack(RETRY_INTERVAL_MS);
+
     if (ElapsedMs() < RETRY_INTERVAL_MS)
     {
         return;
@@ -490,6 +498,23 @@ void ReconnectManager::UpdateRetrying()
     }
 
     EnterPhase(Phase::Retrying);  // server not reachable this time; wait and retry
+}
+
+void ReconnectManager::TryNowIfNetworkBack(double intervalMs)
+{
+#ifdef __EMSCRIPTEN__
+    if (!mu::web::TakeNetworkBack())
+    {
+        return;
+    }
+
+    // A probe started without a network fails, and one started just before it came back can wait out its
+    // whole timeout: the next try is due the moment the network is there.
+    CloseProbe();
+    m_phaseStartTime = WorldTime - intervalMs;
+#else
+    (void)intervalMs;
+#endif
 }
 
 bool ReconnectManager::TrySelectCachedCharacter()
@@ -566,6 +591,15 @@ int ReconnectManager::GetStepIndex() const
     case Phase::Joining:        return 4;
     default:                    return 0;
     }
+}
+
+bool ReconnectManager::IsWaitingForNetwork() const
+{
+#ifdef __EMSCRIPTEN__
+    return m_active && (m_phase == Phase::Probing || m_phase == Phase::Retrying) && !mu::web::BrowserOnline();
+#else
+    return false;
+#endif
 }
 
 int ReconnectManager::GetCountdownSeconds() const

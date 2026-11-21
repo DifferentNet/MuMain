@@ -54,6 +54,7 @@ public:
     int GetStepIndex() const;        // 1-based progress step for the bar
     static int GetStepCount();       // total steps the bar represents
     int GetCountdownSeconds() const; // seconds until the next probe (Waiting only)
+    bool IsWaitingForNetwork() const; // web: the browser says it has no network ("No network", not the countdown)
 
 private:
     ReconnectManager() = default;
@@ -70,6 +71,11 @@ private:
     void UpdateSelectingChar();
     void UpdateJoining();
     void UpdateRetrying();
+
+    // Web: the browser's network came back, so the probe or re-login due comes at once instead of after
+    // its wait. Without a network the tries go on as usual: a browser can be wrong that it has none.
+    // Nothing on the desktop.
+    void TryNowIfNetworkBack(double intervalMs);
 
     // Background TCP reachability probe (keeps the game rendered while waiting).
     void StartProbe();
