@@ -21,8 +21,9 @@
 	     body has the class "pad", each control shows the pad button that presses it (.pad-glyph,
 	     drawn by gamepad_glyphs.rcss) and the menu shows which of its windows the pad points at.
 	     Without touch ("no-touch") the joystick's area is not drawn: the left stick walks. -->
-	<!-- bound-geometry: the joystick follows the finger (its centre and knob are where the finger
-	     is, in window pixels) and a hero gauge's fill is the gauge's. -->
+	<!-- The joystick follows the finger (its centre and knob are where the finger is, in window
+	     pixels) and a hero gauge's fill is the gauge's, both by a bound transform from a fixed place:
+	     a transform, unlike a bound left or width, does not lay the document out again each frame. -->
 
 	<!-- The phone view's hero frame (UI/Mobile/HeroFrame.cpp), in the PC bar's place: the level's
 	     number with the master level under it, HP and MP with their numbers, SD and AG as thin bars,
@@ -32,35 +33,35 @@
 	<div id="tc_hero">
 		<div id="tc_hero_level"><div class="tc-hero-level-number">{{hero_level}}</div><div class="tc-hero-master" data-if="hero_master != ''">{{hero_master}}</div><div class="tc-alert-plus" data-if="points_alert">+</div></div>
 		<div id="tc_hero_hp" class="tc-gauge" data-class-low="hero_hp < 0.25 &amp;&amp; hero_hp > 0">
-			<div class="tc-gauge-fill" data-style-width="hero_hp * 100 + '%'"></div>
+			<div class="tc-gauge-fill" data-style-transform="'scaleX(' + hero_hp + ')'"></div>
 			<div class="tc-gauge-text">{{hero_hp_text}}</div>
 		</div>
 		<div id="tc_hero_mp" class="tc-gauge">
-			<div class="tc-gauge-fill" data-style-width="hero_mp * 100 + '%'"></div>
+			<div class="tc-gauge-fill" data-style-transform="'scaleX(' + hero_mp + ')'"></div>
 			<div class="tc-gauge-text">{{hero_mp_text}}</div>
 		</div>
 		<div id="tc_hero_small">
 			<div id="tc_hero_sd" class="tc-gauge tc-gauge-small">
-				<div class="tc-gauge-fill" data-style-width="hero_sd * 100 + '%'"></div>
+				<div class="tc-gauge-fill" data-style-transform="'scaleX(' + hero_sd + ')'"></div>
 			</div>
 			<div id="tc_hero_ag" class="tc-gauge tc-gauge-small">
-				<div class="tc-gauge-fill" data-style-width="hero_ag * 100 + '%'"></div>
+				<div class="tc-gauge-fill" data-style-transform="'scaleX(' + hero_ag + ')'"></div>
 			</div>
 		</div>
 		<!-- The EXP line's percentage, shown only in the phone HUD (touch_controls.rcss): the bottom
 		     centre is the chat's, so it stands in the frame, which the system messages follow down. -->
 		<div id="tc_exp_text">{{hero_exp_text}}</div>
 	</div>
-	<div id="tc_exp"><div id="tc_exp_fill" data-style-width="hero_exp * 100 + '%'"></div></div>
+	<div id="tc_exp"><div id="tc_exp_fill" data-style-transform="'scaleX(' + hero_exp + ')'"></div></div>
 
 	<!-- The joystick's area: a finger landing anywhere in it walks. #tc_stick_idle shows where the
 	     stick is while no finger holds it. -->
 	<div id="tc_stick">
 		<div id="tc_stick_idle" data-if="!stick_active"><div class="tc-stick-idle-knob"></div></div>
 	</div>
-	<div id="tc_stick_base" data-if="stick_active" data-style-left="stick_x + 'px'" data-style-top="stick_y + 'px'">
+	<div id="tc_stick_base" data-if="stick_active" data-style-transform="'translate(' + stick_x + 'px, ' + stick_y + 'px)'">
 		<div class="tc-stick-ring"></div>
-		<div id="tc_stick_knob" data-style-left="knob_x + 'px'" data-style-top="knob_y + 'px'"></div>
+		<div id="tc_stick_knob" data-style-transform="'translate(' + knob_x + 'px, ' + knob_y + 'px)'"></div>
 	</div>
 
 	<!-- Along the top, right of the location bar: Back (Esc: closes the window on top, or opens the

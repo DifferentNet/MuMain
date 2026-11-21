@@ -9837,7 +9837,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Festung der Kaiserlichen Wächter, Runde %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9849,11 +9849,11 @@
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Festung der Kaiserlichen Wächter nicht erobern.</value>
+    <value>Tier Map nicht abschließen.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Runde %d (Zone %d)</value>
+    <value>Tier %d · Zone %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -14643,5 +14643,8 @@
   <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
   <data name="HudEffects" xml:space="preserve">
     <value>HUD animation</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Kein Netzwerk</value>
   </data>
 </root>

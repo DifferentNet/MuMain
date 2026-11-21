@@ -29,11 +29,17 @@ struct WarmUpWindow
 };
 
 // The windows of the hotkeys and the phone's top row and menu that have a document of their own, the
-// most opened first (MU Helper's settings, Commands and Help last). Not here: the NPC windows (shops,
-// storage: their opening talks to the server), the skill picker and the phone's menu and Social panel (parts of the
-// touch controls' document, always shown), the skill grid (part of the main frame's), the chat line
-// (small, and it holds the text field the phone's keyboard follows), Friends (its document belongs to the
-// legacy friend window manager, CUIFriendWindow, with no document to show on its own).
+// most opened first (MU Helper's settings, Commands and Help last), then a second list: the system menu
+// (Esc, the phone's Back and menu), the NPC windows players open most, and the windows behind a button or
+// a menu row, the window menu (U) and the key bindings last. An NPC window warms with its empty model: the
+// warm-up runs no OpeningProcess(), and what its opening asks of the server waits for the real opening. A
+// window may skip itself in PrepareWarmUp(): the pet window for every class but the Dark Lord, the window
+// menu and the key bindings on a phone or tablet (no keyboard, no PC bar). Not here: the skill picker and
+// the phone's menu and Social panel (parts of the touch controls' document, always shown), the skill grid
+// (part of the main frame's), the chat line (small, and it holds the text field the phone's keyboard
+// follows), Friends (its document belongs to the legacy friend window manager, CUIFriendWindow, with no
+// document to show on its own), the master skill tree (no master levels here), the GM panel (game masters
+// only) and the NPC windows of single events.
 constexpr WarmUpWindow kWarmUpWindows[] = {
     {"Inventory", mu::ui::window::INTERFACE_INVENTORY},
     {"Character", mu::ui::window::INTERFACE_CHARACTER},
@@ -49,6 +55,22 @@ constexpr WarmUpWindow kWarmUpWindows[] = {
     {"MuHelper", mu::ui::window::INTERFACE_MUHELPER},
     {"Commands", mu::ui::window::INTERFACE_COMMAND},
     {"Help", mu::ui::window::INTERFACE_HELP},
+    {"SystemMenu", mu::ui::window::INTERFACE_GENERIC_MENU_DIALOG},
+    {"NpcShop", mu::ui::window::INTERFACE_NPCSHOP},
+    {"Storage", mu::ui::window::INTERFACE_STORAGE},
+    {"LootFilter", mu::ui::window::INTERFACE_LOOT_FILTER},
+    {"CommandList", mu::ui::window::INTERFACE_COMMAND_LIST},
+    {"JewelBank", mu::ui::window::INTERFACE_JEWEL_BANK},
+    {"ChaosMachine", mu::ui::window::INTERFACE_MIXINVENTORY},
+    {"TierMaps", mu::ui::window::INTERFACE_TIER_MAPS},
+    {"Titles", mu::ui::window::INTERFACE_TITLES},
+    {"Trade", mu::ui::window::INTERFACE_TRADE},
+    {"Auction", mu::ui::window::INTERFACE_AUCTION},
+    {"NpcTalk", mu::ui::window::INTERFACE_NPC_DIALOGUE},
+    {"Pet", mu::ui::window::INTERFACE_PET},
+    {"Gens", mu::ui::window::INTERFACE_GENSRANKING},
+    {"WindowMenu", mu::ui::window::INTERFACE_WINDOW_MENU},
+    {"KeyBindings", mu::ui::window::INTERFACE_KEY_BINDINGS},
 };
 constexpr int kWarmUpWindowCount = static_cast<int>(std::size(kWarmUpWindows));
 constexpr int kNoWindow = -1;
@@ -66,8 +88,8 @@ struct State
 {
     // Per session.
     bool warmed[kWarmUpWindowCount] = {};
-    // Had nothing to show (opened by the player, no document, no map picture): tried again in the next
-    // world, so it holds up no other window.
+    // Had nothing to show (opened by the player, no document, no map picture, not for this class or device):
+    // tried again in the next world, so it holds up no other window.
     bool skipped[kWarmUpWindowCount] = {};
 
     bool inWorld = false;

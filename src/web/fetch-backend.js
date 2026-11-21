@@ -84,6 +84,15 @@ addToLibrary({
     return typeof text == 'string' ? stringToNewUTF8(text) : 0;
   },
 
+  // On the page's thread: `text` (a C string, freed here) as a line of the page's log (out: index.html's
+  // Module.print). This mount's worker has no page log: its console.warn reaches only the browser's console.
+  $printOnPageThread__proxy: 'async',
+  $printOnPageThread__deps: ['$UTF8ToString', 'free'],
+  $printOnPageThread: function(text) {
+    out(UTF8ToString(text));
+    _free(text);
+  },
+
   _wasmfs_create_fetch_backend_js__deps: [
     '$wasmFS$backends',
     '$wasmFS$JSMemoryRanges',
@@ -91,9 +100,12 @@ addToLibrary({
     '$stringToNewUTF8',
     '$downloadOnPageThread',
     '$releaseIndexOnPageThread',
+    '$printOnPageThread',
     'malloc',
     'free',
     'MuWeb_FilesOnPageThread',
+    'MuWeb_MapEntries',
+    'MuWeb_MapEntryWorld',
     '_wasmfs_fetch_get_file_url',
     '_wasmfs_fetch_get_chunk_size',
   ],
@@ -594,14 +606,78 @@ addToLibrary({
 
     loadReadGroups();
 
+    // A line in the page's log for each map the game enters (WebFileSystem.cpp LoadWorldFiles, MuWeb_MapEntries):
+    // how many files the game then read one at a time from this mount, how long it waited for them in all, and
+    // the slowest ones with their wait. Those are files the map's pack lacks (tools/web/make_map_files.py,
+    // src/web/map-files.txt and model-files.txt). The line comes once no read has been under way for
+    // MAP_READS_QUIET_MS, or when the next map is entered; reads on the same map after it (a monster first met
+    // on a walk) are left out. Only this mount's reads (fetchStart): a file the page's thread reads whole itself
+    // (WebFileSystem.cpp MuWeb_ReadWholeAsync, g_pageReads: Safari and every iPhone browser) is not in the line.
+    var MAP_READS_QUIET_MS = 5000;
+    var MAP_READS_SLOWEST = 5;
+    var mapReads = null; // {entry, world, count, waitedMs, slowest: [{path, ms}], open (reads under way), timer}
+    var mapEntrySummed = 0; // the last map entry whose line is out or being gathered
+
+    // The gathering a read the game asks for now counts in, or null: before the first map, or its line is out.
+    function mapReadsAt(entry) {
+      if (mapReads && mapReads.entry != entry) {
+        endMapReads();
+      }
+      if (!mapReads && entry > mapEntrySummed) {
+        mapEntrySummed = entry;
+        mapReads = {entry: entry, world: _MuWeb_MapEntryWorld(), count: 0, waitedMs: 0, slowest: [], open: 0, timer: 0};
+      }
+      if (mapReads) {
+        mapReads.open++;
+        clearTimeout(mapReads.timer);
+      }
+      return mapReads;
+    }
+
+    function noteMapRead(reads, url, ms) {
+      if (!reads) {
+        return;
+      }
+      reads.open--;
+      reads.count++;
+      reads.waitedMs += ms;
+      reads.slowest.push({path: pagePath(url) || url, ms: ms});
+      reads.slowest.sort((a, b) => b.ms - a.ms);
+      reads.slowest.length = Math.min(reads.slowest.length, MAP_READS_SLOWEST);
+      if (reads === mapReads && !reads.open) {
+        reads.timer = setTimeout(endMapReads, MAP_READS_QUIET_MS);
+      }
+    }
+
+    function endMapReads() {
+      var reads = mapReads;
+      mapReads = null;
+      clearTimeout(reads.timer);
+      if (!reads.count) {
+        return;
+      }
+      var slowest = reads.slowest.map((read) => `${read.path} ${Math.round(read.ms)} ms`).join(', ');
+      var line = `Web files: map folder ${reads.world}: ${reads.count} file(s) read one at a time, ` +
+                 `${Math.round(reads.waitedMs)} ms waited in all; the slowest: ${slowest}`;
+      printOnPageThread(stringToNewUTF8(line));
+    }
+
     // The file's size and its first two chunks (or all of it), in one request.
     async function fetchStart(file, url, chunkSize) {
       var end = 2 * chunkSize - 1;
-      // This file's read starts before the early reads of the group it begins (started after it arrived,
-      // they made the frame longer: 54 ms against 50, Edge, 2026-10-30).
-      var reading = takeEarly(url, end) || download(url, 0, end);
-      noteFirstRead(url, end);
-      var answer = await reading;
+      var reads = mapReadsAt(_MuWeb_MapEntries());
+      var asked = performance.now();
+      var answer;
+      // The read is counted done however it ends, a throw too: otherwise the map's line would never come.
+      try {
+        // This file's read starts before the early reads of the group it begins (started after it arrived,
+        // they made the frame longer: 54 ms against 50, Edge, 2026-10-30).
+        var reading = takeEarly(url, end) || download(url, 0, end);
+        noteFirstRead(url, end);
+        answer = await reading;
+      } finally {
+        noteMapRead(reads, url, performance.now() - asked);
+      }
       if (answer.status == 416) {
         // Nothing to give from byte 0 on: an empty file.
         wasmFS$JSMemoryRanges[file] = {size: 0, chunks: [], chunkSize: chunkSize};

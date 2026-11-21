@@ -5,6 +5,7 @@
 #include "UI/Core/WindowCommon.h" // ShowSystemMenuDialog
 #include "Audio/DSPlaySound.h"
 #include "I18N/All.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -217,3 +218,13 @@ void mu::ui::window::CWindowMenu::OpenningProcess()
 }
 
 void mu::ui::window::CWindowMenu::ClosingProcess() {}
+
+#ifdef __EMSCRIPTEN__
+bool mu::ui::window::CWindowMenu::PrepareWarmUp()
+{
+    // Opened only by its key (U) and the button in the PC's bottom bar. A phone or tablet has no keyboard, and its
+    // HUD always takes the bar's place there (UI::Mobile::ReplacesPcHud()). A PC in phone view keeps both, so it
+    // still warms the window.
+    return !UI::Mobile::IsHandheld();
+}
+#endif

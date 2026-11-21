@@ -57,8 +57,12 @@ body {
 	background-color: rgba(255, 255, 255, 50);
 }
 /* A point at the finger's landing place; the ring centres on it, the knob is offset from it. */
+/* Its centre is where the finger landed: a translate() bound to that point (touch_controls.rml), from
+   the top left. A transform, unlike a bound left and top, does not lay the document out again. */
 #tc_stick_base {
 	position: absolute;
+	left: 0;
+	top: 0;
 	width: 0;
 	height: 0;
 }
@@ -73,8 +77,11 @@ body {
 	border-radius: 64rem;
 	background-color: rgba(0, 0, 0, 70);
 }
+/* Moved from the stick's centre by a bound translate(), as the base is. */
 #tc_stick_knob {
 	position: absolute;
+	left: 0;
+	top: 0;
 	width: 56rem;
 	height: 56rem;
 	margin-left: -28rem;
@@ -866,11 +873,17 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 #tc_hero_hp {
 	margin-top: 0;
 }
+/* The gauge's whole width, shrunk from the left edge by a scaleX() bound to its fraction. A transform,
+   unlike a width, does not lay the whole document out again on each step; the fill's gradient runs
+   from top to bottom and the gauge's own border clips its ends, so it looks the same. */
 .tc-gauge-fill {
 	position: absolute;
 	left: 0;
 	top: 0;
+	width: 100%;
 	height: 100%;
+	transform-origin: left center;
+	transform: scaleX(0);
 }
 .tc-gauge-text {
 	position: relative;
@@ -905,8 +918,12 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	height: 3rem;
 	background-color: rgba(0, 0, 0, 150);
 }
+/* Shrunk from the left edge by a bound scaleX(), as the gauges' fills are. */
 #tc_exp_fill {
+	width: 100%;
 	height: 100%;
+	transform-origin: left center;
+	transform: scaleX(0);
 	background-color: rgba(255, 210, 60, 220);
 }
 

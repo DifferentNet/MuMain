@@ -21,6 +21,10 @@ struct WaitingSoundLoad
     std::string path;  // as the backend opens it
     int channels = 0;
     bool enable3D = false;
+    // A looped play was asked for while it waited (MiniAudioBackend.cpp LoadPutOffSound: the Blood Castle
+    // ambience, asked for once at effect volume 0): the backend starts it once the sound loads; a stop
+    // forgets it.
+    bool loop = false;
 };
 
 class WaitingSoundLoads
@@ -37,6 +41,29 @@ public:
     bool Remove(int slot)
     {
         return std::erase_if(m_loads, [slot](const WaitingSoundLoad& load) { return load.slot == slot; }) > 0;
+    }
+
+    // Keeps (true) or forgets (false) a looped play for the load waiting for `slot`; true where one waits.
+    bool SetLoop(int slot, bool loop)
+    {
+        for (WaitingSoundLoad& load : m_loads)
+        {
+            if (load.slot == slot)
+            {
+                load.loop = loop;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Forgets every waiting load's looped play (a stop of all sounds).
+    void ClearLoops()
+    {
+        for (WaitingSoundLoad& load : m_loads)
+        {
+            load.loop = false;
+        }
     }
 
     // The load asked for first, or null without any.

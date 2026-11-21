@@ -7,6 +7,7 @@
 #include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlDraggable.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -227,6 +228,18 @@ void CKeyBindingsWindow::ClosingProcess()
     m_pending.clear();
     StopCapture();
 }
+
+#ifdef __EMSCRIPTEN__
+bool CKeyBindingsWindow::PrepareWarmUp()
+{
+    // Phones and tablets have no keyboard, and Options shows no row for this window there (OptionWindow.cpp).
+    if (UI::Mobile::IsHandheld() || !m_RmlView.Document())
+        return false;
+    // Filled in only while shown (SyncRmlModel()); the rows come from the player's own key table, nothing is asked for.
+    SyncContent();
+    return true;
+}
+#endif
 
 void CKeyBindingsWindow::OnRmlBuilt()
 {

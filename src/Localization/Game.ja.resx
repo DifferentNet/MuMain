@@ -8568,19 +8568,27 @@
     <comment>legacy_id=2448</comment>
   </data>
   <data name="Regular Level 2nd Regular Level 2nd" xml:space="preserve">
-    <value> 1    15-80     10-60         1    220-270</value>
+    <value>Regular Level 2nd Regular Level 2nd</value>
     <comment>legacy_id=2447,2456</comment>
   </data>
+  <data name=" 1 15-80 10-60 1 220-270" xml:space="preserve">
+    <value> 1    15-80     10-60         1    220-270</value>
+    <comment>legacy_id=2457</comment>
+  </data>
   <data name=" 4 181-230 161-210 4 351-380" xml:space="preserve">
-    <value> 5    231-280   211-260     5    381-400</value>
+    <value> 4 181-230 161-210 4 351-380</value>
     <comment>legacy_id=2460</comment>
   </data>
   <data name=" 5 231-280 211-260 5 381-400" xml:space="preserve">
-    <value> 6    281-330   261-310     6    マスター</value>
+    <value> 5    231-280   211-260     5    381-400</value>
     <comment>legacy_id=2461</comment>
   </data>
+  <data name=" 6 281-330 261-310 6 Master" xml:space="preserve">
+    <value> 6    281-330   261-310     6    マスター</value>
+    <comment>legacy_id=2462</comment>
+  </data>
   <data name=" 7 331-400 311-400" xml:space="preserve">
-    <value> 7    マスター    マスター     6    マスター    マスター</value>
+    <value> 7 331-400 311-400</value>
     <comment>legacy_id=2463</comment>
   </data>
   <data name=" 8 Master Master" xml:space="preserve">
@@ -9520,7 +9528,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>バルカ要塞第%d要塞の</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9528,7 +9536,7 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>バルカ要塞の制圧に</value>
+    <value>Tier Mapの攻略に</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
@@ -9536,7 +9544,7 @@
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>第%d要塞、%dの間</value>
+    <value>Tier %d · 第%dの間</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -10700,7 +10708,7 @@
     <comment>legacy_id=3157</comment>
   </data>
   <data name="Phoenix Shot (Mana:%d)" xml:space="preserve">
-    <value> </value>
+    <value>Phoenix Shot (Mana:%d)</value>
     <comment>legacy_id=3158</comment>
   </data>
   <data name="Finding a Client" xml:space="preserve">
@@ -10948,11 +10956,11 @@
     <comment>legacy_id=3318</comment>
   </data>
   <data name="Are you sure you want to dissolve" xml:space="preserve">
-    <value>本当に %s +%dを</value>
+    <value>本当に</value>
     <comment>legacy_id=3319</comment>
   </data>
   <data name="%s +%d?" xml:space="preserve">
-    <value>解体しますか?</value>
+    <value>%s +%dを解体しますか?</value>
     <comment>legacy_id=3320</comment>
   </data>
   <data name="You can't buy W coin while in full screen mode." xml:space="preserve">
@@ -11018,7 +11026,7 @@
     <value>宝石解体が失敗しました</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d要塞進行成功</value>
+    <value>第%dの間 攻略成功</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu分</value>
@@ -11027,10 +11035,10 @@
     <value>刻印スイッチ%d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>%sステータス %dポイントが生成になりました</value>
+    <value>%lsステータス %dポイントが生成になりました</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>%sステータス %dポイントが減少になりました</value>
+    <value>%lsステータス %dポイントが減少になりました</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>該当のステータスはこれ以上生成させることができません。</value>
@@ -12627,5 +12635,8 @@
   <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
   <data name="HudEffects" xml:space="preserve">
     <value>HUD animation</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>ネットワーク未接続</value>
   </data>
 </root>

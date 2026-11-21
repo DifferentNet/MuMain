@@ -2627,3 +2627,6 @@ Data/Logo/SkynetLogin.OZJ
 Data/Seasons.json
 Data/Skill/fenril_winter_snow.OZJ
 Data/Skill/fenril_winter_fur.OZJ
+# Added 2026-11-21: the monster preload's list (Engine/Monsters/MonsterPreload.cpp), read on entering the
+# first map on a computer (a phone or tablet doesn't preload)
+Data/Local/MapMonsters.txt

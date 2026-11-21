@@ -715,7 +715,8 @@ namespace
         if (iSkillMaxDelay == 0)
             return 0.f; // avoid a divide-by-zero the original's own float division would also hit
 
-        return iSkillDelay / (float)iSkillMaxDelay;
+        // The cooldown wipes scale by it: kept within 0..1 so a delay above the skill's own stays in the slot.
+        return std::clamp(iSkillDelay / (float)iSkillMaxDelay, 0.f, 1.f);
     }
 }
 

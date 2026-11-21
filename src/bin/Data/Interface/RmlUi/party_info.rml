@@ -1,5 +1,6 @@
 <rml>
-	<!-- bound-geometry: each member's health bar is a fraction -->
+	<!-- Each member's health bar is scaled by its fraction (a bound scaleX(), not a width): a
+	     transform does not lay the document out again on each change. -->
 <head>
 	<title>Party Info</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -50,7 +51,7 @@
 				<span class="sharp-text party-map" data-style-font-size="text_px + 'px'">{{m.map_text}}</span>
 				<span class="sharp-text party-coord" data-style-font-size="text_px + 'px'">{{m.coord_text}}</span>
 				<div class="party-hp-bar">
-					<div class="party-hp-fill" data-style-width="m.hp_percent + '%'"></div>
+					<div class="party-hp-fill" data-style-transform="'scaleX(' + m.hp_fraction + ')'"></div>
 				</div>
 				<span class="sharp-text party-hp-text" data-style-font-size="text_px + 'px'">{{m.hp_text}}</span>
 				<div class="party-kick-btn" data-class-hidden="!m.show_kick"

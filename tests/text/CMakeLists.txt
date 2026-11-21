@@ -12,6 +12,13 @@ mu_add_test(
         test_wide_format.cpp
 )
 
+add_test(
+    NAME resx_format_specifiers
+    COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_resx_format_specifiers.py"
+            "${CMAKE_SOURCE_DIR}"
+)
+
 mu_add_test(
     NAME sdl_ttf_text_cache_tests
     SOURCES

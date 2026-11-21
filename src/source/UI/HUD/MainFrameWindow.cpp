@@ -757,9 +757,10 @@ void mu::ui::window::CMainFrameWindow::SyncExperience()
     const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
     const __int64 dwNexExperience = experience.next;
     const __int64 dwExperience = experience.current;
-    const double fRatio = experience.progress;
+    // Within 0..1, NaN as 0: the fill scales by it, and a NaN would not survive the casts below.
+    const double fRatio = UI::HUD::HeroGauges::UnitFraction(experience.progress);
 
-    const double scaled = std::clamp(fRatio, 0.0, 1.0) * 10.0;
+    const double scaled = fRatio * 10.0;
     int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
     double fProgress = std::clamp(scaled - static_cast<double>(static_cast<long long>(scaled)), 0.0, 1.0);
     if (fRatio >= 1.0) { iExp = 9; fProgress = 1.0; }

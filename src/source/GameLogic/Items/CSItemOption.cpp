@@ -1294,6 +1294,7 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
     bool shield = false;
     bool staff = false;
     int handWeapons = 0;
+    int handStaffs = 0;
     for (const int slot : { EQUIPMENT_WEAPON_RIGHT, EQUIPMENT_WEAPON_LEFT, EQUIPMENT_HELPER })
     {
         const int type = CharacterMachine->Equipment[slot].Type;
@@ -1313,6 +1314,7 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
             shield |= group == ITEM_GROUP_SHIELD;
             staff |= group == ITEM_GROUP_STAFF;
             handWeapons += group <= ITEM_GROUP_SPEAR ? 1 : 0;
+            handStaffs += group == ITEM_GROUP_STAFF && !twoHanded ? 1 : 0;
         }
     }
 
@@ -1352,8 +1354,11 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
         bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 40, 0, twoHandedSword });
         bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoWeaponsD, 30, 0, !twoHanded && twoWeapons });
         bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 25, 0, !twoHandedSword && twoHandedStaff });
+        // Two one-handed staffs, or a staff and a one-handed weapon (since 2026-11-21).
+        const bool staffPair = handStaffs >= 1 && handWeapons + handStaffs >= 2;
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsOneHandedStaffD, 25, 0, !twoHanded && !twoWeapons && staffPair });
         bonuses.push_back({ I18N::Game::PowerOfTheAncientsWeaponShieldDD, 15, ShieldPercent,
-                            !twoHanded && !twoWeapons && (weaponAndShield || (shield && staff)) });
+                            !twoHanded && !twoWeapons && !staffPair && (weaponAndShield || (shield && staff)) });
         break;
     }
     case CLASS_DARK_LORD:

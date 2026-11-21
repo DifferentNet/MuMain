@@ -6,6 +6,7 @@
 #include "UI/Party/PartyListRefresh.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
+#include "UI/HUD/HeroGauges.h"
 #include "UI/HUD/KeyHint.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -118,7 +119,7 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
     member.RegisterMember("map_text", &PartyMemberRow::mapText);
     member.RegisterMember("coord_text", &PartyMemberRow::coordText);
     member.RegisterMember("hp_text", &PartyMemberRow::hpText);
-    member.RegisterMember("hp_percent", &PartyMemberRow::hpPercent);
+    member.RegisterMember("hp_fraction", &PartyMemberRow::hpFraction);
     member.RegisterMember("is_leader", &PartyMemberRow::isLeader);
     member.RegisterMember("show_kick", &PartyMemberRow::showKick);
     member.RegisterMember("index", &PartyMemberRow::index);
@@ -432,7 +433,8 @@ void CPartyInfoWindow::SyncRmlModel()
         mu_swprintf(szText, L"(%d,%d)", pMember->x, pMember->y);
         row.coordText = StringUtils::WideToNarrow(szText);
 
-        row.hpPercent = pMember->maxHP > 0 ? (pMember->currHP * 100.f) / pMember->maxHP : 0.f;
+        const double health = pMember->maxHP > 0 ? static_cast<double>(pMember->currHP) / pMember->maxHP : 0.0;
+        row.hpFraction = static_cast<float>(UI::HUD::HeroGauges::UnitFraction(health));
         mu_swprintf(szText, L"%d %ls %d", pMember->currHP, I18N::Game::Text2374, pMember->maxHP);
         row.hpText = StringUtils::WideToNarrow(szText);
 

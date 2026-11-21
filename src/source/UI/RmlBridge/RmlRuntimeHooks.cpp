@@ -8,6 +8,7 @@
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Placement/WindowPlacement.h"
 #include "UI/RmlBridge/RmlDocumentHints.h"
+#include "UI/RmlBridge/RmlGlyphWarmup.h"
 #include "UI/RmlBridge/RmlMarquee.h"
 #include "UI/RmlBridge/RmlNativeText.h"
 #include "UI/RmlBridge/RmlNativeTextFit.h"
@@ -46,7 +47,12 @@ void InstallRuntimeHooks()
         LoadActiveThemeFonts();
         UI::Diagnostics::Initialize();
     };
-    hooks.beforeDestroy = [] { UI::Diagnostics::Release(); ClearThemeFontCache(); };
+    hooks.beforeDestroy = []
+    {
+        UI::Diagnostics::Release();
+        ClearThemeFontCache();
+        ForgetWarmedFontFaces();
+    };
     hooks.beforeUpdate = []
     {
         ReleaseQueuedReforgeTextures();
@@ -64,6 +70,9 @@ void InstallRuntimeHooks()
         UpdateMarquees(context);
         if (auto* chat = g_pChatListBox)
             chat->AfterRmlLayout(context);
+        // Last, after the fit above set its sizes: the faces are warmed before this frame renders.
+        if (context == RmlUiRuntime::Instance().GetContext())
+            WarmShownFontFaces(*context);
     };
 #ifdef __EMSCRIPTEN__
     // A window warmed up is shown only between these two; the hover follows the mouse again after.

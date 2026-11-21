@@ -66,6 +66,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatRowWrap.cpp
 )
 
+# How many old lines a full chat list drops, and only where rows are added (UI/Chat/ChatLogCap.h).
+mu_add_test(
+    NAME chat_log_cap_tests
+    SOURCES
+        test_chat_log_cap.cpp
+)
+
 # The high-water end of the chat plate pool (UI/Chat/ChatPlateBound.h).
 mu_add_test(
     NAME chat_plate_bound_tests

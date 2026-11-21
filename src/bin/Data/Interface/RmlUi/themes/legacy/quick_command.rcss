@@ -76,3 +76,21 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #name { width: calc(112px * var(--root-scale)); }
 .quick-label { width: calc(112px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the five rows 30 units tall (19 on a PC), each label and
+   its arrows in the middle of its row and a separator between rows; the back and the frame's sides grow with
+   them (one middle tile repeated down) and the bottom piece moves down. */
+@media (theme: mobile) {
+	#panel { height: 195px; }
+	#back { height: 195px; decorator: image(qcmd-back repeat left top); }
+	.frame-middle-1 { height: 105px; decorator: image(qcmd-middle repeat left top); }
+	.frame-middle-2, .frame-middle-3, .frame-middle-4 { display: none; }
+	#frame_down { top: 150px; }
+	.quick-row { height: 30px; }
+	.quick-label { top: 7px; }
+	.arrow { top: 10px; }
+	.line-1 { top: 72px; }
+	.line-2 { top: 102px; }
+	.line-3 { top: 132px; }
+	.line-4 { top: 162px; }
+}

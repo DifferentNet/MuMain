@@ -7,13 +7,22 @@
 
 namespace UI::HUD::HeroGauges
 {
+// A share kept within 0..1 (NaN counts 0): the bars' fills scale by it and must not run past their track.
+[[nodiscard]] inline double UnitFraction(double value)
+{
+    return value > 0.0 ? (value < 1.0 ? value : 1.0) : 0.0;
+}
+
 // What the hero has now, and at most.
 struct Gauge
 {
     std::uint32_t current = 0;
     std::uint32_t max = 0;
 
-    [[nodiscard]] float Fraction() const { return max > 0 ? static_cast<float>(current) / max : 0.f; }
+    [[nodiscard]] float Fraction() const
+    {
+        return max > 0 ? static_cast<float>(UnitFraction(static_cast<double>(current) / max)) : 0.f;
+    }
 };
 
 // A master's own maxima once master level is reached. AG and SD count at least 1 at most.

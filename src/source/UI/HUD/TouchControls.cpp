@@ -40,6 +40,7 @@
 #include "UI/Mobile/TouchTarget.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
+#include "UI/RmlBridge/RmlGlyphWarmup.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
 #include "UI/RmlBridge/RmlThemedView.h"
@@ -835,6 +836,9 @@ Rml::ElementDocument* g_lastCover = nullptr;
 std::vector<Rml::ElementDocument*> g_shownLastFrame;
 std::vector<Rml::ElementDocument*> g_shownNow;
 bool g_coverSeen = false;
+// Whether this frame shows another set of documents than the last (a window opened or shut): the boxes
+// are measured at once then (round 29).
+bool g_windowsChanged = false;
 
 bool Inside(const ControlBox& box, float x, float y, float slop)
 {
@@ -1247,9 +1251,10 @@ double Now()
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
-// With the pad in use and no finger on the controls, the boxes are read only by an A press over a
-// window (ControlAt): measured then (EnsureBoxes), else four times a second, not every frame (pad
-// round 5, 2026-11-17). An open menu, picker or Social panel is measured every frame for its focus.
+// The boxes are read by a finger landing or sliding (HitTest) and by an A press over a window (ControlAt):
+// measured then (EnsureBoxes), at once on a change of the layout, else four times a second, not every
+// frame (pad round 5, 2026-11-17; fingers too since round 29). An open menu, picker or Social panel is
+// measured every frame for its focus.
 constexpr double LazyMeasureSeconds = 0.25;
 struct BoxesMeasure
 {
@@ -1259,11 +1264,22 @@ struct BoxesMeasure
     double at = -1e9;
     // Measures since the last TakeMeasureCount(), for the MU_RENDER_TIMING log.
     std::uint32_t count = 0;
-    // What the layout followed last: the top row folded or open and the screen's size. A change
-    // measures at once, so the buffs and the system messages move with the row on the same frame.
+    // What the layout followed last: the top row folded or open, the screen's size and the skill buttons
+    // in play. A change (or a window opening or shutting) measures at once, so the buffs and the system
+    // messages move with the row on the same frame.
     bool quickOpen = false;
     float screenWidth = 0.f;
     float screenHeight = 0.f;
+    int skillSlots = 0;
+    // The pieces the party's cards, the chat and the system messages keep clear of that show and hide on
+    // their own: the quick equip chip and its text (another offer sizes it anew), the potion buttons (a bit
+    // each, Q W E R) and the hero frame's width in whole pixels (a sub-pixel change is no change). And
+    // fingers or the pad playing: the pad's layout puts the controls elsewhere (body.no-touch).
+    bool offerShown = false;
+    Rml::String offerText;
+    unsigned potionsShown = 0;
+    int heroWidth = 0;
+    bool fingers = false;
     // Frames still measured at once after such a change: the new layout may only show on the next.
     int eagerFrames = 0;
 };
@@ -1284,16 +1300,6 @@ void EnsureBoxes()
 {
     if (g_measure.lazy && g_measure.stale)
         MeasureBoxesNow();
-}
-
-bool AnyFingerOnControls()
-{
-    for (int control = 0; control < ControlCount; ++control)
-    {
-        if (Touch::Control(control).held)
-            return true;
-    }
-    return false;
 }
 
 // A tap shorter than this still lights its button this long (the pressed class).
@@ -1905,6 +1911,7 @@ bool WasShownLastFrame(const Rml::ElementDocument* document)
 // opens under a finger still on the screen (a long press's item card).
 void RestPointerUnderNewWindow()
 {
+    g_windowsChanged = false;
     Rml::ElementDocument* controls = g_View.Document();
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (controls == nullptr || context == nullptr)
@@ -1939,6 +1946,7 @@ void RestPointerUnderNewWindow()
             g_restOnLift = true;
     }
     g_coverSeen = true;
+    g_windowsChanged = anyNew || g_shownNow.size() != g_shownLastFrame.size();
     g_shownLastFrame.swap(g_shownNow);
 }
 
@@ -2902,6 +2910,102 @@ void SyncUnderWindow(Rml::ElementDocument* document, bool panelOpen, bool pickin
     MarkControlsUnderWindows(document, picking);
 }
 
+// Whether a control is laid out as the last frame left it, by its element's own flags: no box is read.
+bool IsControlLaidOut(Rml::ElementDocument* document, int control)
+{
+    Rml::Element* element = FindElement(document, ControlElement(control));
+    return element != nullptr && IsLaidOut(element);
+}
+
+constexpr std::array<int, 4> PotionControls{KeyButtonControl("tc_potion_q"), KeyButtonControl("tc_potion_w"),
+                                            KeyButtonControl("tc_potion_e"), KeyButtonControl("tc_potion_r")};
+constexpr int HeroFrameControl = KeyButtonControl("tc_hero");
+static_assert(std::ranges::none_of(PotionControls, [](int control) { return control < 0; }) && HeroFrameControl >= 0);
+
+// The potion buttons laid out, a bit each in PotionControls' order.
+unsigned PotionsShown(Rml::ElementDocument* document)
+{
+    unsigned shown = 0;
+    for (size_t potion = 0; potion < PotionControls.size(); ++potion)
+    {
+        if (IsControlLaidOut(document, PotionControls[potion]))
+            shown |= 1u << potion;
+    }
+    return shown;
+}
+
+// The hero frame's width in whole pixels, 0 while it is not laid out: its box as the last frame laid it
+// out (no layout is asked for).
+int HeroWidth(Rml::ElementDocument* document)
+{
+    Rml::Element* element = FindElement(document, ControlElement(HeroFrameControl));
+    if (element == nullptr || !IsLaidOut(element))
+        return 0;
+    return static_cast<int>(std::lround(element->GetBox().GetSize(Rml::BoxArea::Border).x));
+}
+
+// Whether this frame measures the boxes (MeasureBoxesNow): every frame while a panel of the controls is
+// open, on the frames after a change of the layout or the windows, else four times a second; between
+// those a finger or the pad's A reads them fresh (EnsureBoxes). The quick equip chip showing, hiding or
+// taking another offer, a potion button showing or hiding, the hero frame's width and a switch between
+// fingers and the pad count as a change of the layout: the party's cards, the chat and the system messages
+// move off them on the same frame (FollowNeighbours, which with fingers runs every frame anyway).
+bool IsMeasureDue(Rml::ElementDocument* document, const ControlsModel& model)
+{
+    g_measure.lazy = !model.menuOpen && !model.pickerOpen && !model.socialOpen;
+    const Rml::Vector2f screen = document->GetBox().GetSize(Rml::BoxArea::Border);
+    const int skillSlots = ActiveSlots();
+    // The chip's own element: besides offer_shown, the bind hint, the picker, the map and the pad's
+    // layout hide it (touch_controls.rcss).
+    const bool offerShown = IsControlLaidOut(document, OfferControl);
+    // Another offer while the chip stays shown; the text is copied only when it changed.
+    const bool offerTextChanged = model.offerText != g_measure.offerText;
+    if (offerTextChanged)
+        g_measure.offerText = model.offerText;
+    const unsigned potionsShown = PotionsShown(document);
+    const int heroWidth = HeroWidth(document);
+    const bool layoutChanged = model.quickOpen != g_measure.quickOpen || screen.x != g_measure.screenWidth ||
+                               screen.y != g_measure.screenHeight || skillSlots != g_measure.skillSlots ||
+                               offerShown != g_measure.offerShown || (offerShown && offerTextChanged) ||
+                               potionsShown != g_measure.potionsShown || heroWidth != g_measure.heroWidth ||
+                               model.fingers != g_measure.fingers || g_windowsChanged;
+    g_measure.quickOpen = model.quickOpen;
+    g_measure.screenWidth = screen.x;
+    g_measure.screenHeight = screen.y;
+    g_measure.skillSlots = skillSlots;
+    g_measure.offerShown = offerShown;
+    g_measure.potionsShown = potionsShown;
+    g_measure.heroWidth = heroWidth;
+    g_measure.fingers = model.fingers;
+    if (layoutChanged)
+        g_measure.eagerFrames = EagerFramesAfterChange;
+    const bool eager = g_measure.eagerFrames > 0;
+    if (eager)
+        --g_measure.eagerFrames;
+    return !g_measure.lazy || eager || Now() - g_measure.at >= LazyMeasureSeconds;
+}
+
+// The panels open last frame. One opening now has its text walked again for faces to warm (the chat's
+// letters into a name card's size before a name comes in): its lists fill in as it opens.
+struct PanelsOpen
+{
+    bool menu = false;
+    bool picker = false;
+    bool social = false;
+};
+PanelsOpen g_panelsOpen;
+
+void WarmOpenedPanels(Rml::ElementDocument* document, const ControlsModel& model)
+{
+    if (model.menuOpen && !g_panelsOpen.menu)
+        UI::RmlBridge::RewalkFontFacesOf(document, "menu opened");
+    if (model.pickerOpen && !g_panelsOpen.picker)
+        UI::RmlBridge::RewalkFontFacesOf(document, "skill picker opened");
+    if (model.socialOpen && !g_panelsOpen.social)
+        UI::RmlBridge::RewalkFontFacesOf(document, "Social panel opened");
+    g_panelsOpen = PanelsOpen{model.menuOpen, model.pickerOpen, model.socialOpen};
+}
+
 void Hide()
 {
     ForgetCoveringWindows();
@@ -2924,6 +3028,7 @@ void Hide()
     SetField(model.knobY, 0.f, "knob_y");
     g_boxes.fill(ControlBox{});
     g_measure = {};
+    g_panelsOpen = {};
     UI::Mobile::PhoneHudLayout::Release();
     UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
 }
@@ -3036,22 +3141,9 @@ void Update()
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     SyncUnderWindow(document, model.menuOpen || model.pickerOpen || model.socialOpen, model.pickerOpen);
+    WarmOpenedPanels(document, model);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
-    // Played with the pad, the controls are measured lazily (EnsureBoxes): only an A press over a
-    // window reads them then.
-    g_measure.lazy = padInUse && !model.menuOpen && !model.pickerOpen && !model.socialOpen && !AnyFingerOnControls();
-    const Rml::Vector2f screen = document->GetBox().GetSize(Rml::BoxArea::Border);
-    const bool layoutChanged = model.quickOpen != g_measure.quickOpen || screen.x != g_measure.screenWidth
-                               || screen.y != g_measure.screenHeight;
-    g_measure.quickOpen = model.quickOpen;
-    g_measure.screenWidth = screen.x;
-    g_measure.screenHeight = screen.y;
-    if (layoutChanged)
-        g_measure.eagerFrames = EagerFramesAfterChange;
-    const bool eager = g_measure.eagerFrames > 0;
-    if (eager)
-        --g_measure.eagerFrames;
-    const bool due = !g_measure.lazy || eager || Now() - g_measure.at >= LazyMeasureSeconds;
+    const bool due = IsMeasureDue(document, model);
 
     // The pad lights the PC's pad row too: X held shows before the skill animates.
     SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
@@ -3066,7 +3158,11 @@ void Update()
         MeasurePickerPage(document);
     if (model.socialOpen)
         FitSocialPlayers(document);
-    if (due)
+    // With fingers the phone's HUD pieces follow every frame, as before round 29: the party's cards, the
+    // buffs' lane, the notice board and the chat input change size on their own (a buff wrapping to a
+    // second row, a member joining, a wider notice) and must not overlap the buffs or the controls for a
+    // quarter second. The controls' own boxes stay lazy: they move only on a change IsMeasureDue sees.
+    if (due || model.fingers)
         FollowNeighbours(document);
 }
 

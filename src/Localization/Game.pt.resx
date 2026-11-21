@@ -524,7 +524,7 @@
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P: Janela da Festa</value>
+    <value>P: Janela do grupo</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
@@ -664,7 +664,7 @@
     <comment>legacy_id=162</comment>
   </data>
   <data name="WIZ Dmg" xml:space="preserve">
-    <value>WIZ Dano</value>
+    <value>Dano WIZ</value>
     <comment>legacy_id=163</comment>
   </data>
   <data name="DEF" xml:space="preserve">
@@ -784,7 +784,7 @@
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>para criar uma festa com</value>
+    <value>para criar um grupo com</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -792,7 +792,7 @@
     <comment>legacy_id=194</comment>
   </data>
   <data name="a party with them." xml:space="preserve">
-    <value>uma festa com eles.</value>
+    <value>um grupo com eles.</value>
     <comment>legacy_id=195</comment>
   </data>
   <data name="You can share more Exp with" xml:space="preserve">
@@ -892,7 +892,7 @@
     <comment>legacy_id=220</comment>
   </data>
   <data name="Close Party Window (P)" xml:space="preserve">
-    <value>Fechar janela da festa (P)</value>
+    <value>Fechar janela do grupo (P)</value>
     <comment>legacy_id=221</comment>
   </data>
   <data name="Close Character Info Window (C)" xml:space="preserve">
@@ -1028,11 +1028,11 @@
     <comment>legacy_id=255</comment>
   </data>
   <data name="Party256" xml:space="preserve">
-    <value>/festa</value>
+    <value>/grupo</value>
     <comment>legacy_id=256</comment>
   </data>
   <data name="You are already in a party" xml:space="preserve">
-    <value>Você já está em uma festa</value>
+    <value>Você já está em um grupo</value>
     <comment>legacy_id=257</comment>
   </data>
   <data name="/exchange" xml:space="preserve">
@@ -1312,7 +1312,7 @@
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
-    <value>Festa (P)</value>
+    <value>Grupo (P)</value>
     <comment>legacy_id=361</comment>
   </data>
   <data name="Character (C)" xml:space="preserve">
@@ -1585,7 +1585,7 @@
     <comment>legacy_id=424</comment>
   </data>
   <data name="Someone requests you to join their a party" xml:space="preserve">
-    <value>Alguém pede que você participe de uma festa</value>
+    <value>Alguém convida você para o grupo dele</value>
     <comment>legacy_id=425</comment>
   </data>
   <data name="Please draw your guild emblem" xml:space="preserve">
@@ -1869,7 +1869,7 @@
     <comment>legacy_id=498</comment>
   </data>
   <data name="Party is full." xml:space="preserve">
-    <value>A festa está cheia.</value>
+    <value>O grupo está cheio.</value>
     <comment>legacy_id=499</comment>
   </data>
   <data name="The user has left the game." xml:space="preserve">
@@ -1881,7 +1881,7 @@
     <comment>legacy_id=501</comment>
   </data>
   <data name="You have just left the party." xml:space="preserve">
-    <value>Você acabou de sair da festa.</value>
+    <value>Você acabou de sair do grupo.</value>
     <comment>legacy_id=502</comment>
   </data>
   <data name="Guild master has refused your request to join the guild." xml:space="preserve">
@@ -3493,7 +3493,7 @@
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
-    <value>Você deve estar em uma festa</value>
+    <value>Você deve estar em um grupo</value>
     <comment>legacy_id=937</comment>
   </data>
   <data name="Command Window" xml:space="preserve">
@@ -4277,7 +4277,7 @@
     <comment>legacy_id=1143</comment>
   </data>
   <data name="Curse" xml:space="preserve">
-    <value>Xingamento</value>
+    <value>Maldição</value>
     <comment>legacy_id=1144</comment>
   </data>
   <data name="Feel the new Spirit of Guardian!!" xml:space="preserve">
@@ -4417,7 +4417,7 @@
     <comment>legacy_id=1184</comment>
   </data>
   <data name="Can only be used during party" xml:space="preserve">
-    <value>Só pode ser usado durante a festa</value>
+    <value>Só pode ser usado em grupo</value>
     <comment>legacy_id=1185</comment>
   </data>
   <data name="Force wave skill (mana:%d)" xml:space="preserve">
@@ -4973,11 +4973,11 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>Item em</value>
+    <value>Depositar itens</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
-    <value>Item fora</value>
+    <value>Retirar itens</value>
     <comment>legacy_id=1337</comment>
   </data>
   <data name="Deposit zen" xml:space="preserve">
@@ -6277,7 +6277,7 @@
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>Bate-papo de festa</value>
+    <value>Chat do grupo</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% ddiminuir</value>
+    <value>%d%% diminuição</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">
@@ -6873,7 +6873,7 @@
     <comment>legacy_id=1850</comment>
   </data>
   <data name="Crywolf Fortress" xml:space="preserve">
-    <value>Fortaleza do Lobo Chorão</value>
+    <value>Fortaleza do Crywolf</value>
     <comment>legacy_id=1851</comment>
   </data>
   <data name="Lost Kalima" xml:space="preserve">
@@ -9817,23 +9817,23 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Rodada dos Guardiões da Fortaleza do Império %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>foi apagado.</value>
+    <value>foi concluído.</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Você não conseguiu conquistar o</value>
+    <value>Você não conseguiu concluir o</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Fortaleza dos Guardiões do Império.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Rodada %d (Zona %d)</value>
+    <value>Tier %d · Zona %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -10425,7 +10425,7 @@
     <comment>legacy_id=2989</comment>
   </data>
   <data name="You cannot form a party with a member of the opposing gens." xml:space="preserve">
-    <value>Você não pode formar um partido com um membro da gens oposta.</value>
+    <value>Você não pode formar um grupo com um membro da gens oposta.</value>
     <comment>legacy_id=2990</comment>
   </data>
   <data name="The alliance master has not joined the gens." xml:space="preserve">
@@ -10909,7 +10909,7 @@
     <comment>legacy_id=3121</comment>
   </data>
   <data name="Charm item" xml:space="preserve">
-    <value>Item de charme</value>
+    <value>Amuleto</value>
     <comment>legacy_id=3122</comment>
   </data>
   <data name="Relic item" xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>Desmontar joia falhou.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Zona limpa</value>
+    <value>Zona %d concluída</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu Minuto</value>
@@ -12948,10 +12948,10 @@
     <value>Interruptor de coroa %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(fruta %s) pontos estatísticos %d foram Criar.</value>
+    <value>(fruta %ls) pontos estatísticos %d foram Criar.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(fruta %s) pontos estatísticos %d foram Diminuir.</value>
+    <value>(fruta %ls) pontos estatísticos %d foram Diminuir.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Esta estatística não pode mais ser Criar.</value>
@@ -14545,5 +14545,8 @@
   <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
   <data name="HudEffects" xml:space="preserve">
     <value>HUD animation</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Sem rede</value>
   </data>
 </root>

@@ -4,6 +4,7 @@
 #include <string_view>
 #include "Core/Utilities/Benchmark/BenchConsoleCommand.h"
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Core/Utilities/Log/WideFormat.h"
 
 #include "muConsoleDebug.h"	// self
 
@@ -798,7 +799,8 @@ void CmuConsoleDebug::Write(int iType, const wchar_t* pStr, ...)
     wchar_t szBuffer[256] = L"";
     va_list arguments;
     va_start(arguments, pStr);
-    _vsnwprintf(szBuffer, std::size(szBuffer), pStr, arguments);
+    // As CErrorReport::Write(): a %hs in the web build and a refused format still give a line (FormatLogLine()).
+    Core::Log::FormatLogLine(szBuffer, std::size(szBuffer), pStr, arguments);
     va_end(arguments);
 
     char utf8Buffer[1024] = { 0 };

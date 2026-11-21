@@ -170,3 +170,19 @@
 
 /* The data-for template row has no step of its own; it inherits this one. */
 .gr-desc { --line-height: 0px; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the description scrolls by finger
+   (Render/RmlUi/RmlTouchScroll.cpp), so its scroll bar, whose 15-unit well the phone's readable text ran
+   into, gives way to a slim bar that only shows where the text is, as the phone's other lists
+   (chat_command.rcss). The pane is counter-scaled: lengths in it are reference px times --root-scale. */
+@media (theme: mobile) {
+	.gr-desc scrollbarvertical { width: calc(4px * var(--root-scale)); }
+	.gr-desc scrollbarvertical slidertrack { decorator: none; background-color: rgba(255, 255, 255, 20); }
+	.gr-desc scrollbarvertical sliderbar {
+		decorator: none;
+		height: auto;
+		min-height: calc(24px * var(--root-scale));
+		background-color: rgba(255, 220, 120, 150);
+	}
+	.gr-desc scrollbarvertical sliderarrowdec, .gr-desc scrollbarvertical sliderarrowinc { height: 0; }
+}

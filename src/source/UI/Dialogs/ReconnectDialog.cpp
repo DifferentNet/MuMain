@@ -111,7 +111,11 @@ namespace
         SyncField(s_view.Binder(), &ReconnectDialogRmlModel::stepText, "step_text",
                   StringUtils::WideToNarrow(StepLabel(mgr.GetPhase())));
         Rml::String countdownText;
-        if (const int seconds = mgr.GetCountdownSeconds(); seconds > 0)
+        if (mgr.IsWaitingForNetwork())
+        {
+            countdownText = StringUtils::WideToNarrow(I18N::Game::NoNetwork);
+        }
+        else if (const int seconds = mgr.GetCountdownSeconds(); seconds > 0)
         {
             wchar_t countdown[64];
             mu_swprintf(countdown, I18N::Game::RetryingInSeconds, seconds);

@@ -147,11 +147,16 @@
 	top: 0;
 	bottom: 0;
 }
+/* The track's whole width, scaled from the left edge by a bound scaleX() (main_frame.rml): a
+   transform, unlike a width, does not lay the document out again on each step. */
 #exp_fill {
 	position: absolute;
 	left: 0;
 	top: 0;
+	width: 100%;
 	height: 100%;
+	transform-origin: left center;
+	transform: scaleX(0);
 	background-color: #d6a83c;
 	border-top: 1dp rgba(255, 255, 255, 120);
 }
@@ -302,12 +307,17 @@
 }
 
 /* Bottom-anchored translucent wipe -- shrinks from the top down as cooldown counts down.
-   Height is bound per-instance (data-style-height, main_frame.rml). */
+   The cell's whole height, scaled from the bottom edge by a scaleY() bound per instance
+   (data-style-transform, main_frame.rml): a transform, unlike a height, does not lay the whole
+   document out again on each step. */
 .cooldown-wipe {
 	position: absolute;
 	left: 0;
 	bottom: 0;
 	width: 100%;
+	height: 100%;
+	transform-origin: center bottom;
+	transform: scaleY(0);
 	background-color: rgba(255, 128, 128, 128);
 	pointer-events: none;
 }

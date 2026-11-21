@@ -18,6 +18,7 @@ bool MountGameFiles();
 // map's pack, packs/world<world>, tools/web/make_startup_pack.py) before the game reads them, instead of
 // a request per file. Call it before loading a map; blocks until done, yielding to the browser meanwhile.
 // Without a pack, or where it failed to load, the files still download one by one as the game opens them.
+// Each call starts a map entry for the page's log line about those (fetch-backend.js, MuWeb_MapEntries).
 void LoadWorldFiles(int world);
 
 // Starts reading the pack of map folder `world` (LoadWorldFiles' number) as soon as the map the game is
@@ -73,6 +74,12 @@ bool WaitsForDeferredPart(const std::string& path);
 
 // How many files of the deferred parts haven't come or failed yet: 0 once they all did.
 std::size_t DeferredFilesWaiting();
+
+// The page holds back a deferred part whose sounds or music are off (volume 0 in config.ini) when it starts,
+// so a game played silent downloads nothing for them; its files wait meanwhile (WaitsForDeferredPart). The
+// audio asks for it once their volume is up: `folder` is "Data/Sound/" or "Data/Music/". Asking again, or
+// for a part the page didn't hold back, does nothing.
+void WantDeferredPart(const char* folder);
 
 // Where the page's thread downloads the game's files (Safari), reads the file at `path` whole now, the
 // game waiting for it the way it waits for a frame, through the service worker, which keeps it on the

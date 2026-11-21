@@ -1544,3 +1544,37 @@ Data/Sound/mBull2.wav
 Data/Sound/mBullAttack1.wav
 Data/Sound/mBullAttack2.wav
 Data/Sound/mBullDie.wav
+# Added 2026-11-21 (round 30): window textures every first entry into the world read one by one (the
+# minimap, the character window's buttons, the MU Helper's fields, scroll bars).
+Data/Interface/newui_guild_tab04.OZT
+Data/Interface/newui_item_money.OZT
+Data/Interface/newui_jewelbank_btn.OZT
+Data/Interface/newui_chainfo_btn_stats.OZT
+Data/Interface/newui_chainfo_btn_titles.OZT
+Data/Interface/mini_map_ui_npc.OZT
+Data/Interface/mini_map_ui_portal.OZT
+Data/Interface/mini_map_ui_cha.OZT
+Data/Interface/mini_map_ui_line.OZJ
+Data/Interface/mini_map_ui_corner.OZT
+Data/Interface/mini_map_ui_cancel.OZT
+Data/Interface/newui_scrollbar_m.OZT
+Data/Interface/newui_scroll_on.OZT
+Data/Interface/newui_scrollbar_up.OZT
+Data/Interface/newui_scrollbar_down.OZT
+Data/Interface/icon_Rank_0.OZT
+Data/Interface/MacroUI/MacroUI_RangeMinus.OZT
+Data/Interface/newui_option_check.OZT
+Data/Interface/MacroUI/MacroUI_InputNumber.OZT
+Data/Interface/InGameShop/ingame_Bt03.OZT
+Data/Interface/mini_map_ui_boss.OZT
+# And the ones the chat window (its tabs and buttons) and the Options window (the volume bar) read one by
+# one when first opened, 136 KB in all.
+Data/Interface/newui_chat_back.OZJ
+Data/Interface/newui_chat_btn_alpha.OZJ
+Data/Interface/newui_chat_btn_size.OZJ
+Data/Interface/newui_chat_chat_on.OZJ
+Data/Interface/newui_chat_frame_on.OZJ
+Data/Interface/newui_chat_normal_on.OZJ
+Data/Interface/newui_chat_system_on.OZJ
+Data/Interface/newui_option_volume01.OZT
+Data/Interface/newui_option_volume02.OZT

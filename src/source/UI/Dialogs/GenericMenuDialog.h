@@ -133,6 +133,10 @@ namespace mu::ui::window
         // value, not low -- CManager::CompareKeyEventOrder sorts descending (highest runs first),
         // the opposite of what "first priority" suggests. 100.0f, matching that sibling exactly.
         float GetKeyEventOrder() override { return 100.0f; }
+#ifdef __EMSCRIPTEN__
+        // The warm-up (UI/Core/WindowWarmUp.h): the dialog's frame, with no buttons until a menu opens.
+        Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+#endif
 
     private:
         void BuildRmlUi();

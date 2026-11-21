@@ -704,6 +704,24 @@ extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
     return g_filesOnPageThread.load();
 }
 
+namespace
+{
+// The maps entered so far (mu::web::LoadWorldFiles) and the last one's folder number: fetch-backend.js writes a
+// line per map entry about the files then read one at a time.
+std::atomic<int> g_mapEntries{0};
+std::atomic<int> g_mapEntryWorld{0};
+} // namespace
+
+extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_MapEntries()
+{
+    return g_mapEntries.load();
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_MapEntryWorld()
+{
+    return g_mapEntryWorld.load();
+}
+
 extern "C" FILE* __real_fopen(const char* path, const char* mode);
 
 #ifdef MU_WEB_FILE_TRACE
@@ -950,6 +968,13 @@ void InstallDeferredPartsWithin(double budgetMs)
         }
     }
 }
+
+// Index.html's Module.muWantDeferred: downloads the deferred part of `folder` it held back, if any.
+EM_JS(void, MuWeb_WantDeferredPart, (const char* folder), {
+    if (Module["muWantDeferred"]) {
+        Module["muWantDeferred"](UTF8ToString(folder));
+    }
+});
 
 // Fills g_waitingDeferredFiles from the page.
 void NoteDeferredFiles()
@@ -1225,8 +1250,16 @@ std::size_t mu::web::DeferredFilesWaiting()
     return g_waitingDeferredFiles.size();
 }
 
+void mu::web::WantDeferredPart(const char* folder)
+{
+    MuWeb_WantDeferredPart(folder);
+}
+
 void mu::web::LoadWorldFiles(int world)
 {
+    // The world first: fetch-backend.js asks for it once it sees the count change.
+    g_mapEntryWorld = world;
+    ++g_mapEntries;
     const auto start = std::chrono::steady_clock::now();
     const int written = MuWeb_InstallMapPack(world);
     const double ms = MsSince(start);

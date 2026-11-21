@@ -20,9 +20,6 @@ foreach(single IN ITEMS config.ini MuMainIcon.png manifest.webmanifest icon-192.
     list(APPEND files "${single}")
   endif()
 endforeach()
-# The PC client's monster preload list (Engine/Monsters/MonsterPreload.cpp): the browser client
-# doesn't preload, its map packs bring a map's monster files instead.
-list(REMOVE_ITEM files "Data/Local/MapMonsters.txt")
 list(SORT files)
 list(LENGTH files count)
 string(JOIN "\n" content ${files})
