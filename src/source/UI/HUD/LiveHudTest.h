@@ -9,7 +9,7 @@
 // overridden; nothing goes to the server.
 //   $hudtest hp|mp|sd|ag <0..1>   a gauge's fill
 //   $hudtest expfill <0..1>       the EXP bar's fill, and with it the spark
-//   $hudtest cd <seconds>         every skill slot cooling down for that long, from now
+//   $hudtest cd <seconds>         every skill slot cooling down for that long (at most MaxCooldownSeconds), from now
 //   $hudtest exp                  an EXP gain
 //   $hudtest lvl                  a level-up (the hero's level shown one higher than the last)
 //   $hudtest poison on|off        the hero poisoned or not
@@ -19,6 +19,9 @@
 //   $hudtest off                  the hero's own values again, and the stats log off
 namespace UI::HUD::LiveHudTest
 {
+// The longest cooldown `cd` plays; a longer one is cut to it, so its milliseconds always fit an int.
+inline constexpr float MaxCooldownSeconds = 3600.f;
+
 struct Overrides
 {
     std::optional<float> life;

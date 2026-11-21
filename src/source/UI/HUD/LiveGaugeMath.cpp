@@ -207,6 +207,7 @@ LiveHudConfig ReadLiveHudConfig(const std::map<std::string, std::string>& sectio
     ReadColour(section, "riminner", config.rimInner);
     ReadFloat(section, "rimwidth", 0.f, NoLimit, config.rimWidth);
     ReadFloat(section, "cresttint", 0.f, 1.f, config.crestTint);
+    ReadColour(section, "sparkcolour", config.sparkColour);
     ReadFloat(section, "sparkradius", 0.f, NoLimit, config.sparkRadius);
     ReadFloat(section, "sparkperiod", 0.01f, NoLimit, config.sparkPeriod);
     ReadFloat(section, "sparkstill", 0.f, 1.f, config.sparkStill);
@@ -336,18 +337,28 @@ bool ReadyFlash::Update(float cooldownFraction)
     return ended;
 }
 
-bool LevelUpDetector::Update(std::uint64_t hero, std::int64_t level)
+bool LevelUpDetector::Update(std::uint64_t hero, bool master, std::int64_t level, double now)
 {
-    if (!m_started || hero != m_hero)
+    if (!m_started || hero != m_hero || master != m_master)
     {
         m_started = true;
         m_hero = hero;
+        m_master = master;
         m_level = level;
+        m_startedAt = now;
         return false;
     }
     const bool rose = level > m_level;
     m_level = level;
-    return rose;
+    return rose && now - m_startedAt >= LevelUpQuietTime;
+}
+
+SkillCooldown SkillCooldownOf(int delayLeftMs, int fullDelayMs)
+{
+    if (delayLeftMs <= 0 || fullDelayMs <= 0)
+        return {};
+    const float share = static_cast<float>(delayLeftMs) / static_cast<float>(fullDelayMs);
+    return {std::min(share, 1.f), delayLeftMs};
 }
 
 int CooldownSeconds(int remainingMs)

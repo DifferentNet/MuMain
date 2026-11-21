@@ -56,8 +56,10 @@ struct LiveHudConfig
     float rimWidth = 1.5f;
     // The crest's brightness at the liquid's surface (UI/HUD/LiveGaugeMesh.h, ShineInputs).
     float crestTint = 0.30f;
-    // The EXP spark: a glow sparkRadius big round the fill's end, sparkPeak bright at the top of its breathing (a
-    // sparkPeriod cycle, LiveGauge::SparkBreath()); with HudEffects off it stands still at sparkStill of its peak.
+    // The EXP spark: a sparkColour glow sparkRadius big round the fill's end, sparkPeak bright at the top of its
+    // breathing (a sparkPeriod cycle, LiveGauge::SparkBreath()); with HudEffects off it stands still at sparkStill of
+    // its peak. The level-up band has its colour too.
+    std::uint32_t sparkColour = 0xFF78D7FFu; // #ffd778
     float sparkRadius = 5.f;
     float sparkPeriod = 1.4f;
     float sparkStill = 0.825f;
@@ -164,18 +166,37 @@ private:
     float m_last = 0.f;
 };
 
-// A level-up: Update() is true when the same hero's level rises. A new hero (or the first call) only records the
-// level; the EXP bar wrapping within a level never counts.
+// How long after LevelUpDetector starts over a rising level is only recorded, in seconds.
+inline constexpr double LevelUpQuietTime = 2.0;
+
+// A level-up: Update() is true when the same hero's level, counted the same way (`master`: the master level), rises.
+// The first call, a new hero or the other count starts over: it records the level, and for LevelUpQuietTime after
+// `now` (seconds) a rise is only recorded too, since on login the master level comes in its own packet after the
+// first frames. The EXP bar wrapping within a level never counts.
 class LevelUpDetector
 {
 public:
-    [[nodiscard]] bool Update(std::uint64_t hero, std::int64_t level);
+    [[nodiscard]] bool Update(std::uint64_t hero, bool master, std::int64_t level, double now);
 
 private:
     std::uint64_t m_hero = 0;
     std::int64_t m_level = 0;
+    double m_startedAt = 0.0;
+    bool m_master = false;
     bool m_started = false;
 };
+
+// A skill's cooldown as the live HUD shows it: the share of its delay left (0..1, 0 = ready) and the milliseconds left.
+struct SkillCooldown
+{
+    float fraction = 0.f;
+    int remainingMs = 0;
+};
+
+// The cooldown of a skill with `delayLeftMs` of its `fullDelayMs` left (CharacterAttribute->SkillDelay[] and the
+// skill's SkillAttribute[].Delay); none (0, 0) once nothing is left, or for a skill without a delay. The share is above
+// 0 exactly while some of the delay is left, so ReadyFlash fires only when the delay runs out.
+[[nodiscard]] SkillCooldown SkillCooldownOf(int delayLeftMs, int fullDelayMs);
 
 // The whole seconds a skill slot shows of a cooldown with `remainingMs` left: rounded up, and none (0) once that would
 // read 1 or less, so a 5 s cooldown counts 5, 4, 3, 2 and its last second shows no number.

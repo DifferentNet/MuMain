@@ -577,7 +577,8 @@ TEST_CASE("a gem's halo fans from its outline to the ring, cut at the group's bo
     constexpr std::uint32_t Red = 0xFF1834FFu;
     constexpr std::uint32_t HalfRed = 0x800C1A80u;
     std::vector<Vertex> quads;
-    BuildHalo(GemBox, outline, shape, Red, 0.5f, quads);
+    HaloScratch scratch;
+    BuildHalo(GemBox, outline, shape, Red, 0.5f, scratch, quads);
     REQUIRE(quads.size() >= 48 * 4);
     REQUIRE(quads.size() % 4 == 0);
 
@@ -613,14 +614,60 @@ TEST_CASE("a gem's halo fans from its outline to the ring, cut at the group's bo
     // Straight down it reaches the group's bottom and no further.
     CHECK(lowest == doctest::Approx(bottom));
 
-    BuildHalo(GemBox, outline, shape, Red, 1.f, quads);
+    BuildHalo(GemBox, outline, shape, Red, 1.f, scratch, quads);
     CHECK(CountColoured(quads, 0u) == quads.size() / 4);
     CHECK(quads[1].abgr == Red);
 
-    BuildHalo(GemBox, outline, shape, Red, 0.f, quads);
+    BuildHalo(GemBox, outline, shape, Red, 0.f, scratch, quads);
     CHECK(quads.empty());
-    BuildHalo(GemBox, outline, {centreX, centreY, 0.f, bottom}, Red, 0.5f, quads);
+    BuildHalo(GemBox, outline, {centreX, centreY, 0.f, bottom}, Red, 0.5f, scratch, quads);
     CHECK(quads.empty());
+}
+
+TEST_CASE("a gem's halo reuses its scratch: the same fan, nothing grown again [ui][live_gauge]")
+{
+    const std::vector<OutlinePoint> outline = DefaultOutline();
+    const HaloShape shape{GemBox.left + GemBox.width / 2.f, GemBox.top + GemBox.height / 2.f, 31.f,
+                          GemBox.top + GemBox.height};
+    constexpr std::uint32_t Red = 0xFF1834FFu;
+    const auto same = [](const std::vector<Vertex>& a, const std::vector<Vertex>& b)
+    {
+        if (a.size() != b.size())
+            return false;
+        for (std::size_t i = 0; i < a.size(); ++i)
+        {
+            if (a[i].x != b[i].x || a[i].y != b[i].y || a[i].u != b[i].u || a[i].v != b[i].v || a[i].abgr != b[i].abgr)
+                return false;
+        }
+        return true;
+    };
+
+    HaloScratch fresh;
+    std::vector<Vertex> first;
+    BuildHalo(GemBox, outline, shape, Red, 0.5f, fresh, first);
+    REQUIRE_FALSE(first.empty());
+
+    // A scratch left by another gem's halo (a smaller box, another outline) gives the same fan.
+    HaloScratch reused;
+    std::vector<Vertex> other;
+    const std::vector<OutlinePoint> triangle = {{0.5f, 0.f}, {1.f, 1.f}, {0.f, 1.f}};
+    BuildHalo({0.f, 0.f, 20.f, 20.f}, triangle, {10.f, 10.f, 15.f, 20.f}, Red, 0.8f, reused, other);
+    REQUIRE_FALSE(other.empty());
+    std::vector<Vertex> second;
+    BuildHalo(GemBox, outline, shape, Red, 0.5f, reused, second);
+    CHECK(same(first, second));
+
+    // Built again with it, nothing is allocated: the vectors keep their buffers.
+    const std::size_t corners = reused.corners.capacity();
+    const std::size_t angles = reused.angles.capacity();
+    const PixelPoint* cornerData = reused.corners.data();
+    const float* angleData = reused.angles.data();
+    BuildHalo(GemBox, outline, shape, Red, 0.5f, reused, second);
+    CHECK(same(first, second));
+    CHECK(reused.corners.capacity() == corners);
+    CHECK(reused.angles.capacity() == angles);
+    CHECK(reused.corners.data() == cornerData);
+    CHECK(reused.angles.data() == angleData);
 }
 
 namespace

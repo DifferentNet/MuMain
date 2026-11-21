@@ -359,7 +359,9 @@ LiveHud=1
   life is low. SD and AG rings round the gems, the SD one with its own ghost. On the skill row a
   dark sweep over the cooldown left, the whole seconds left, and a short gold flash when a slot is
   ready again. On the EXP bar a spark breathes at the fill's end and flares on each EXP gain; a
-  level-up sends a band of light across the bar and the sheen over both gems.
+  level-up sends a band of light across the bar and the sheen over both gems (none in the first 2 s
+  after the HUD binds, the hero changes or the master level starts: the master level comes in its
+  own packet).
 - **Markup.** `main_frame.rml` is shared by every theme. Its live parts carry `live-only`: per gem
   `orb_hp_*` / `orb_mp_*` (`_box`, `_under`, `_halo`, `_body`, `_shine`), the rings
   `orb_sd_arc` / `orb_ag_arc` and their `_cap`, per skill slot `.skill-sweep`, `.skill-ready` and
@@ -392,6 +394,7 @@ degrees clockwise from 3 o'clock, colours `#rrggbb` (`SweepShade` `#rrggbbaa`).
 | `HaloLife`, `HaloMana`, `HaloPoison` | `#ff3418`, `#2870ff`, `#30c040` | the glow round each gem |
 | `SweepShade` | `#060403cc` | the skill cooldown's shade |
 | `RimOuter`, `RimInner`, `RimWidth` | `#5c462a`, `#0b0907`, 1.5 | the socket's rim round each gem; the colours also draw the rings' track |
+| `SparkColour` | `#ffd778` | the EXP spark's and the level-up band's colour |
 | `SparkRadius`, `SparkPeak` | 5, 0.6 | the EXP spark's size and its brightness (0..1) at the top of its breathing |
 | `SparkPeriod`, `SparkStill` | 1.4, 0.825 | the breathing's cycle; the brightness with HudEffects off, a share of `SparkPeak` |
 | `FlareTime`, `FlareRadius`, `FlareBrightness` | 0.8, 1.8, 1.5 | an EXP gain's flare: how long it takes to fall back, how many times as big and as bright the spark starts (at least 1) |
@@ -417,7 +420,7 @@ A form it does not know answers with the usage line.
 |---|---|
 | `$hudtest hp\|mp\|sd\|ag <0..1>` | a gauge's fill |
 | `$hudtest expfill <0..1>` | the EXP bar's fill (within its tenth), and with it the spark |
-| `$hudtest cd <seconds>` | every skill slot cooling down for that long, from now; `cd 0` stops it |
+| `$hudtest cd <seconds>` | every skill slot cooling down for that long (at most 3600 s), from now; `cd 0` stops it |
 | `$hudtest exp` | an EXP gain (the spark's flare) |
 | `$hudtest lvl` | a level-up (the band and the sheen) |
 | `$hudtest poison on\|off` | the hero poisoned or not (the life gem's poisoned art and halo) |

@@ -161,11 +161,7 @@ void PushCrest(const GemShape& shape, std::span<const float> surface, const Shin
     }
 }
 
-struct Point
-{
-    float x = 0.f;
-    float y = 0.f;
-};
+using Point = PixelPoint;
 
 Point Outward(Point from, Point to, float orientation)
 {
@@ -448,15 +444,17 @@ void BuildArcCap(const Ring& ring, float level, float length, float tint, std::v
 }
 
 void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const HaloShape& shape, std::uint32_t colour,
-               float strength, std::vector<Vertex>& out)
+               float strength, HaloScratch& scratch, std::vector<Vertex>& out)
 {
     out.clear();
     if (outline.size() < 3 || strength <= 0.f || shape.radius <= 0.f || box.width <= 0.f || box.height <= 0.f)
         return;
 
     const Point centre{shape.centreX, shape.centreY};
-    std::vector<Point> points;
-    std::vector<float> angles;
+    std::vector<Point>& points = scratch.corners;
+    std::vector<float>& angles = scratch.angles;
+    points.clear();
+    angles.clear();
     points.reserve(outline.size());
     angles.reserve(HaloSegments + outline.size() + 1);
     for (const OutlinePoint& point : outline)

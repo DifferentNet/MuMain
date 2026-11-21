@@ -100,7 +100,7 @@ bool Apply(Overrides& overrides, std::wstring_view arguments)
     {
         if (*number < 0.f)
             return false;
-        overrides.cooldownSeconds = *number;
+        overrides.cooldownSeconds = std::min(*number, MaxCooldownSeconds);
         ++overrides.cooldowns;
         return true;
     }

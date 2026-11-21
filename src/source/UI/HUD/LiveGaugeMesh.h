@@ -154,11 +154,26 @@ struct HaloShape
     float bottom = 0.f;
 };
 
+// A point in pixels of the mesh element.
+struct PixelPoint
+{
+    float x = 0.f;
+    float y = 0.f;
+};
+
+// BuildHalo()'s working space: the outline's corners in pixels and the fan's angles. The caller keeps it (one per gem)
+// so that a rebuild allocates nothing once its vectors have grown; BuildHalo() clears them first.
+struct HaloScratch
+{
+    std::vector<PixelPoint> corners;
+    std::vector<float> angles;
+};
+
 // The glow round a gem, drawn plain and added (SetPlainMesh, additive): a fan of quads from the gem's outline
 // (`outline` in `box`), `colour` times `strength` there, out to the shape's edge, where it adds nothing. `out` is
 // cleared first; nothing at strength 0.
 void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const HaloShape& shape, std::uint32_t colour,
-               float strength, std::vector<Vertex>& out);
+               float strength, HaloScratch& scratch, std::vector<Vertex>& out);
 
 // A skill slot's cooldown shade, drawn plain (SetPlainMesh, blended): the part of `rect` that a hand turning clockwise
 // from 12 o'clock round the rect's centre has yet to pass with `remaining` (0..1) of the turn left, in `colour`. One

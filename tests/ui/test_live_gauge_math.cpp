@@ -280,17 +280,81 @@ TEST_CASE("a skill's ready flash fires once when its cooldown ends [ui][live_gau
     CHECK(flash.Update(-0.1f));
 }
 
-TEST_CASE("a level-up counts only the same hero's level rising [ui][live_gauge]")
+TEST_CASE("a level-up counts only the same hero's level rising, counted the same way, after the quiet start "
+          "[ui][live_gauge]")
 {
+    REQUIRE(LevelUpQuietTime == doctest::Approx(2.0));
     LevelUpDetector levels;
-    CHECK_FALSE(levels.Update(1, 10));
-    CHECK_FALSE(levels.Update(1, 10));
-    CHECK(levels.Update(1, 11));
-    CHECK_FALSE(levels.Update(1, 11));
-    // Another character: only recorded.
-    CHECK_FALSE(levels.Update(2, 50));
-    CHECK(levels.Update(2, 51));
-    CHECK_FALSE(levels.Update(2, 40));
+    CHECK_FALSE(levels.Update(1, false, 10, 0.0));
+    CHECK_FALSE(levels.Update(1, false, 10, 2.5));
+    CHECK(levels.Update(1, false, 11, 3.0));
+    CHECK_FALSE(levels.Update(1, false, 11, 3.1));
+    CHECK_FALSE(levels.Update(1, false, 9, 3.2));
+    CHECK(levels.Update(1, false, 10, 3.3));
+
+    // Another character: only recorded, and a rise in its first 2 s too.
+    CHECK_FALSE(levels.Update(2, false, 50, 10.0));
+    CHECK_FALSE(levels.Update(2, false, 51, 11.9));
+    CHECK(levels.Update(2, false, 52, 12.0));
+    CHECK_FALSE(levels.Update(2, false, 40, 13.0));
+
+    // The master level starting (another count): it starts over, so its first value (0 until its packet comes) and
+    // the real one in the next 2 s play nothing; later master levels do.
+    CHECK_FALSE(levels.Update(2, true, 0, 20.0));
+    CHECK_FALSE(levels.Update(2, true, 57, 20.4));
+    CHECK_FALSE(levels.Update(2, true, 57, 22.5));
+    CHECK(levels.Update(2, true, 58, 23.0));
+    // Back to the normal level: starts over again.
+    CHECK_FALSE(levels.Update(2, false, 400, 24.0));
+    CHECK_FALSE(levels.Update(2, false, 401, 25.0));
+    CHECK(levels.Update(2, false, 402, 26.5));
+
+    // A login: the first frames see a stale master level, then the real one for the same hero; no cue.
+    LevelUpDetector login;
+    CHECK_FALSE(login.Update(7, true, 1, 100.0));
+    CHECK_FALSE(login.Update(7, true, 120, 100.3));
+    CHECK_FALSE(login.Update(7, true, 120, 102.5));
+    CHECK(login.Update(7, true, 121, 103.0));
+}
+
+TEST_CASE("a skill's live cooldown is its delay left, the share above 0 exactly while some is left [ui][live_gauge]")
+{
+    SkillCooldown cooldown = SkillCooldownOf(3000, 4000);
+    CHECK(cooldown.fraction == doctest::Approx(0.75f));
+    CHECK(cooldown.remainingMs == 3000);
+    cooldown = SkillCooldownOf(1, 60000);
+    CHECK(cooldown.fraction > 0.f);
+    CHECK(cooldown.remainingMs == 1);
+    // More delay left than the skill's own: a full turn.
+    cooldown = SkillCooldownOf(5000, 4000);
+    CHECK(cooldown.fraction == doctest::Approx(1.f));
+    CHECK(cooldown.remainingMs == 5000);
+    // Nothing left, or no delay to take a share of: none.
+    for (const std::pair<int, int>& none :
+         {std::pair{0, 4000}, std::pair{-16, 4000}, std::pair{2000, 0}, std::pair{2000, -1}})
+    {
+        CAPTURE(none.first);
+        CAPTURE(none.second);
+        cooldown = SkillCooldownOf(none.first, none.second);
+        CHECK(cooldown.fraction == 0.f);
+        CHECK(cooldown.remainingMs == 0);
+    }
+
+    // A 4 s delay counted down frame by frame flashes once, when it runs out, and not before.
+    ReadyFlash flash;
+    int flashes = 0;
+    int flashedAt = 1;
+    for (int left = 4000; left >= -32; left -= 16)
+    {
+        if (flash.Update(SkillCooldownOf(left, 4000).fraction))
+        {
+            ++flashes;
+            flashedAt = left;
+        }
+    }
+    CHECK(flashes == 1);
+    CHECK(flashedAt <= 0);
+    CHECK(flashedAt > -16);
 }
 
 TEST_CASE("a cooldown shows its whole seconds left, rounded up, until its last second [ui][live_gauge]")
@@ -440,6 +504,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(defaults.rimInner == 0xFF07090Bu);
     CHECK(defaults.rimWidth == doctest::Approx(1.5f));
     CHECK(defaults.crestTint == doctest::Approx(0.30f));
+    CHECK(defaults.sparkColour == 0xFF78D7FFu);
     CHECK(defaults.sparkRadius == doctest::Approx(5.f));
     CHECK(defaults.sparkPeriod == doctest::Approx(1.4f));
     CHECK(defaults.sparkStill == doctest::Approx(0.825f));
@@ -471,6 +536,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
                                                     {"riminner", "#40506070"},
                                                     {"rimwidth", "2.5"},
                                                     {"cresttint", "0.6"},
+                                                    {"sparkcolour", "#80c0ff"},
                                                     {"sparkradius", "7"},
                                                     {"sparkperiod", "2"},
                                                     {"sparkstill", "0.5"},
@@ -502,6 +568,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(read.rimInner == 0x70605040u);
     CHECK(read.rimWidth == doctest::Approx(2.5f));
     CHECK(read.crestTint == doctest::Approx(0.6f));
+    CHECK(read.sparkColour == 0xFFFFC080u);
     CHECK(read.sparkRadius == doctest::Approx(7.f));
     CHECK(read.sparkPeriod == doctest::Approx(2.f));
     CHECK(read.sparkStill == doctest::Approx(0.5f));
@@ -522,7 +589,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
         {"cresttint", "1.5"},     {"sparkradius", "-2"},      {"sparkperiod", "0"},
         {"sparkstill", "1.2"},    {"sparkpeak", "bright"},    {"flaretime", "0"},
         {"flareradius", "0.5"},   {"flarebrightness", "0.9"}, {"bandtime", "-0.9"},
-        {"bandhalfwidth", "-16"}, {"bandstrength", "2"}};
+        {"bandhalfwidth", "-16"}, {"bandstrength", "2"},      {"sparkcolour", "gold"}};
     const LiveHudConfig kept = ReadLiveHudConfig(bad);
     CHECK(SameOutline(kept.gemOutline, DefaultOutline()));
     CHECK(kept.gemZoom == doctest::Approx(1.32f));
@@ -537,6 +604,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(kept.rimInner == 0xFF07090Bu);
     CHECK(kept.rimWidth == doctest::Approx(1.5f));
     CHECK(kept.crestTint == doctest::Approx(0.30f));
+    CHECK(kept.sparkColour == 0xFF78D7FFu);
     CHECK(kept.sparkRadius == doctest::Approx(5.f));
     CHECK(kept.sparkPeriod == doctest::Approx(1.4f));
     CHECK(kept.sparkStill == doctest::Approx(0.825f));
@@ -665,6 +733,34 @@ TEST_CASE("$hudtest cd plays its cooldown from when it is first seen, each reque
     CHECK(playback.At(overrides, 50.0).has_value());
     REQUIRE(Apply(overrides, L"off"));
     CHECK_FALSE(playback.At(overrides, 50.5).has_value());
+}
+
+TEST_CASE("$hudtest cd plays an hour at most, so its milliseconds fit [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::Apply;
+    using UI::HUD::LiveHudTest::CooldownPlayback;
+    using UI::HUD::LiveHudTest::MaxCooldownSeconds;
+    using UI::HUD::LiveHudTest::Overrides;
+
+    REQUIRE(MaxCooldownSeconds == doctest::Approx(3600.f));
+    Overrides overrides;
+    CooldownPlayback playback;
+    REQUIRE(Apply(overrides, L"cd 3600"));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
+    const wchar_t* const longer[] = {L"cd 3601", L"cd 3000000", L"cd 1e30"};
+    for (std::size_t i = 0; i < std::size(longer); ++i)
+    {
+        CAPTURE(i);
+        REQUIRE(Apply(overrides, longer[i]));
+        CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
+        const auto left = playback.At(overrides, 100.0);
+        REQUIRE(left.has_value());
+        CHECK(left->fraction == doctest::Approx(1.f));
+        CHECK(left->remainingMs == 3600000);
+    }
+    // Past what a float holds it is no number at all.
+    CHECK_FALSE(Apply(overrides, L"cd 1e40"));
+    CHECK(*overrides.cooldownSeconds == doctest::Approx(3600.f));
 }
 
 TEST_CASE("$hudtest stats counts the syncs, the ticks' rebuilds and the time in 5 s windows [ui][live_gauge]")

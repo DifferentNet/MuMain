@@ -517,11 +517,12 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
         values.emplace(key, setting.value);
     }
     for (const char* key :
-         {"gemoutline", "gemzoom",     "emptyshade",      "waveamplitude", "waveperiodlife", "waveperiodmana",
-          "arcstart",   "arcsweep",    "arcwidth",        "lowlife",       "pulseperiod",    "pulsestrength",
-          "halolife",   "halomana",    "halopoison",      "sweepshade",    "rimouter",       "riminner",
-          "rimwidth",   "cresttint",   "sparkradius",     "sparkpeak",     "sparkperiod",    "sparkstill",
-          "flaretime",  "flareradius", "flarebrightness", "bandtime",      "bandhalfwidth",  "bandstrength"})
+         {"gemoutline",  "gemzoom",   "emptyshade",  "waveamplitude",   "waveperiodlife", "waveperiodmana",
+          "arcstart",    "arcsweep",  "arcwidth",    "lowlife",         "pulseperiod",    "pulsestrength",
+          "halolife",    "halomana",  "halopoison",  "sweepshade",      "rimouter",       "riminner",
+          "rimwidth",    "cresttint", "sparkcolour", "sparkradius",     "sparkpeak",      "sparkperiod",
+          "sparkstill",  "flaretime", "flareradius", "flarebrightness", "bandtime",       "bandhalfwidth",
+          "bandstrength"})
     {
         CAPTURE(key);
         CHECK(values.count(key) == 1);
@@ -537,6 +538,8 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
     CHECK(config.rimInner == 0xFF07090Bu);
     CHECK(config.rimWidth == doctest::Approx(1.5f));
     CHECK(config.crestTint == doctest::Approx(0.30f));
+    // The spark's and the band's gold is the ready rim's (tokens.ini hud-ready-rim).
+    CHECK(config.sparkColour == 0xFF78D7FFu);
     CHECK(config.sparkRadius == doctest::Approx(5.f));
     CHECK(config.sparkPeak == doctest::Approx(0.6f));
     CHECK(config.sparkPeriod == doctest::Approx(1.4f));

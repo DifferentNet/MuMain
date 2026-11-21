@@ -49,9 +49,6 @@ constexpr const char* ReadyClass = "ready";
 // The seconds' class while they have two digits or more (main_frame_live.rcss's .skill-cd-secs.long).
 constexpr const char* LongSecondsClass = "long";
 constexpr double ReadyFlashTime = 0.4;
-// The EXP spark's and the level-up band's gold, #ffd778: the skill slots' ready rim (tokens.ini hud-ready-rim). Their
-// sizes and times are the theme's (LiveGauge::LiveHudConfig).
-constexpr std::uint32_t SparkColour = 0xFF78D7FFu;
 
 constexpr const char* ThemesRoot = "Data/Interface/RmlUi/themes";
 constexpr const char* LiveHudSection = "LiveHud";
@@ -88,6 +85,12 @@ LiveGauge::Box OwnBox(Rml::Element* element)
 bool HasArea(const LiveGauge::Box& box)
 {
     return box.width > 0.f && box.height > 0.f;
+}
+
+// Whether a gem has a ring arc to draw: its mesh element with its art (data-src).
+bool DrawsArc(const Render::RmlUi::AdditiveMeshElement* mesh, const std::string& source)
+{
+    return mesh != nullptr && !source.empty();
 }
 
 // 0..1 while the sheen crosses the gem, -1 between runs.
@@ -366,8 +369,8 @@ void UI::HUD::LiveHud::DrawUnder(Gem& gem)
 {
     const LiveGauge::Box box = BoxWithin(gem.box, gem.under);
     const LiveGauge::Box ring = OwnBox(gem.under);
-    // The track goes with the ring's arc: none without one.
-    const float trackWidth = gem.arc.mesh != nullptr ? m_config.arcWidth * m_dpRatio : 0.f;
+    // The track goes with the ring's arc: none where no arc is drawn.
+    const float trackWidth = DrawsArc(gem.arc.mesh, gem.arc.source) ? m_config.arcWidth * m_dpRatio : 0.f;
     const UnderKey key{box, ring, m_config.rimWidth * m_dpRatio, trackWidth};
     if (key == gem.underKey || !HasArea(box))
         return;
@@ -393,7 +396,7 @@ void UI::HUD::LiveHud::DrawHalo(Gem& gem, const Look& look)
     // Round the gem as far as the ring reaches, and never under the group's box (the gem's bottom is its bottom).
     const LiveGauge::HaloShape shape{box.left + box.width / 2.f, box.top + box.height / 2.f,
                                      std::min(ring.width, ring.height) / 2.f, box.top + box.height};
-    LiveGauge::BuildHalo(box, m_config.gemOutline, shape, key.colour, key.strength, gem.haloQuads);
+    LiveGauge::BuildHalo(box, m_config.gemOutline, shape, key.colour, key.strength, gem.haloScratch, gem.haloQuads);
     gem.halo->SetPlainMesh(gem.haloQuads, 1.f, true);
     ++m_rebuilds;
     gem.haloKey = key;
@@ -402,7 +405,7 @@ void UI::HUD::LiveHud::DrawHalo(Gem& gem, const Look& look)
 void UI::HUD::LiveHud::DrawArc(Gem& gem)
 {
     Arc& arc = gem.arc;
-    if (arc.mesh == nullptr || arc.source.empty())
+    if (!DrawsArc(arc.mesh, arc.source))
         return;
     const LiveGauge::Box box = BoxWithin(gem.box, arc.mesh);
     const ArcKey key{box, OwnBox(arc.mesh), arc.motion.shown, arc.motion.GhostLevel(), m_dpRatio};
@@ -427,11 +430,12 @@ void UI::HUD::LiveHud::DrawArc(Gem& gem)
 
 void UI::HUD::LiveHud::Cue(const Inputs& inputs, double tick)
 {
-    // The first tick after binding only notes where the gains stand (the level: LevelUpDetector's first call).
+    // The first tick after binding only notes where the gains stand (the level: LevelUpDetector, which also lets its
+    // first 2 s pass, while the master level may still be coming in).
     const bool gained = m_cuesStarted && inputs.expGains > m_expGains;
     m_cuesStarted = true;
     m_expGains = inputs.expGains;
-    const bool levelledUp = m_levelUp.Update(inputs.hero, inputs.level);
+    const bool levelledUp = m_levelUp.Update(inputs.hero, inputs.masterLevel, inputs.level, tick);
     if (!inputs.effects)
         return;
     if (gained)
@@ -506,10 +510,10 @@ void UI::HUD::LiveHud::DrawSpark(const Inputs& inputs, float levelUp, double tic
     if (key == m_sparkKey || !HasArea(box))
         return;
 
-    LiveGauge::BuildGlow(box.left + key.fill * box.width, box.top + box.height / 2.f, key.radius, SparkColour,
+    LiveGauge::BuildGlow(box.left + key.fill * box.width, box.top + box.height / 2.f, key.radius, m_config.sparkColour,
                          key.strength, m_sparkQuads);
-    LiveGauge::AppendBand(box, key.bandPhase, m_config.bandHalfWidth * m_dpRatio, SparkColour, m_config.bandStrength,
-                          m_sparkQuads);
+    LiveGauge::AppendBand(box, key.bandPhase, m_config.bandHalfWidth * m_dpRatio, m_config.sparkColour,
+                          m_config.bandStrength, m_sparkQuads);
     m_spark->SetPlainMesh(m_sparkQuads, 1.f, true);
     ++m_rebuilds;
     m_sparkKey = key;

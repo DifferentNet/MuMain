@@ -62,9 +62,11 @@ public:
         float expFill = 0.f;
         // How many EXP gains the hero has had: each new one flares the spark.
         std::uint32_t expGains = 0;
-        // The hero (any value that differs between characters) and its level: the level rising for the same hero
-        // plays the level-up cue.
+        // The hero (any value that differs between characters) and its level, the master level when `masterLevel`:
+        // the level rising for the same hero, counted the same way, plays the level-up cue (not in the first
+        // LiveGauge::LevelUpQuietTime after binding or after a change of either, LiveGauge::LevelUpDetector).
         std::uint64_t hero = 0;
+        bool masterLevel = false;
         std::int64_t level = 0;
         // Options > Interface "HUD animation" (config.ini [UI] HudEffects). Off: the liquid lies flat, and there is
         // no sheen, no low-life pulse, no ready flash and no level-up cue, and the EXP spark stands still without its
@@ -196,6 +198,7 @@ private:
         std::vector<float> surface;
         std::vector<LiveGauge::Vertex> underQuads;
         std::vector<LiveGauge::Vertex> haloQuads;
+        LiveGauge::HaloScratch haloScratch;
         std::vector<LiveGauge::Vertex> bodyQuads;
         std::vector<LiveGauge::Vertex> shineQuads;
         UnderKey underKey;

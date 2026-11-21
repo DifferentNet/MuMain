@@ -610,11 +610,12 @@ void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* documen
     for (int i = 0; i < 5; ++i)
     {
         const int hotKey = g_pSkillList->GetHotKeySlotNumber(i);
-        inputs.cooldowns[i] = {g_pSkillList->GetHotKeySlotCooldownFraction(i), g_pSkillList->GetHotKeySlotCooldownMs(i),
+        const UI::HUD::LiveGauge::SkillCooldown cooldown = g_pSkillList->GetHotKeySlotLiveCooldown(i);
+        inputs.cooldowns[i] = {cooldown.fraction, cooldown.remainingMs,
                                hotKey >= 0 ? g_pSkillList->GetHotKey(hotKey) : -1};
     }
-    inputs.cooldowns[5] = {g_pSkillList->GetCurrentSkillCooldownFraction(), g_pSkillList->GetCurrentSkillCooldownMs(),
-                           Hero->CurrentSkill};
+    const UI::HUD::LiveGauge::SkillCooldown current = g_pSkillList->GetCurrentSkillLiveCooldown();
+    inputs.cooldowns[5] = {current.fraction, current.remainingMs, Hero->CurrentSkill};
     if (const auto testCooldown = m_LiveHudTestCooldown.At(overrides, now))
     {
         for (UI::HUD::LiveHud::Inputs::Cooldown& cooldown : inputs.cooldowns)
@@ -629,7 +630,9 @@ void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* documen
     inputs.expFill = m_RmlView.GetModel().expFraction;
     inputs.expGains = m_uExpGains + static_cast<std::uint32_t>(overrides.expGains);
     inputs.hero = std::hash<std::wstring_view>{}(std::wstring_view(Hero->ID));
-    inputs.level = UI::HUD::HeroGauges::ReadExperience().level + overrides.levelUps;
+    const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
+    inputs.masterLevel = experience.master;
+    inputs.level = experience.level + overrides.levelUps;
     m_LiveHud.Sync(document, inputs, now);
 }
 
