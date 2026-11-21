@@ -837,7 +837,8 @@
   function fullscreenRefused(reason) {
     const why = reason && reason.message ? reason.message : String(reason);
     appendLog("Fullscreen refused: " + why, true);
-    if (!statusEl.hidden && !fullscreenNoteTimer) return; // "Loading…" and the like stay
+    // "Loading…" and the like stay; the no-room note (sayNoRoom) gives way, it waits for the screen to be free.
+    if (!statusEl.hidden && !fullscreenNoteTimer && statusEl.textContent !== tx("noRoom")) return;
     setStatus(tx("fullscreenRefused", why === NO_PAGE_FULLSCREEN ? tx("noPageFullscreen") : why));
     clearTimeout(fullscreenNoteTimer);
     fullscreenNoteTimer = setTimeout(() => { fullscreenNoteTimer = 0; setStatus(""); }, FULLSCREEN_NOTE_MS);
