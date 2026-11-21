@@ -14,6 +14,15 @@ namespace Render::Effects::FlipbookBlend
 // No phase recorded for the particle's current life: it draws its frame alone.
 inline constexpr float kNoPhase = -1.0f;
 
+// Frames on the explosion sheets Effect/Explotion01 and Effect/explotion01mono (BITMAP_EXPLOTION,
+// BITMAP_EXPLOTION_MONO). They are 4x4 grids, but only cells 0..9 hold the fire; cells 10..15 are
+// solid white. Their phase, (20 - LifeTime) / 2, stays below 10, so the cut frame never reaches a
+// white cell; the blend must hold frame 9 too, or it lays a white square over the fading fire.
+inline constexpr int kExplosionSheetFrames = 10;
+
+// Frames on Effect/loungexflow (BITMAP_SUMMON_SAHAMUTT_EXPLOSION): a full 4x4 grid.
+inline constexpr int kSahamuttExplosionSheetFrames = 16;
+
 struct Frames
 {
     int frame = 0;      // the whole frame, as the particle's Frame

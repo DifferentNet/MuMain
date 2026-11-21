@@ -9171,9 +9171,14 @@ void RenderParticles(BYTE byRenderOneMore)
             case BITMAP_EXPLOTION_MONO:
             case BITMAP_EXPLOTION:
             case BITMAP_SUMMON_SAHAMUTT_EXPLOSION:
-                RenderFlipbook(o, pBitmap, 16, [&](int frame, float* light)
+            {
+                const int frames = o->Type == BITMAP_SUMMON_SAHAMUTT_EXPLOSION
+                                       ? Render::Effects::FlipbookBlend::kSahamuttExplosionSheetFrames
+                                       : Render::Effects::FlipbookBlend::kExplosionSheetFrames;
+                RenderFlipbook(o, pBitmap, frames, [&](int frame, float* light)
                                { RenderSprite(o->TexType, o->Position, Width, Height, light, 0.f, frame % 4 * 0.25f + 0.005f, frame / 4 * 0.25f + 0.005f, 0.25f - 0.01f, 0.25f - 0.01f); });
                 break;
+            }
             case BITMAP_EXPLOTION + 1:
                 RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
                                { RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, light, o->Angle[0], frame % 4 * 0.25f, 0.f, 0.25f, 1.f); });

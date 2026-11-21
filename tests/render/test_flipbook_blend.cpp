@@ -2,6 +2,7 @@
 
 #include "Render/Effects/FlipbookBlend.h"
 
+#include <initializer_list>
 #include <limits>
 
 namespace
@@ -72,4 +73,37 @@ TEST_CASE("a whole phase shows its frame alone [render][flipbook_blend]")
     const Flipbook::Frames frames = Flipbook::Split(5.0f, 16);
     CHECK(frames.frame == 5);
     CHECK(frames.weight == 0.0f);
+}
+
+TEST_CASE("an explosion never blends into the white cells past its sheet's frames [render][flipbook_blend]")
+{
+    // BITMAP_EXPLOTION and BITMAP_EXPLOTION_MONO: `(20 - LifeTime) / 2` while LifeTime > 0.
+    for (const float step : {1.0f, 0.37f, 0.25f, 0.1f})
+    {
+        for (float life = 20.0f; life > 0.0f; life -= step)
+        {
+            const float phase = (20.0f - life) / 2.0f;
+            const Flipbook::Frames frames = Flipbook::Split(phase, Flipbook::kExplosionSheetFrames);
+            CHECK(frames.frame == static_cast<int>(phase));
+            CHECK(frames.next < Flipbook::kExplosionSheetFrames);
+        }
+    }
+}
+
+TEST_CASE("an explosion that lingers holds its last fire frame [render][flipbook_blend]")
+{
+    // SubType 2 keeps Life = 1 for its last ten ticks: phase (20 - 1) / 2.
+    const Flipbook::Frames frames = Flipbook::Split(9.5f, Flipbook::kExplosionSheetFrames);
+    CHECK(frames.frame == 9);
+    CHECK(frames.next == 9);
+    CHECK(frames.weight == 0.0f);
+    // The frame before still blends into the last one.
+    CHECK(Flipbook::Split(8.5f, Flipbook::kExplosionSheetFrames).next == 9);
+}
+
+TEST_CASE("the Sahamutt explosion blends over its whole sheet [render][flipbook_blend]")
+{
+    // BITMAP_SUMMON_SAHAMUTT_EXPLOSION: `16 - LifeTime`.
+    CHECK(Flipbook::Split(14.5f, Flipbook::kSahamuttExplosionSheetFrames).next == 15);
+    CHECK(Flipbook::Split(15.2f, Flipbook::kSahamuttExplosionSheetFrames).weight == 0.0f);
 }
