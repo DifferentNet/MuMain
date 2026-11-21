@@ -12,6 +12,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/HUD/ItemHotKey.h"
 #include "UI/HUD/LiveHud.h"
+#include "UI/HUD/LiveHudTest.h"
 #include "UI/HUD/SkillList.h"
 
 #include <memory>
@@ -110,6 +111,8 @@ namespace mu::ui::window
 
         bool m_bExpEffect;
         DWORD m_dwExpEffectTime;
+        // How many EXP gains came (SetGetExp(), SetGetExp_Wide()): the live HUD's spark flares on each.
+        std::uint32_t m_uExpGains = 0;
 
         __int64 m_dwPreExp;
         __int64 m_dwGetExp;
@@ -245,6 +248,7 @@ namespace mu::ui::window
         const Rml::ElementDocument* m_pSyncedDocument = nullptr;
         bool m_bSyncedPhoneHud = false;
         UI::HUD::LiveHud m_LiveHud;
+        UI::HUD::LiveHudTest::CooldownPlayback m_LiveHudTestCooldown;
         // The HUD, and its top-right button row on the same model: a document of its own so it
         // stacks under the windows docked over that corner while the bars stay over them
         // (RmlStackingOrder.cpp).

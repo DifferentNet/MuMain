@@ -8,6 +8,8 @@ namespace UI::HUD::LiveHudTest
 {
 namespace
 {
+constexpr double MillisecondsPerSecond = 1000.0;
+
 // The value after a gauge's or the cooldown's name: a finite number, nothing after it but spaces.
 std::optional<float> ParseNumber(std::wstring_view text)
 {
@@ -90,6 +92,7 @@ bool Apply(Overrides& overrides, std::wstring_view arguments)
         if (*number < 0.f)
             return false;
         overrides.cooldownSeconds = *number;
+        ++overrides.cooldowns;
         return true;
     }
     std::optional<float>* gauge = GaugeByName(overrides, name);
@@ -97,5 +100,21 @@ bool Apply(Overrides& overrides, std::wstring_view arguments)
         return false;
     *gauge = *number;
     return true;
+}
+
+std::optional<CooldownLeft> CooldownPlayback::At(const Overrides& overrides, double now)
+{
+    if (overrides.cooldowns != m_seen)
+    {
+        m_seen = overrides.cooldowns;
+        m_start = now;
+    }
+    if (!overrides.cooldownSeconds || *overrides.cooldownSeconds <= 0.f)
+        return std::nullopt;
+    const double length = *overrides.cooldownSeconds;
+    const double left = length - (now - m_start);
+    if (left <= 0.0)
+        return std::nullopt;
+    return CooldownLeft{static_cast<float>(left / length), static_cast<int>(std::ceil(left * MillisecondsPerSecond))};
 }
 } // namespace UI::HUD::LiveHudTest

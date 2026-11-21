@@ -1,6 +1,7 @@
 #include "UI/HUD/LiveGaugeMesh.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -40,6 +41,9 @@ constexpr float ArcLastV = 0.95f;
 // The halo's even cuts round the gem; the outline's corners are cuts too.
 constexpr int HaloSegments = 48;
 constexpr float FullTurnDegrees = 360.f;
+constexpr float HalfTurnDegrees = 180.f;
+// 12 o'clock in screen angles, where the cooldown's hand starts.
+constexpr float NoonDegrees = 270.f;
 
 // A grey at `shade` (0..1), opaque.
 std::uint32_t Grey(float shade)
@@ -506,6 +510,110 @@ void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const Halo
         }
         inner0 = inner1;
         outer0 = outer1;
+    }
+}
+
+void BuildSweep(const Box& rect, float remaining, std::uint32_t colour, std::vector<Vertex>& out)
+{
+    out.clear();
+    const float share = std::clamp(remaining, 0.f, 1.f);
+    if (share <= 0.f || rect.width <= 0.f || rect.height <= 0.f)
+        return;
+
+    const float halfWidth = rect.width / 2.f;
+    const float halfHeight = rect.height / 2.f;
+    const Point centre{rect.left + halfWidth, rect.top + halfHeight};
+    // What is left runs from the hand to 12 o'clock a turn on, cut at the rect's corners so each part ends on one side.
+    const float to = NoonDegrees + FullTurnDegrees;
+    const float from = to - share * FullTurnDegrees;
+    const float corner = std::atan2(halfHeight, halfWidth) / DegreesToRadians;
+    std::array<float, 10> cuts{};
+    std::size_t count = 0;
+    cuts[count++] = from;
+    for (const float turn : {0.f, FullTurnDegrees})
+    {
+        for (const float degrees :
+             {corner, HalfTurnDegrees - corner, HalfTurnDegrees + corner, FullTurnDegrees - corner})
+        {
+            const float cut = degrees + turn;
+            if (cut > from + AngleEpsilon && cut < to - AngleEpsilon)
+                cuts[count++] = cut;
+        }
+    }
+    std::sort(cuts.begin() + 1, cuts.begin() + count);
+    cuts[count++] = to;
+
+    // Where the ray at `degrees` leaves the rect.
+    const auto edgeAt = [&](float degrees)
+    {
+        const Point direction = Direction(degrees);
+        const float reachX = std::fabs(direction.x) > std::numeric_limits<float>::epsilon()
+                                 ? halfWidth / std::fabs(direction.x)
+                                 : std::numeric_limits<float>::max();
+        const float reachY = std::fabs(direction.y) > std::numeric_limits<float>::epsilon()
+                                 ? halfHeight / std::fabs(direction.y)
+                                 : std::numeric_limits<float>::max();
+        const float reach = std::min(reachX, reachY);
+        return Point{std::clamp(centre.x + reach * direction.x, rect.left, rect.left + rect.width),
+                     std::clamp(centre.y + reach * direction.y, rect.top, rect.top + rect.height)};
+    };
+
+    Point previous = edgeAt(cuts[0]);
+    for (std::size_t i = 1; i < count; ++i)
+    {
+        const Point next = edgeAt(cuts[i]);
+        if (cuts[i] - cuts[i - 1] > AngleEpsilon)
+        {
+            out.push_back({centre.x, centre.y, 0.f, 0.f, colour});
+            out.push_back({previous.x, previous.y, 0.f, 0.f, colour});
+            out.push_back({next.x, next.y, 0.f, 0.f, colour});
+            out.push_back({centre.x, centre.y, 0.f, 0.f, colour});
+        }
+        previous = next;
+    }
+}
+
+void BuildGlow(float centreX, float centreY, float radius, std::uint32_t colour, float strength,
+               std::vector<Vertex>& out)
+{
+    out.clear();
+    if (radius <= 0.f || strength <= 0.f)
+        return;
+    const std::uint32_t lit = Scaled(colour, strength);
+    for (int segment = 0; segment < GlowSegments; ++segment)
+    {
+        const Point first = Direction(FullTurnDegrees * static_cast<float>(segment) / GlowSegments);
+        const Point last = Direction(FullTurnDegrees * static_cast<float>(segment + 1) / GlowSegments);
+        out.push_back({centreX, centreY, 0.f, 0.f, lit});
+        out.push_back({centreX + radius * first.x, centreY + radius * first.y, 0.f, 0.f, 0u});
+        out.push_back({centreX + radius * last.x, centreY + radius * last.y, 0.f, 0.f, 0u});
+        out.push_back({centreX, centreY, 0.f, 0.f, lit});
+    }
+}
+
+void AppendBand(const Box& box, float phase, float halfWidth, std::uint32_t colour, float strength,
+                std::vector<Vertex>& out)
+{
+    if (phase < 0.f || phase > 1.f || halfWidth <= 0.f || strength <= 0.f || box.width <= 0.f || box.height <= 0.f)
+        return;
+    const float line = box.left - halfWidth + phase * (box.width + 2.f * halfWidth);
+    const float right = box.left + box.width;
+    const float bottom = box.top + box.height;
+    // The band's strength at `x`: full on the line, none at its edges.
+    const auto shareAt = [&](float x) { return std::clamp(1.f - std::fabs(x - line) / halfWidth, 0.f, 1.f); };
+    // Each half from its edge to the line, cut to the box.
+    for (const float edge : {line - halfWidth, line + halfWidth})
+    {
+        const float x0 = std::clamp(std::min(edge, line), box.left, right);
+        const float x1 = std::clamp(std::max(edge, line), box.left, right);
+        if (x1 - x0 <= PixelEpsilon)
+            continue;
+        const std::uint32_t colour0 = Scaled(colour, strength * shareAt(x0));
+        const std::uint32_t colour1 = Scaled(colour, strength * shareAt(x1));
+        out.push_back({x0, box.top, 0.f, 0.f, colour0});
+        out.push_back({x0, bottom, 0.f, 0.f, colour0});
+        out.push_back({x1, bottom, 0.f, 0.f, colour1});
+        out.push_back({x1, box.top, 0.f, 0.f, colour1});
     }
 }
 } // namespace UI::HUD::LiveGauge

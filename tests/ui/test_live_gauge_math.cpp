@@ -293,6 +293,84 @@ TEST_CASE("a level-up counts only the same hero's level rising [ui][live_gauge]"
     CHECK_FALSE(levels.Update(2, 40));
 }
 
+TEST_CASE("a cooldown shows its whole seconds left, rounded up, until its last second [ui][live_gauge]")
+{
+    CHECK(CooldownSeconds(5000) == 5);
+    CHECK(CooldownSeconds(4001) == 5);
+    CHECK(CooldownSeconds(4000) == 4);
+    CHECK(CooldownSeconds(3500) == 4);
+    CHECK(CooldownSeconds(2001) == 3);
+    CHECK(CooldownSeconds(2000) == 2);
+    CHECK(CooldownSeconds(1001) == 2);
+    CHECK(CooldownSeconds(1000) == 0);
+    CHECK(CooldownSeconds(1) == 0);
+    CHECK(CooldownSeconds(0) == 0);
+    CHECK(CooldownSeconds(-500) == 0);
+    CHECK(CooldownSeconds(60000) == 60);
+
+    // A 5 s cooldown counted down frame by frame: 5, 4, 3, 2, then no number, each a change of the text.
+    std::vector<int> shown;
+    for (int ms = 5000; ms >= 0; ms -= 16)
+    {
+        const int seconds = CooldownSeconds(ms);
+        if (shown.empty() || shown.back() != seconds)
+            shown.push_back(seconds);
+    }
+    CHECK(shown == std::vector<int>{5, 4, 3, 2, 0});
+}
+
+TEST_CASE("the EXP spark breathes between 0.65 and 1 on its period [ui][live_gauge]")
+{
+    constexpr float Period = 1.4f;
+    float lowest = 2.f;
+    float highest = -1.f;
+    for (int step = 0; step <= 1400; ++step)
+    {
+        const double t = step * 0.001;
+        const float breath = SparkBreath(t, Period);
+        lowest = std::min(lowest, breath);
+        highest = std::max(highest, breath);
+        CHECK(SparkBreath(t + Period, Period) == doctest::Approx(breath).epsilon(1e-4));
+    }
+    CHECK(lowest == doctest::Approx(0.65f).epsilon(1e-3));
+    CHECK(highest == doctest::Approx(1.f).epsilon(1e-3));
+    CHECK(SparkBreath(0.0, Period) == doctest::Approx(0.825f));
+    // A long uptime keeps the same breath.
+    CHECK(SparkBreath(1.4e5 + 0.35, Period) == doctest::Approx(1.f).epsilon(1e-3));
+    CHECK(SparkBreath(3.0, 0.f) == doctest::Approx(1.f));
+}
+
+TEST_CASE("an EXP gain's flare falls from 1 to 0 over its time, fast at first [ui][live_gauge]")
+{
+    constexpr float Time = 0.8f;
+    CHECK(FlareLeft(0.0, Time) == doctest::Approx(1.f));
+    CHECK(FlareLeft(0.2, Time) == doctest::Approx(0.5625f));
+    CHECK(FlareLeft(0.4, Time) == doctest::Approx(0.25f));
+    CHECK(FlareLeft(0.8, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(5.0, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(-0.1, Time) == doctest::Approx(0.f));
+    CHECK(FlareLeft(0.1, 0.f) == doctest::Approx(0.f));
+    float last = 2.f;
+    for (int step = 0; step < 80; ++step)
+    {
+        const float left = FlareLeft(step * 0.01, Time);
+        CHECK(left < last);
+        last = left;
+    }
+}
+
+TEST_CASE("a one-off run goes 0 to 1 over its time and is -1 outside it [ui][live_gauge]")
+{
+    constexpr float Run = 0.9f;
+    CHECK(RunPhase(0.0, Run) == doctest::Approx(0.f));
+    CHECK(RunPhase(0.45, Run) == doctest::Approx(0.5f));
+    CHECK(RunPhase(0.89, Run) == doctest::Approx(0.98889f).epsilon(1e-3));
+    CHECK(RunPhase(0.9, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(3.0, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(-0.01, Run) == doctest::Approx(-1.f));
+    CHECK(RunPhase(0.1, 0.f) == doctest::Approx(-1.f));
+}
+
 TEST_CASE("a gem outline is a convex polygon in percent, or the octagon [ui][live_gauge]")
 {
     const std::vector<OutlinePoint> octagon = DefaultOutline();
@@ -442,6 +520,7 @@ TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off cle
     CHECK(*overrides.skillMana == doctest::Approx(0.f));
     CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
     CHECK(*overrides.poisoned);
+    CHECK(overrides.cooldowns == 1);
     CHECK(overrides.expGains == 2);
     CHECK(overrides.levelUps == 1);
 
@@ -459,6 +538,7 @@ TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off cle
     }
     CHECK(*overrides.life == doctest::Approx(0.25f));
     CHECK(*overrides.cooldownSeconds == doctest::Approx(3.5f));
+    CHECK(overrides.cooldowns == 1);
     CHECK(overrides.expGains == 2);
 
     CHECK(Apply(overrides, L"off"));
@@ -468,6 +548,52 @@ TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off cle
     CHECK_FALSE(overrides.skillMana.has_value());
     CHECK_FALSE(overrides.poisoned.has_value());
     CHECK_FALSE(overrides.cooldownSeconds.has_value());
+    CHECK(overrides.cooldowns == 0);
     CHECK(overrides.expGains == 0);
     CHECK(overrides.levelUps == 0);
+}
+
+TEST_CASE("$hudtest cd plays its cooldown from when it is first seen, each request afresh [ui][live_gauge]")
+{
+    using UI::HUD::LiveHudTest::Apply;
+    using UI::HUD::LiveHudTest::CooldownPlayback;
+    using UI::HUD::LiveHudTest::Overrides;
+
+    Overrides overrides;
+    CooldownPlayback playback;
+    CHECK_FALSE(playback.At(overrides, 1.0).has_value());
+
+    REQUIRE(Apply(overrides, L"cd 5"));
+    auto left = playback.At(overrides, 10.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    CHECK(left->remainingMs == 5000);
+    left = playback.At(overrides, 12.5);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(0.5f));
+    CHECK(left->remainingMs == 2500);
+    left = playback.At(overrides, 14.9995);
+    REQUIRE(left.has_value());
+    CHECK(left->remainingMs == 1);
+    CHECK_FALSE(playback.At(overrides, 15.0).has_value());
+    CHECK_FALSE(playback.At(overrides, 30.0).has_value());
+
+    // The same request again starts over when it is seen.
+    REQUIRE(Apply(overrides, L"cd 5"));
+    left = playback.At(overrides, 40.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    // A new length cuts the running one short.
+    REQUIRE(Apply(overrides, L"cd 2"));
+    left = playback.At(overrides, 41.0);
+    REQUIRE(left.has_value());
+    CHECK(left->fraction == doctest::Approx(1.f));
+    CHECK(left->remainingMs == 2000);
+    REQUIRE(Apply(overrides, L"cd 0"));
+    CHECK_FALSE(playback.At(overrides, 41.5).has_value());
+
+    REQUIRE(Apply(overrides, L"cd 5"));
+    CHECK(playback.At(overrides, 50.0).has_value());
+    REQUIRE(Apply(overrides, L"off"));
+    CHECK_FALSE(playback.At(overrides, 50.5).has_value());
 }

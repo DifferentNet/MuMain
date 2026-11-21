@@ -717,6 +717,12 @@ namespace
 
         return iSkillDelay / (float)iSkillMaxDelay;
     }
+
+    // The milliseconds left of the cooldown ComputeSkillCooldownFraction() shows; 0 while it shows none.
+    int ComputeSkillCooldownMs(int iIndex)
+    {
+        return ComputeSkillCooldownFraction(iIndex) > 0.f ? CharacterAttribute->SkillDelay[iIndex] : 0;
+    }
 }
 
 namespace
@@ -860,6 +866,17 @@ float mu::ui::window::CSkillList::GetHotKeyCooldownFraction(int iHotKey)
 float mu::ui::window::CSkillList::GetCurrentSkillCooldownFraction()
 {
     return ComputeSkillCooldownFraction(Hero->CurrentSkill);
+}
+
+int mu::ui::window::CSkillList::GetHotKeySlotCooldownMs(int iSlotIndex)
+{
+    const int iHotKey = SlotHotKey(iSlotIndex);
+    return IsHotKeyShown(iHotKey) ? ComputeSkillCooldownMs(m_iHotKeySkillType[iHotKey]) : 0;
+}
+
+int mu::ui::window::CSkillList::GetCurrentSkillCooldownMs()
+{
+    return ComputeSkillCooldownMs(Hero->CurrentSkill);
 }
 
 // Click/hover entry points bound from main_frame.rml's data-event-click/mouseover/mouseout (CMainFrameWindow::BuildRmlUi()).

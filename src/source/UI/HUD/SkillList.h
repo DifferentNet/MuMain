@@ -95,6 +95,9 @@ namespace mu::ui::window
         // Per-slot cooldown fraction for the compact hotkey row + current-skill slot (0 = ready).
         float GetHotKeySlotCooldownFraction(int iSlotIndex);
         float GetCurrentSkillCooldownFraction();
+        // The same cooldowns' milliseconds left (0 = ready), for the live HUD's seconds (UI/HUD/LiveHud.h).
+        int GetHotKeySlotCooldownMs(int iSlotIndex);
+        int GetCurrentSkillCooldownMs();
 
         // The slot helpers follow the bar's set, which switches with the current skill (a cast from
         // the MU Helper, too). The touch controls' skill buttons keep their set, so they ask by the

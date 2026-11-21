@@ -4,7 +4,9 @@
 #include "UI/HUD/KeyHint.h"
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <string>
+#include <string_view>
 #include "I18N/All.h"
 
 #include "UI/HUD/MainFrameWindow.h"	// self
@@ -600,7 +602,33 @@ void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* documen
     inputs.skillMana = overrides.skillMana.value_or(inputs.skillMana);
     inputs.poisoned = overrides.poisoned.value_or(inputs.poisoned);
     inputs.effects = GameConfig::GetInstance().GetHudEffects();
-    m_LiveHud.Sync(document, inputs, Rml::GetSystemInterface()->GetElapsedTime());
+
+    // The skill row's cooldowns, or $hudtest cd's on all six slots.
+    const double now = Rml::GetSystemInterface()->GetElapsedTime();
+    for (int i = 0; i < 5; ++i)
+    {
+        const int hotKey = g_pSkillList->GetHotKeySlotNumber(i);
+        inputs.cooldowns[i] = {g_pSkillList->GetHotKeySlotCooldownFraction(i), g_pSkillList->GetHotKeySlotCooldownMs(i),
+                               hotKey >= 0 ? g_pSkillList->GetHotKey(hotKey) : -1};
+    }
+    inputs.cooldowns[5] = {g_pSkillList->GetCurrentSkillCooldownFraction(), g_pSkillList->GetCurrentSkillCooldownMs(),
+                           Hero->CurrentSkill};
+    if (const auto testCooldown = m_LiveHudTestCooldown.At(overrides, now))
+    {
+        for (UI::HUD::LiveHud::Inputs::Cooldown& cooldown : inputs.cooldowns)
+        {
+            cooldown.fraction = testCooldown->fraction;
+            cooldown.remainingMs = testCooldown->remainingMs;
+        }
+    }
+
+    // The EXP bar as SyncExperience() just filled it; $hudtest exp and lvl count on top of the hero's own gains and
+    // level, so each request plays once and `off` plays nothing.
+    inputs.expFill = m_RmlView.GetModel().expFraction;
+    inputs.expGains = m_uExpGains + static_cast<std::uint32_t>(overrides.expGains);
+    inputs.hero = std::hash<std::wstring_view>{}(std::wstring_view(Hero->ID));
+    inputs.level = UI::HUD::HeroGauges::ReadExperience().level + overrides.levelUps;
+    m_LiveHud.Sync(document, inputs, now);
 }
 
 void mu::ui::window::CMainFrameWindow::SyncGauges()
@@ -1060,6 +1088,7 @@ void mu::ui::window::CMainFrameWindow::SetGetExp_Wide(__int64 dwGetExp)
     {
         m_bExpEffect = true;
         m_dwExpEffectTime = timeGetTime();
+        ++m_uExpGains;
     }
 }
 
@@ -1076,6 +1105,7 @@ void mu::ui::window::CMainFrameWindow::SetGetExp(__int64 dwGetExp)
     {
         m_bExpEffect = true;
         m_dwExpEffectTime = timeGetTime();
+        ++m_uExpGains;
     }
 }
 

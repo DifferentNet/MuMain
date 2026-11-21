@@ -35,6 +35,13 @@ constexpr float HaloPerLevel = 0.25f;
 constexpr float HaloPulseLow = 0.25f;
 constexpr float HaloPulseHigh = 0.60f;
 
+constexpr int MillisecondsPerSecond = 1000;
+// A cooldown's last whole second shows no number.
+constexpr int FirstHiddenSecond = 1;
+
+constexpr float BreathLow = 0.65f;
+constexpr float BreathHigh = 1.f;
+
 constexpr float PercentScale = 100.f;
 constexpr std::size_t MinOutlinePoints = 3;
 
@@ -328,5 +335,36 @@ bool LevelUpDetector::Update(std::uint64_t hero, std::int64_t level)
     const bool rose = level > m_level;
     m_level = level;
     return rose;
+}
+
+int CooldownSeconds(int remainingMs)
+{
+    if (remainingMs <= 0)
+        return 0;
+    const int seconds = remainingMs / MillisecondsPerSecond + (remainingMs % MillisecondsPerSecond != 0 ? 1 : 0);
+    return seconds > FirstHiddenSecond ? seconds : 0;
+}
+
+float SparkBreath(double t, float period)
+{
+    if (period <= 0.f)
+        return BreathHigh;
+    const double wave = 0.5 + 0.5 * std::sin(TwoPi * Fraction(t / period));
+    return BreathLow + (BreathHigh - BreathLow) * static_cast<float>(wave);
+}
+
+float FlareLeft(double age, float duration)
+{
+    if (age < 0.0 || duration <= 0.f || age >= duration)
+        return 0.f;
+    const float left = 1.f - static_cast<float>(age / duration);
+    return left * left;
+}
+
+float RunPhase(double age, float duration)
+{
+    if (age < 0.0 || duration <= 0.f || age >= duration)
+        return -1.f;
+    return static_cast<float>(age / duration);
 }
 } // namespace UI::HUD::LiveGauge

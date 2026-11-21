@@ -4,7 +4,9 @@
 #include "UI/HUD/LiveGaugeMesh.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -24,13 +26,18 @@ class AdditiveMeshElement;
 // fills their meshes (<additive-mesh>) from the hero's values: liquid gems with an eased level, a damage ghost on the
 // life gem, a wave and slosh, a crest, a glass highlight and a sheen, a halo round each gem that pulses with the life
 // gem while life is low, and the SD and AG rings round them, the SD one with its own damage ghost
-// (UI/HUD/LiveGaugeMesh.h). Shapes, shades and timings come from the theme's [LiveHud] section
-// (LiveGauge::LiveHudConfig). CMainFrameWindow owns it.
+// (UI/HUD/LiveGaugeMesh.h). On the skill row each slot gets a dark sweep over what is left of its cooldown, the whole
+// seconds left and a flash when it is ready again; on the EXP bar a spark breathes at the fill's end, flares on each
+// EXP gain, and a level-up sends a band of light across the bar and the sheen over both gems. Shapes, shades and
+// timings come from the theme's [LiveHud] section (LiveGauge::LiveHudConfig). CMainFrameWindow owns it.
 namespace UI::HUD
 {
 class LiveHud
 {
 public:
+    // The skill slots with a sweep: the hotkey row's five, then the current skill's.
+    static constexpr std::size_t SkillSlotCount = 6;
+
     // The hero's values, 0..1 of each maximum.
     struct Inputs
     {
@@ -39,8 +46,28 @@ public:
         float shield = 0.f;
         float skillMana = 0.f;
         bool poisoned = false;
+        // A skill slot's cooldown: the share of it left (0 = ready) and its milliseconds left, and the skill the slot
+        // shows (-1: none). Another skill in the slot (the row's other set, another current skill) is no cooldown
+        // ending, so it makes no ready flash.
+        struct Cooldown
+        {
+            float fraction = 0.f;
+            int remainingMs = 0;
+            int skill = -1;
+        };
+        // main_frame.rml's skill_slot_0..4, then current_skill_slot.
+        std::array<Cooldown, SkillSlotCount> cooldowns{};
+        // The EXP bar's fill, 0..1 of the bar (main_frame.rml's exp_fraction).
+        float expFill = 0.f;
+        // How many EXP gains the hero has had: each new one flares the spark.
+        std::uint32_t expGains = 0;
+        // The hero (any value that differs between characters) and its level: the level rising for the same hero
+        // plays the level-up cue.
+        std::uint64_t hero = 0;
+        std::int64_t level = 0;
         // Options > Interface "HUD animation" (config.ini [UI] HudEffects). Off: the liquid lies flat, and there is
-        // no sheen and no low-life pulse; the levels still ease and the ghosts still drain.
+        // no sheen, no low-life pulse, no ready flash and no level-up cue, and the EXP spark stands still without its
+        // flare; the levels still ease, the ghosts still drain, and the cooldowns still show their sweep and seconds.
         bool effects = true;
     };
 
@@ -135,6 +162,8 @@ private:
         // The low-life pulse, 0..1, while `pulsing`.
         bool pulsing = false;
         float pulse = 0.f;
+        // The level-up's sheen, 0..1 while it crosses the gem in place of the usual one; -1 otherwise.
+        float levelUp = -1.f;
     };
 
     // One gem: its elements (main_frame.rml's orb_<name>_*), its motion and its reused geometry.
@@ -176,14 +205,52 @@ private:
         GemCount,
     };
 
+    // A skill slot's live parts (main_frame.rml's .skill-sweep, .skill-ready and .skill-cd-secs in the slot): the
+    // sweep, the ready flash (the slot's class `ready`, which main_frame_live.rcss animates on .skill-ready) and the
+    // seconds left.
+    struct SkillSlot
+    {
+        Rml::Element* slot = nullptr;
+        Render::RmlUi::AdditiveMeshElement* sweep = nullptr;
+        Rml::Element* seconds = nullptr;
+        // The skill the flash follows: it starts again with another one.
+        int skill = -1;
+        LiveGauge::ReadyFlash flash;
+        // When the `ready` class comes off again, while it is on.
+        std::optional<double> readyUntil;
+        // The number the slot shows (0: none); -1 until it is first set.
+        int shownSeconds = -1;
+        // What the sweep was last built from; -1 until it is first built.
+        LiveGauge::Box sweepBox;
+        float sweepFraction = -1.f;
+        std::vector<LiveGauge::Vertex> quads;
+    };
+
+    // What the EXP spark (main_frame.rml's exp_spark) was last built from.
+    struct SparkKey
+    {
+        LiveGauge::Box box;
+        float fill = -1.f;
+        float radius = -1.f;
+        float strength = -1.f;
+        float bandPhase = -2.f;
+
+        bool operator==(const SparkKey&) const = default;
+    };
+
     void Bind(Rml::ElementDocument* document);
     bool BindGem(Rml::ElementDocument* document, const char* name, const char* arcName, Gem& gem);
+    void BindSkills(Rml::ElementDocument* document);
     void ReadConfig();
     static void Advance(Motion& motion, float target, double now, float dt);
     void Draw(Gem& gem, const Look& look, double tick);
     void DrawUnder(Gem& gem);
     void DrawHalo(Gem& gem, const Look& look);
     void DrawArc(Gem& gem);
+    // Notices this tick's EXP gain and level-up.
+    void Cue(const Inputs& inputs, double tick);
+    void DrawSkill(SkillSlot& slot, const Inputs::Cooldown& cooldown, bool effects, double tick);
+    void DrawSpark(const Inputs& inputs, float levelUp, double tick);
     [[nodiscard]] LiveGauge::Ring TrackRing(const LiveGauge::Box& gem, const LiveGauge::Box& ring) const;
 
     Rml::ElementDocument* m_document = nullptr;
@@ -193,5 +260,16 @@ private:
     double m_lastTick = -1.0;
     LiveGauge::LiveHudConfig m_config;
     std::array<Gem, GemCount> m_gems;
+    std::array<SkillSlot, SkillSlotCount> m_slots;
+
+    Render::RmlUi::AdditiveMeshElement* m_spark = nullptr;
+    std::vector<LiveGauge::Vertex> m_sparkQuads;
+    SparkKey m_sparkKey;
+    // The EXP gains and the level seen so far, and when the latest flare and level-up cue started.
+    bool m_cuesStarted = false;
+    std::uint32_t m_expGains = 0;
+    LiveGauge::LevelUpDetector m_levelUp;
+    std::optional<double> m_flareStart;
+    std::optional<double> m_levelUpStart;
 };
 } // namespace UI::HUD

@@ -1,8 +1,9 @@
 #pragma once
 
 // The live HUD's numbers (a theme with LiveHud=1, UI/HUD/LiveHud.h): how a gem's shown level follows the hero's,
-// the damage ghost, the liquid's wave and slosh, the SD/AG arcs' span, the low-life pulse, the skills' ready flash,
-// the level-up cue, and the theme's [LiveHud] settings. Pure: no RmlUi, no game state.
+// the damage ghost, the liquid's wave and slosh, the SD/AG arcs' span, the low-life pulse, the skills' ready flash and
+// seconds left, the EXP spark's breathing and flare, the level-up cue, and the theme's [LiveHud] settings. Pure: no
+// RmlUi, no game state.
 
 #include <cstdint>
 #include <map>
@@ -159,4 +160,19 @@ private:
     std::int64_t m_level = 0;
     bool m_started = false;
 };
+
+// The whole seconds a skill slot shows of a cooldown with `remainingMs` left: rounded up, and none (0) once that would
+// read 1 or less, so a 5 s cooldown counts 5, 4, 3, 2 and its last second shows no number.
+[[nodiscard]] int CooldownSeconds(int remainingMs);
+
+// The EXP spark's breathing at time `t`: 0.65..1 on a sine of `period` seconds; 1 for a period of 0 or less.
+[[nodiscard]] float SparkBreath(double t, float period);
+
+// What is left of a flare `age` seconds after it lit: 1 then, falling to 0 over `duration` (fast at first: the square
+// of the time left's share); 0 before it and after.
+[[nodiscard]] float FlareLeft(double age, float duration);
+
+// How far a one-off run (the level-up band and sheen) has got `age` seconds after it started: 0..1 over `duration`; -1
+// before it and once it is over.
+[[nodiscard]] float RunPhase(double age, float duration);
 } // namespace UI::HUD::LiveGauge

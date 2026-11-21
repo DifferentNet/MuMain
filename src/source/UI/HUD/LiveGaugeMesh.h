@@ -1,8 +1,9 @@
 #pragma once
 
-// The live HUD's gem meshes (UI/HUD/LiveHud.h), built into quads for <additive-mesh>
-// (Render/RmlUi/RmlAdditiveMeshElement.h): four vertices each, top-left, bottom-left, bottom-right, top-right,
-// positions in pixels of the mesh element's border box, u and v 0..1 of the gem's art. Pure: no RmlUi.
+// The live HUD's meshes (UI/HUD/LiveHud.h): the gems, their rings and halos, the skills' cooldown sweep and the EXP
+// spark, built into quads for <additive-mesh> (Render/RmlUi/RmlAdditiveMeshElement.h): four vertices each, top-left,
+// bottom-left, bottom-right, top-right, positions in pixels of the mesh element's border box, u and v 0..1 of the gem's
+// art. Pure: no RmlUi.
 
 #include "Render/Renderer/Overlay2DRecorder.h"
 #include "UI/HUD/LiveGaugeMath.h"
@@ -158,4 +159,25 @@ struct HaloShape
 // cleared first; nothing at strength 0.
 void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const HaloShape& shape, std::uint32_t colour,
                float strength, std::vector<Vertex>& out);
+
+// A skill slot's cooldown shade, drawn plain (SetPlainMesh, blended): the part of `rect` that a hand turning clockwise
+// from 12 o'clock round the rect's centre has yet to pass with `remaining` (0..1) of the turn left, in `colour`. One
+// triangle per side the wedge crosses, each a quad that ends on the centre again. `out` is cleared first; nothing at 0.
+void BuildSweep(const Box& rect, float remaining, std::uint32_t colour, std::vector<Vertex>& out);
+
+// The EXP spark's triangles.
+inline constexpr int GlowSegments = 8;
+
+// A soft round glow, drawn plain and added (SetPlainMesh, additive): a fan of GlowSegments triangles round
+// (centreX, centreY), `colour` times `strength` at the centre and nothing at `radius`. `out` is cleared first; nothing
+// at strength or radius 0.
+void BuildGlow(float centreX, float centreY, float radius, std::uint32_t colour, float strength,
+               std::vector<Vertex>& out);
+
+// A soft upright band across `box`, drawn plain and added: `halfWidth` either side of its centre line, `colour` times
+// `strength` on the line and nothing at its edges, cut to the box. The line runs from `halfWidth` before the box's left
+// edge at `phase` 0 to `halfWidth` past its right one at 1, so the band enters and leaves whole; nothing outside 0..1.
+// Appended to `out`.
+void AppendBand(const Box& box, float phase, float halfWidth, std::uint32_t colour, float strength,
+                std::vector<Vertex>& out);
 } // namespace UI::HUD::LiveGauge

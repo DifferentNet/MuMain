@@ -1,7 +1,8 @@
 /* Skynet's live HUD (theme.ini LiveHud=1, UI/HUD/LiveHud.h), over legacy's main_frame.rcss (linked first): each
    gauge group's gem is 1.2x the original's, cut to an octagon, its liquid drawn by C++ into main_frame.rml's
-   .live-only meshes over a plate that covers the strip's baked sockets. Only what changes is here; potions, skills,
-   buttons and EXP stay where legacy puts them. The meshes' shapes and timings are theme.ini's [LiveHud]. */
+   .live-only meshes over a plate that covers the strip's baked sockets; the skill slots and the EXP bar get their
+   live parts too. Only what changes is here; potions, skills, buttons and EXP stay where legacy puts them. The
+   meshes' shapes and timings are theme.ini's [LiveHud]. */
 
 /* The ring round each gem stands 12.4dp above the strip: the HUD's unit keeps that room clear of windows. */
 #hud_layout { height: 64dp; }
@@ -69,6 +70,45 @@
 
 /* The open skill grid clears the ring. */
 #skill_list { bottom: 65dp; }
+
+/* The skill row's cooldowns: a dark sweep drawn by C++ over the slot replaces the old wipe (the open grid's cells
+   keep theirs), the whole seconds left stand in the middle while two or more remain, and a slot that is ready again
+   flashes for 0.4 s (C++ gives it the class "ready" as long). The flash takes its additive colour down to black, which
+   for an added colour is its opacity going from 1 to 0: the additive-fill decorator does not read opacity. */
+#skill_slots .cooldown-wipe { display: none; }
+.skill-sweep, .skill-ready {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+#skill_slots .ready .skill-ready { animation: 0.4s linear-in-out skill-ready-flash; }
+@keyframes skill-ready-flash {
+	from { decorator: additive-fill(token(hud-ready-flash)); }
+	to { decorator: additive-fill(#000000); }
+}
+.skill-cd-secs {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 100%;
+	height: 14dp;
+	margin-top: -7dp;
+	text-align: center;
+	color: token(hud-cd-secs);
+	font-family: "token(font-body)";
+	font-weight: bold;
+	font-effect: outline(1px #000000);
+	font-size: 14dp;
+	line-height: 14dp;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+/* The EXP bar's spark at the fill's end and the level-up band, drawn by C++ over the track; the glow reaches past it. */
+#exp_spark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
 
 /* The phone's HUD (theme flag "mobile-hud") has no bar: this sheet comes after legacy's phone rules, so it puts back
    what it changed above and hides the gems. */

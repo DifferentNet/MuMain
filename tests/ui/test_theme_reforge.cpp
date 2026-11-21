@@ -1,6 +1,7 @@
 #include <doctest.h>
 
 #include "stdafx.h"
+#include "Render/RmlUi/RmlAdditiveFillDecorator.h"
 #include "UI/HUD/LiveGaugeMath.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/ThemeFileInterface.h"
@@ -913,4 +914,149 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
         document->Close();
         fixture.context->ActivateTheme("mobile-hud", false);
     }
+}
+
+TEST_CASE("the skill row's sweep, seconds and flash and the EXP spark show only in skynet, never on the phone "
+          "[ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+    const auto display = [](Rml::ElementDocument* document, const std::string& selector)
+    { return Fixture::First(document, selector.c_str())->GetComputedValues().display(); };
+    using Rml::Style::Display;
+    const std::array<std::string, 6> slots = {"#skill_slot_0", "#skill_slot_1", "#skill_slot_2",
+                                              "#skill_slot_3", "#skill_slot_4", "#current_skill_slot"};
+    const std::array<std::string, 3> slotParts = {" .skill-sweep", " .skill-ready", " .skill-cd-secs"};
+
+    SUBCASE("legacy and modern hide them and keep the old wipe")
+    {
+        for (const char* name : {"legacy", "modern"})
+        {
+            CAPTURE(name);
+            UI::RmlBridge::SetActiveThemeName(name);
+            auto* document = fixture.LoadThemed(name, "main_frame.rml");
+            for (const std::string& slot : slots)
+            {
+                CAPTURE(slot);
+                for (const std::string& part : slotParts)
+                    CHECK(display(document, slot + part) == Display::None);
+                CHECK(display(document, slot + " .cooldown-wipe") != Display::None);
+            }
+            CHECK(display(document, "#exp_spark") == Display::None);
+            document->Close();
+        }
+    }
+
+    SUBCASE("skynet lays the sweep and the flash over each slot, the seconds across its middle, the spark on the bar")
+    {
+        UI::RmlBridge::SetActiveThemeName("skynet");
+        auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        for (const std::string& slot : slots)
+        {
+            CAPTURE(slot);
+            Rml::Element* box = Fixture::First(document, slot.c_str());
+            const Rml::Vector2f inside = box->GetAbsoluteOffset(Rml::BoxArea::Padding);
+            const Rml::Vector2f size = box->GetBox().GetSize(Rml::BoxArea::Padding);
+            for (const char* part : {" .skill-sweep", " .skill-ready"})
+            {
+                Rml::Element* cover = Fixture::First(document, (slot + part).c_str());
+                CHECK(cover->GetComputedValues().display() != Display::None);
+                CHECK(BorderOffset(*cover).x == doctest::Approx(inside.x));
+                CHECK(BorderOffset(*cover).y == doctest::Approx(inside.y));
+                CHECK(BorderSize(*cover).x == doctest::Approx(size.x));
+                CHECK(BorderSize(*cover).y == doctest::Approx(size.y));
+                CHECK(cover->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
+            }
+            // The sweep takes the old wipe's place on this row.
+            CHECK(display(document, slot + " .cooldown-wipe") == Display::None);
+
+            Rml::Element* seconds = Fixture::First(document, (slot + " .skill-cd-secs").c_str());
+            seconds->SetInnerRML("5");
+            fixture.context->Update();
+            const auto& style = seconds->GetComputedValues();
+            CHECK(style.display() != Display::None);
+            CHECK(style.color() == Rml::Colourb(0xff, 0xf2, 0xcf));
+            CHECK(style.font_weight() == Rml::Style::FontWeight::Bold);
+            CHECK(style.has_font_effect());
+            CHECK(style.text_align() == Rml::Style::TextAlign::Center);
+            CHECK(style.pointer_events() == Rml::Style::PointerEvents::None);
+            CHECK(BorderOffset(*seconds).x == doctest::Approx(inside.x));
+            CHECK(BorderSize(*seconds).x == doctest::Approx(size.x));
+            CHECK(BorderOffset(*seconds).y + BorderSize(*seconds).y / 2.f == doctest::Approx(inside.y + size.y / 2.f));
+        }
+        // The open grid's cells keep their bottom-up wipe.
+        CHECK(display(document, "#skill_grid .cooldown-wipe") != Display::None);
+
+        // The spark's mesh lies over the whole track; its glow reaches past it.
+        Rml::Element* track = Fixture::First(document, "#exp_track");
+        Rml::Element* spark = Fixture::First(document, "#exp_spark");
+        CHECK(spark->GetComputedValues().display() != Display::None);
+        CHECK(spark->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
+        CHECK(BorderOffset(*spark).x == doctest::Approx(track->GetAbsoluteOffset(Rml::BoxArea::Padding).x));
+        CHECK(BorderOffset(*spark).y == doctest::Approx(track->GetAbsoluteOffset(Rml::BoxArea::Padding).y));
+        CHECK(BorderSize(*spark).x == doctest::Approx(track->GetBox().GetSize(Rml::BoxArea::Padding).x));
+        CHECK(BorderSize(*spark).y == doctest::Approx(track->GetBox().GetSize(Rml::BoxArea::Padding).y));
+
+        // A slot ready again flashes once while C++ gives it "ready": its flash layer draws nothing until then.
+        Rml::Element* slot = Fixture::First(document, "#skill_slot_2");
+        Rml::Element* flash = Fixture::First(document, "#skill_slot_2 .skill-ready");
+        CHECK_FALSE(flash->GetComputedValues().has_decorator());
+        CHECK(flash->GetComputedValues().animation() == nullptr);
+        slot->SetClass("ready", true);
+        fixture.context->Update();
+        const Rml::AnimationList* animation = flash->GetComputedValues().animation();
+        REQUIRE(animation != nullptr);
+        REQUIRE(animation->size() == 1);
+        CHECK(animation->front().name == "skill-ready-flash");
+        CHECK(animation->front().duration == doctest::Approx(0.4f));
+        CHECK(animation->front().num_iterations == 1);
+        // The other slots stay dark.
+        CHECK(Fixture::First(document, "#skill_slot_3 .skill-ready")->GetComputedValues().animation() == nullptr);
+        slot->SetClass("ready", false);
+        fixture.context->Update();
+        CHECK(flash->GetComputedValues().animation() == nullptr);
+        document->Close();
+    }
+
+    SUBCASE("the phone's HUD has none of them")
+    {
+        UI::RmlBridge::SetActiveThemeName("skynet");
+        fixture.context->ActivateTheme("mobile-hud", true);
+        auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        for (const std::string& slot : slots)
+        {
+            CAPTURE(slot);
+            for (const std::string& part : slotParts)
+                CHECK(display(document, slot + part) == Display::None);
+        }
+        CHECK(display(document, "#exp_spark") == Display::None);
+        document->Close();
+        fixture.context->ActivateTheme("mobile-hud", false);
+    }
+}
+
+TEST_CASE("a skynet skill slot ready again flashes from the hud-ready-flash colour [ui][rml-theme]")
+{
+    Fixture fixture;
+    // The flash's decorator, as RmlUiRuntime registers it; without it the keyframes hold no decorator. Only this test
+    // registers it, once per process: its instancer is a static that keeps the parsers of the RmlUi it was made in.
+    Render::RmlUi::RegisterAdditiveFillDecorator();
+    fixture.CopyRealInterface();
+    UI::RmlBridge::SetActiveThemeName("skynet");
+    auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+    Rml::Element* slot = Fixture::First(document, "#current_skill_slot");
+    Rml::Element* flash = Fixture::First(document, "#current_skill_slot .skill-ready");
+    CHECK_FALSE(flash->GetComputedValues().has_decorator());
+
+    // Once running it draws the additive colour on its way to black.
+    slot->SetClass("ready", true);
+    fixture.context->Update();
+    REQUIRE(flash->GetComputedValues().has_decorator());
+    const Rml::Property* decorator = flash->GetProperty("decorator");
+    REQUIRE(decorator != nullptr);
+    const auto declarations = decorator->Get<Rml::DecoratorsPtr>();
+    REQUIRE(declarations);
+    REQUIRE(declarations->list.size() == 1);
+    CHECK(declarations->list.front().type == "additive-fill");
+    document->Close();
 }

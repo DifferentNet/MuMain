@@ -622,3 +622,213 @@ TEST_CASE("a gem's halo fans from its outline to the ring, cut at the group's bo
     BuildHalo(GemBox, outline, {centreX, centreY, 0.f, bottom}, Red, 0.5f, quads);
     CHECK(quads.empty());
 }
+
+namespace
+{
+// Legacy's hotkey slot and current-skill slot at 1 px per dp (main_frame.rcss), the second away from the origin.
+constexpr Box HotkeySlot{0.f, 0.f, 32.f, 38.f};
+constexpr Box CurrentSlot{170.f, 8.f, 20.f, 28.f};
+constexpr std::uint32_t SweepShade = 0xCC030406u; // #060403cc
+
+float TriangleArea(const Vertex& a, const Vertex& b, const Vertex& c)
+{
+    return 0.5f * std::fabs((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y));
+}
+
+// What a mesh's quads cover, both triangles of each (indices 0,1,2 and 0,2,3).
+float MeshArea(const std::vector<Vertex>& quads)
+{
+    float area = 0.f;
+    for (std::size_t q = 0; q + 3 < quads.size(); q += 4)
+        area += TriangleArea(quads[q], quads[q + 1], quads[q + 2]) + TriangleArea(quads[q], quads[q + 2], quads[q + 3]);
+    return area;
+}
+
+// Whether (x, y) lies in one of the quads' first triangles (the sweep's second ones are empty).
+bool Covers(const std::vector<Vertex>& quads, float x, float y)
+{
+    for (std::size_t q = 0; q + 3 < quads.size(); q += 4)
+    {
+        const Vertex& a = quads[q];
+        const Vertex& b = quads[q + 1];
+        const Vertex& c = quads[q + 2];
+        const auto side = [&](const Vertex& from, const Vertex& to)
+        { return (to.x - from.x) * (y - from.y) - (to.y - from.y) * (x - from.x); };
+        const float ab = side(a, b);
+        const float bc = side(b, c);
+        const float ca = side(c, a);
+        const bool anyNegative = ab < 0.f || bc < 0.f || ca < 0.f;
+        const bool anyPositive = ab > 0.f || bc > 0.f || ca > 0.f;
+        if (!(anyNegative && anyPositive) && TriangleArea(a, b, c) > 0.f)
+            return true;
+    }
+    return false;
+}
+} // namespace
+
+TEST_CASE("a cooldown sweep covers what is left of the turn from 12 o'clock, cut to the slot [ui][live_gauge]")
+{
+    std::vector<Vertex> quads;
+    for (const Box& slot : {HotkeySlot, CurrentSlot})
+    {
+        const float area = slot.width * slot.height;
+        const float centreX = slot.left + slot.width / 2.f;
+        const float centreY = slot.top + slot.height / 2.f;
+        for (const float remaining : {0.25f, 0.5f, 0.75f, 0.99f, 1.f})
+        {
+            CAPTURE(slot.left);
+            CAPTURE(remaining);
+            BuildSweep(slot, remaining, SweepShade, quads);
+            REQUIRE_FALSE(quads.empty());
+            CHECK(quads.size() % 4 == 0);
+            for (const Vertex& vertex : quads)
+            {
+                CHECK(vertex.x >= slot.left - Near);
+                CHECK(vertex.x <= slot.left + slot.width + Near);
+                CHECK(vertex.y >= slot.top - Near);
+                CHECK(vertex.y <= slot.top + slot.height + Near);
+                CHECK(vertex.abgr == SweepShade);
+            }
+            CHECK(std::fabs(MeshArea(quads) / area - remaining) <= 0.02f);
+        }
+
+        // The quarters a hand from 12 o'clock has passed are open, the rest dark.
+        const float quarterX = slot.width / 4.f;
+        const float quarterY = slot.height / 4.f;
+        BuildSweep(slot, 0.75f, SweepShade, quads);
+        CHECK_FALSE(Covers(quads, centreX + quarterX, centreY - quarterY));
+        CHECK(Covers(quads, centreX + quarterX, centreY + quarterY));
+        CHECK(Covers(quads, centreX - quarterX, centreY + quarterY));
+        CHECK(Covers(quads, centreX - quarterX, centreY - quarterY));
+        BuildSweep(slot, 0.25f, SweepShade, quads);
+        CHECK_FALSE(Covers(quads, centreX + quarterX, centreY - quarterY));
+        CHECK_FALSE(Covers(quads, centreX + quarterX, centreY + quarterY));
+        CHECK_FALSE(Covers(quads, centreX - quarterX, centreY + quarterY));
+        CHECK(Covers(quads, centreX - quarterX, centreY - quarterY));
+        // Just after the start only a sliver right of 12 o'clock is open.
+        BuildSweep(slot, 0.99f, SweepShade, quads);
+        CHECK_FALSE(Covers(quads, centreX + 0.5f, slot.top + 1.f));
+        CHECK(Covers(quads, centreX - 0.5f, slot.top + 1.f));
+        CHECK(Covers(quads, centreX + slot.width / 2.f - 1.f, slot.top + 1.f));
+
+        BuildSweep(slot, 1.f, SweepShade, quads);
+        CHECK(MeshArea(quads) == doctest::Approx(area).epsilon(1e-4));
+        BuildSweep(slot, 3.f, SweepShade, quads);
+        CHECK(MeshArea(quads) == doctest::Approx(area).epsilon(1e-4));
+        BuildSweep(slot, 0.f, SweepShade, quads);
+        CHECK(quads.empty());
+        BuildSweep(slot, -0.5f, SweepShade, quads);
+        CHECK(quads.empty());
+    }
+    BuildSweep({0.f, 0.f, 0.f, 38.f}, 0.5f, SweepShade, quads);
+    CHECK(quads.empty());
+}
+
+TEST_CASE("the EXP spark is an 8-triangle fan, bright at its centre and dark at its rim [ui][live_gauge]")
+{
+    constexpr std::uint32_t Gold = 0xFF78D7FFu; // #ffd778
+    constexpr std::uint32_t HalfGold = 0x803C6C80u;
+    constexpr float CentreX = 120.f;
+    constexpr float CentreY = 2.f;
+    constexpr float Radius = 5.f;
+    std::vector<Vertex> quads;
+    BuildGlow(CentreX, CentreY, Radius, Gold, 0.5f, quads);
+    REQUIRE(quads.size() == static_cast<std::size_t>(GlowSegments) * 4);
+    for (std::size_t q = 0; q < quads.size(); q += 4)
+    {
+        CAPTURE(q / 4);
+        for (const std::size_t centre : {q, q + 3})
+        {
+            CHECK(quads[centre].x == doctest::Approx(CentreX));
+            CHECK(quads[centre].y == doctest::Approx(CentreY));
+            CHECK(quads[centre].abgr == HalfGold);
+        }
+        for (const std::size_t rim : {q + 1, q + 2})
+        {
+            CHECK(std::hypot(quads[rim].x - CentreX, quads[rim].y - CentreY) == doctest::Approx(Radius));
+            CHECK(quads[rim].abgr == 0u);
+        }
+    }
+    // Together the triangles make the whole octagon round the centre.
+    CHECK(MeshArea(quads) == doctest::Approx(2.f * std::sqrt(2.f) * Radius * Radius).epsilon(1e-4));
+
+    BuildGlow(CentreX, CentreY, Radius, Gold, 2.f, quads);
+    CHECK(quads[0].abgr == Gold);
+    BuildGlow(CentreX, CentreY, Radius, Gold, 0.f, quads);
+    CHECK(quads.empty());
+    BuildGlow(CentreX, CentreY, 0.f, Gold, 1.f, quads);
+    CHECK(quads.empty());
+}
+
+TEST_CASE("the level-up band crosses the EXP bar left to right, cut to the bar [ui][live_gauge]")
+{
+    constexpr Box Track{2.f, 3.f, 629.f, 4.f};
+    constexpr float HalfWidth = 16.f;
+    constexpr std::uint32_t Gold = 0xFF78D7FFu;
+    const std::uint32_t peakRed = 204u; // 255 * 0.8
+    std::vector<Vertex> quads;
+
+    // Midway: both halves whole, bright on the line, dark at the edges.
+    AppendBand(Track, 0.5f, HalfWidth, Gold, 0.8f, quads);
+    REQUIRE(quads.size() == 8);
+    const float line = Track.left - HalfWidth + 0.5f * (Track.width + 2.f * HalfWidth);
+    CHECK(quads[0].x == doctest::Approx(line - HalfWidth));
+    CHECK(Channel(quads[0].abgr) == 0u);
+    CHECK(quads[3].x == doctest::Approx(line));
+    CHECK(Channel(quads[3].abgr) == peakRed);
+    CHECK(quads[4].x == doctest::Approx(line));
+    CHECK(Channel(quads[4].abgr) == peakRed);
+    CHECK(quads[7].x == doctest::Approx(line + HalfWidth));
+    CHECK(Channel(quads[7].abgr) == 0u);
+    for (const Vertex& vertex : quads)
+    {
+        CHECK((vertex.y == doctest::Approx(Track.top) || vertex.y == doctest::Approx(Track.top + Track.height)));
+    }
+
+    // It moves right as the phase runs, and is cut at the bar's ends with the strength it has there.
+    float lastLine = -1.0e9f;
+    for (const float phase : {0.01f, 0.2f, 0.4f, 0.6f, 0.8f, 0.99f})
+    {
+        CAPTURE(phase);
+        quads.clear();
+        AppendBand(Track, phase, HalfWidth, Gold, 0.8f, quads);
+        REQUIRE_FALSE(quads.empty());
+        CHECK(quads.size() % 4 == 0);
+        float brightestX = 0.f;
+        std::uint32_t brightest = 0u;
+        for (const Vertex& vertex : quads)
+        {
+            CHECK(vertex.x >= Track.left - Near);
+            CHECK(vertex.x <= Track.left + Track.width + Near);
+            if (Channel(vertex.abgr) >= brightest)
+            {
+                brightest = Channel(vertex.abgr);
+                brightestX = vertex.x;
+            }
+        }
+        CHECK(brightest > 0u);
+        CHECK(brightest <= peakRed);
+        CHECK(brightestX > lastLine);
+        lastLine = brightestX;
+    }
+    quads.clear();
+    AppendBand(Track, 0.01f, HalfWidth, Gold, 0.8f, quads);
+    REQUIRE(quads.size() == 4);
+    CHECK(quads[0].x == doctest::Approx(Track.left));
+    CHECK(Channel(quads[0].abgr) > 0u);
+    CHECK(Channel(quads[0].abgr) < peakRed);
+
+    // Whole outside the bar at the ends, and nothing outside 0..1: nothing added.
+    quads.assign(4, Vertex{});
+    for (const float phase : {0.f, 1.f, -0.1f, 1.1f})
+    {
+        CAPTURE(phase);
+        AppendBand(Track, phase, HalfWidth, Gold, 0.8f, quads);
+        CHECK(quads.size() == 4);
+    }
+    AppendBand(Track, 0.5f, HalfWidth, Gold, 0.f, quads);
+    CHECK(quads.size() == 4);
+    // Appended after what is there.
+    AppendBand(Track, 0.5f, HalfWidth, Gold, 0.8f, quads);
+    CHECK(quads.size() == 12);
+}
