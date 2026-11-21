@@ -91,3 +91,40 @@
 
 /* The native line height, counter-scaled out of the panel. */
 .band-hero { height: calc(var(--line-height) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 320 units wide, so the question and the
+   lines, which the phone's readable text makes longer than 230 units, stay on it; the level notice wraps
+   inside it (in Russian it is longer still), and Enter and Close are a finger's size (90 x 38), drawn from
+   newui_btn_empty_small's stretch-safe middle. The frame's pieces and the separator keep their ends while
+   their plain middles repeat, and the stone back repeats. */
+@spritesheet temple-phone-top-sheet { src: "../../../newui_Message_03.tga"; temple-phone-top-l: 0px 0px 70px 67px; temple-phone-top-c: 110px 0px 10px 67px; temple-phone-top-r: 160px 0px 70px 67px; }
+@spritesheet temple-phone-middle-sheet { src: "../../../newui_msgbox_middle.tga"; temple-phone-middle-l: 0px 0px 30px 15px; temple-phone-middle-c: 110px 0px 10px 15px; temple-phone-middle-r: 200px 0px 30px 15px; }
+@spritesheet temple-phone-bottom-sheet { src: "../../../newui_msgbox_bottom.tga"; temple-phone-bottom-l: 0px 0px 70px 50px; temple-phone-bottom-c: 110px 0px 10px 50px; temple-phone-bottom-r: 160px 0px 70px 50px; }
+@spritesheet temple-phone-line-sheet { src: "../../../newui_Message_Line.tga"; temple-phone-line-l: 0px 0px 40px 21px; temple-phone-line-c: 100px 0px 10px 21px; temple-phone-line-r: 183px 0px 40px 21px; }
+@spritesheet temple-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	temple-phone-btn-up: 0px 0px 64px 29px; temple-phone-btn-up-inner: 10px 7px 44px 15px;
+	temple-phone-btn-over: 0px 29px 64px 29px; temple-phone-btn-over-inner: 10px 36px 44px 15px;
+	temple-phone-btn-down: 0px 58px 64px 29px; temple-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 320px; }
+	#back { width: 312px; decorator: image(temple-back repeat left top); }
+	#frame_top { width: 320px; decorator: tiled-horizontal(temple-phone-top-l, temple-phone-top-c, temple-phone-top-r); }
+	.frame-middle { width: 320px; decorator: tiled-horizontal(temple-phone-middle-l, temple-phone-middle-c, temple-phone-middle-r); }
+	#frame_bottom { width: 320px; decorator: tiled-horizontal(temple-phone-bottom-l, temple-phone-bottom-c, temple-phone-bottom-r); }
+	#line { width: 313px; decorator: tiled-horizontal(temple-phone-line-l, temple-phone-line-c, temple-phone-line-r); }
+	.temple-band, .band-hero { width: 310px; }
+
+	.temple-btn { top: 200px; width: 90px; height: 38px; decorator: ninepatch(temple-phone-btn-up, temple-phone-btn-up-inner); }
+	.temple-btn:hover { decorator: ninepatch(temple-phone-btn-over, temple-phone-btn-over-inner); }
+	.temple-btn:active { decorator: ninepatch(temple-phone-btn-down, temple-phone-btn-down-inner); }
+	#btn_enter { left: 60px; }
+	#btn_close { left: 170px; }
+
+	#title { width: calc(320px * var(--root-scale)); }
+	#ct_temple, .temple-line, #ct_members { width: calc(310px * var(--root-scale)); }
+	#ct_notice { left: 10px; width: calc(300px * var(--root-scale)); white-space: normal; }
+	.temple-label { width: calc(90px * var(--root-scale)); }
+}

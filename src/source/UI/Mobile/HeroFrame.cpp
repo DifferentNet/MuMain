@@ -228,7 +228,7 @@ void Sync(Model& model, MarkDirty markDirty)
     SetBar(model.sd, seen.sd, Gauges::Shield(), "hero_sd", force, markDirty);
     SetBar(model.ag, seen.ag, Gauges::SkillMana(), "hero_ag", force, markDirty);
     const Gauges::Experience experience = Gauges::ReadExperience();
-    Set(model.exp, static_cast<float>(experience.progress), "hero_exp", markDirty);
+    Set(model.exp, static_cast<float>(Gauges::UnitFraction(experience.progress)), "hero_exp", markDirty);
     SyncExpText(model, experience, force, markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);

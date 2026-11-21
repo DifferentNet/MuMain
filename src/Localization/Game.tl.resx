@@ -221,7 +221,7 @@
     <comment>legacy_id=55</comment>
   </data>
   <data name="Blood Castle" xml:space="preserve">
-    <value>Kastilyo ng Dugo</value>
+    <value>Blood Castle</value>
     <comment>legacy_id=56,1146</comment>
   </data>
   <data name="Chaos Castle" xml:space="preserve">
@@ -592,7 +592,7 @@
     <comment>legacy_id=144</comment>
   </data>
   <data name="~ &lt;msg&gt;: Message to party members" xml:space="preserve">
-    <value>~ &lt;msg&gt;: Mensahe sa mga miyembro ng partido</value>
+    <value>~ &lt;msg&gt;: Mensahe sa mga miyembro ng party</value>
     <comment>legacy_id=145</comment>
   </data>
   <data name="@ &lt;msg&gt;: Message to guild members" xml:space="preserve">
@@ -784,7 +784,7 @@
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>upang lumikha ng isang partido na may</value>
+    <value>upang lumikha ng isang party kasama ang</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -800,7 +800,7 @@
     <comment>legacy_id=196</comment>
   </data>
   <data name="your party members based on level." xml:space="preserve">
-    <value>iyong mga miyembro ng partido batay sa antas.</value>
+    <value>iyong mga miyembro ng party batay sa antas.</value>
     <comment>legacy_id=197</comment>
   </data>
   <data name="Cost" xml:space="preserve">
@@ -1777,7 +1777,7 @@
     <comment>legacy_id=475</comment>
   </data>
   <data name="You have requested %s to join your party." xml:space="preserve">
-    <value>Hiniling mo ang %s na sumali sa iyong partido.</value>
+    <value>Hiniling mo kay %s na sumali sa iyong party.</value>
     <comment>legacy_id=476</comment>
   </data>
   <data name="You have requested %s to join your guild." xml:space="preserve">
@@ -1861,7 +1861,7 @@
     <comment>legacy_id=496</comment>
   </data>
   <data name="Creating a party has failed." xml:space="preserve">
-    <value>Nabigo ang paglikha ng isang partido.</value>
+    <value>Nabigo ang paggawa ng party.</value>
     <comment>legacy_id=497</comment>
   </data>
   <data name="Your request has been denied." xml:space="preserve">
@@ -4393,7 +4393,7 @@
     <comment>legacy_id=1178</comment>
   </data>
   <data name="Only the owner of magic stone and party members can enter" xml:space="preserve">
-    <value>Tanging ang may-ari ng magic stone at mga miyembro ng partido ang maaaring pumasok</value>
+    <value>Tanging ang may-ari ng magic stone at mga miyembro ng party ang maaaring pumasok</value>
     <comment>legacy_id=1179</comment>
   </data>
   <data name="Kundun mark +%d level" xml:space="preserve">
@@ -4973,7 +4973,7 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>item sa</value>
+    <value>Ilagay ang item</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
@@ -6189,7 +6189,7 @@
     <comment>legacy_id=1659</comment>
   </data>
   <data name="IfYouHavePassedThroughThe" xml:space="preserve">
-    <value>Kung nakapasa ka sa pagsubok ni Apostol Devin, ipapadala ka ng Werewolf Guardsman at ng iyong mga miyembro ng partido na Balgass' Barrack.</value>
+    <value>Kung nakapasa ka sa pagsubok ni Apostol Devin, ipapadala ka ng Werewolf Guardsman at ng iyong mga miyembro ng party sa Balgass' Barrack.</value>
     <comment>legacy_id=1660</comment>
   </data>
   <data name="InOrderToReceiveHelpFrom" xml:space="preserve">
@@ -9265,35 +9265,35 @@
     <comment>legacy_id=2614</comment>
   </data>
   <data name="/Party battle request" xml:space="preserve">
-    <value>/Paghiling ng labanan sa partido</value>
+    <value>/Paghiling ng labanan ng party</value>
     <comment>legacy_id=2620</comment>
   </data>
   <data name="/Party battle cancellation" xml:space="preserve">
-    <value>/Pagkansela ng labanan sa partido</value>
+    <value>/Pagkansela ng labanan ng party</value>
     <comment>legacy_id=2621</comment>
   </data>
   <data name="%s has accepted your request for party battle." xml:space="preserve">
-    <value>Tinanggap ng %s ang iyong kahilingan para sa labanan sa partido.</value>
+    <value>Tinanggap ng %s ang iyong kahilingan para sa labanan ng party.</value>
     <comment>legacy_id=2622</comment>
   </data>
   <data name="%s has rejected your request for party battle." xml:space="preserve">
-    <value>Tinanggihan ng %s ang iyong kahilingan para sa labanan sa partido.</value>
+    <value>Tinanggihan ng %s ang iyong kahilingan para sa labanan ng party.</value>
     <comment>legacy_id=2623</comment>
   </data>
   <data name="Party battle has been cancelled." xml:space="preserve">
-    <value>Kinansela ang labanan sa partido.</value>
+    <value>Kinansela ang labanan ng party.</value>
     <comment>legacy_id=2624</comment>
   </data>
   <data name="You cannot request another battle during the party battle." xml:space="preserve">
-    <value>Hindi ka maaaring humiling ng isa pang labanan sa panahon ng labanan sa partido.</value>
+    <value>Hindi ka maaaring humiling ng isa pang labanan sa panahon ng labanan ng party.</value>
     <comment>legacy_id=2625</comment>
   </data>
   <data name="You have a request for the party battle." xml:space="preserve">
-    <value>Mayroon kang kahilingan para sa labanan sa partido.</value>
+    <value>Mayroon kang kahilingan para sa labanan ng party.</value>
     <comment>legacy_id=2626</comment>
   </data>
   <data name="Would you like to accept the party battle?" xml:space="preserve">
-    <value>Gusto mo bang tanggapin ang labanan sa partido?</value>
+    <value>Gusto mo bang tanggapin ang labanan ng party?</value>
     <comment>legacy_id=2627</comment>
   </data>
   <data name="Unique" xml:space="preserve">
@@ -9817,7 +9817,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Fortress of Empire Guardians Round %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9825,15 +9825,15 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Nabigo kang masakop ang</value>
+    <value>Nabigo kang tapusin ang</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Fortress ng Empire Guardians.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Round %d (Zone %d)</value>
+    <value>Tier %d · Zone %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -9921,7 +9921,7 @@
     <comment>legacy_id=2837</comment>
   </data>
   <data name="You can only enter as a member of a party." xml:space="preserve">
-    <value>Maaari ka lamang pumasok bilang isang miyembro ng isang partido.</value>
+    <value>Maaari ka lamang pumasok bilang isang miyembro ng isang party.</value>
     <comment>legacy_id=2838,2843</comment>
   </data>
   <data name="Quest Item Missing" xml:space="preserve">
@@ -10345,7 +10345,7 @@
     <comment>legacy_id=2969</comment>
   </data>
   <data name="Up to %d%% EXP gain increase, depending on the number of members in your party." xml:space="preserve">
-    <value>Hanggang %d%% EXP ang pagtaas ng kita, depende sa bilang ng mga miyembro sa iyong partido.</value>
+    <value>Hanggang %d%% EXP ang pagtaas ng kita, depende sa bilang ng mga miyembro sa iyong party.</value>
     <comment>legacy_id=2970</comment>
   </data>
   <data name="You can acquire Goblin Points by using the MU Item Shop's storage." xml:space="preserve">
@@ -10425,7 +10425,7 @@
     <comment>legacy_id=2989</comment>
   </data>
   <data name="You cannot form a party with a member of the opposing gens." xml:space="preserve">
-    <value>Hindi ka maaaring bumuo ng isang partido kasama ang isang miyembro ng magkasalungat na gen.</value>
+    <value>Hindi ka maaaring bumuo ng isang party kasama ang isang miyembro ng magkasalungat na gen.</value>
     <comment>legacy_id=2990</comment>
   </data>
   <data name="The alliance master has not joined the gens." xml:space="preserve">
@@ -10453,7 +10453,7 @@
     <comment>legacy_id=2996</comment>
   </data>
   <data name="You cannot form a party within a Battle Zone." xml:space="preserve">
-    <value>Hindi ka maaaring bumuo ng isang partido sa loob ng isang Battle Zone.</value>
+    <value>Hindi ka maaaring bumuo ng isang party sa loob ng isang Battle Zone.</value>
     <comment>legacy_id=2997</comment>
   </data>
   <data name="Parties are not activated within a Battle Zone." xml:space="preserve">
@@ -10701,7 +10701,7 @@
     <comment>legacy_id=3063</comment>
   </data>
   <data name="You cannot ask others to join your party while in Loren Market." xml:space="preserve">
-    <value>Hindi mo maaaring hilingin sa iba na sumali sa iyong partido habang nasa Loren Market.</value>
+    <value>Hindi mo maaaring hilingin sa iba na sumali sa iyong party habang nasa Loren Market.</value>
     <comment>legacy_id=3064</comment>
   </data>
   <data name="Equip to transform into a Skeleton Warrior." xml:space="preserve">
@@ -11029,7 +11029,7 @@
     <comment>legacy_id=3151</comment>
   </data>
   <data name="LegitimateBearersOfTheKarutanRoyal" xml:space="preserve">
-    <value>Mga lehitimong tagapagdala ng Karutan Royal Knights at mga martial artist na may mahusay na pisikal na lakas. Tinutulungan din nila ang iba pang mga miyembro ng partido sa pamamagitan ng pag-cast ng mga subsidiary buff.</value>
+    <value>Mga lehitimong tagapagdala ng Karutan Royal Knights at mga martial artist na may mahusay na pisikal na lakas. Tinutulungan din nila ang iba pang mga miyembro ng party sa pamamagitan ng pag-cast ng mga subsidiary buff.</value>
     <comment>legacy_id=3152</comment>
   </data>
   <data name="Killing Blow (Mana: %d)" xml:space="preserve">
@@ -11489,7 +11489,7 @@
     <comment>legacy_id=3361</comment>
   </data>
   <data name="All party members must be of the same level for this area." xml:space="preserve">
-    <value>Ang lahat ng miyembro ng partido ay dapat na nasa parehong antas para sa lugar na ito.</value>
+    <value>Ang lahat ng miyembro ng party ay dapat na nasa parehong antas para sa lugar na ito.</value>
     <comment>legacy_id=3362</comment>
   </data>
   <data name="Players with an Outlaw or Killer status cannot enter this area." xml:space="preserve">
@@ -12029,7 +12029,7 @@
     <comment>legacy_id=3549</comment>
   </data>
   <data name="HP Status of Party Members" xml:space="preserve">
-    <value>Katayuan ng HP ng mga Miyembro ng Partido</value>
+    <value>Katayuan ng HP ng mga Miyembro ng Party</value>
     <comment>legacy_id=3550</comment>
   </data>
   <data name="Time Space of Casting Buff" xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>Nabigo ang Tanggalin ang hiyas.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Na-clear ang Zone</value>
+    <value>Na-clear ang Zone %d</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu minuto</value>
@@ -12948,10 +12948,10 @@
     <value>switch ng korona %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(%s fruit) stat %d puntos ay Lumikha.</value>
+    <value>(%ls fruit) stat %d puntos ay Lumikha.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(%s fruit) stat %d puntos ay Bawasan.</value>
+    <value>(%ls fruit) stat %d puntos ay Bawasan.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Hindi na maaaring Lumikha ang stat na ito.</value>
@@ -14537,5 +14537,8 @@
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Paggawa</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Walang network</value>
   </data>
 </root>

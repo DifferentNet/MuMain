@@ -524,7 +524,7 @@
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P : Jendela Pesta</value>
+    <value>P : Jendela Party</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
@@ -684,7 +684,7 @@
     <comment>legacy_id=167</comment>
   </data>
   <data name="ENG" xml:space="preserve">
-    <value>Bahasa Inggris</value>
+    <value>ENG</value>
     <comment>legacy_id=168</comment>
   </data>
   <data name="STA" xml:space="preserve">
@@ -732,7 +732,7 @@
     <comment>legacy_id=179</comment>
   </data>
   <data name="Guild" xml:space="preserve">
-    <value>Persekutuan</value>
+    <value>Guild</value>
     <comment>legacy_id=180,946</comment>
   </data>
   <data name="Do you wish to be the guild master?" xml:space="preserve">
@@ -772,7 +772,7 @@
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
-    <value>Berpesta</value>
+    <value>Party</value>
     <comment>legacy_id=190,944,3515,3554</comment>
   </data>
   <data name="Type /party with the mouse cursor on" xml:space="preserve">
@@ -784,7 +784,7 @@
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>untuk membuat pesta dengan</value>
+    <value>untuk membuat party dengan</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -792,7 +792,7 @@
     <comment>legacy_id=194</comment>
   </data>
   <data name="a party with them." xml:space="preserve">
-    <value>pesta dengan mereka.</value>
+    <value>party dengan mereka.</value>
     <comment>legacy_id=195</comment>
   </data>
   <data name="You can share more Exp with" xml:space="preserve">
@@ -800,7 +800,7 @@
     <comment>legacy_id=196</comment>
   </data>
   <data name="your party members based on level." xml:space="preserve">
-    <value>anggota partai Anda berdasarkan level.</value>
+    <value>anggota party Anda berdasarkan level.</value>
     <comment>legacy_id=197</comment>
   </data>
   <data name="Cost" xml:space="preserve">
@@ -892,7 +892,7 @@
     <comment>legacy_id=220</comment>
   </data>
   <data name="Close Party Window (P)" xml:space="preserve">
-    <value>Tutup Jendela Pesta (P)</value>
+    <value>Tutup Jendela Party (P)</value>
     <comment>legacy_id=221</comment>
   </data>
   <data name="Close Character Info Window (C)" xml:space="preserve">
@@ -1032,7 +1032,7 @@
     <comment>legacy_id=256</comment>
   </data>
   <data name="You are already in a party" xml:space="preserve">
-    <value>Anda sudah berada di sebuah pesta</value>
+    <value>Anda sudah berada di dalam party</value>
     <comment>legacy_id=257</comment>
   </data>
   <data name="/exchange" xml:space="preserve">
@@ -1312,7 +1312,7 @@
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
-    <value>Pesta (P)</value>
+    <value>Party (P)</value>
     <comment>legacy_id=361</comment>
   </data>
   <data name="Character (C)" xml:space="preserve">
@@ -1324,7 +1324,7 @@
     <comment>legacy_id=363</comment>
   </data>
   <data name="Guild (G)" xml:space="preserve">
-    <value>Persekutuan (G)</value>
+    <value>Guild (G)</value>
     <comment>legacy_id=364</comment>
   </data>
   <data name="Notice! Please check out" xml:space="preserve">
@@ -1585,7 +1585,7 @@
     <comment>legacy_id=424</comment>
   </data>
   <data name="Someone requests you to join their a party" xml:space="preserve">
-    <value>Seseorang meminta Anda untuk bergabung dengan pestanya</value>
+    <value>Seseorang meminta Anda untuk bergabung dengan party-nya</value>
     <comment>legacy_id=425</comment>
   </data>
   <data name="Please draw your guild emblem" xml:space="preserve">
@@ -1777,7 +1777,7 @@
     <comment>legacy_id=475</comment>
   </data>
   <data name="You have requested %s to join your party." xml:space="preserve">
-    <value>Anda telah meminta %s untuk bergabung dengan pesta Anda.</value>
+    <value>Anda telah meminta %s untuk bergabung dengan party Anda.</value>
     <comment>legacy_id=476</comment>
   </data>
   <data name="You have requested %s to join your guild." xml:space="preserve">
@@ -1861,7 +1861,7 @@
     <comment>legacy_id=496</comment>
   </data>
   <data name="Creating a party has failed." xml:space="preserve">
-    <value>Gagal membuat pesta.</value>
+    <value>Gagal membuat party.</value>
     <comment>legacy_id=497</comment>
   </data>
   <data name="Your request has been denied." xml:space="preserve">
@@ -1869,7 +1869,7 @@
     <comment>legacy_id=498</comment>
   </data>
   <data name="Party is full." xml:space="preserve">
-    <value>Pesta sudah penuh.</value>
+    <value>Party sudah penuh.</value>
     <comment>legacy_id=499</comment>
   </data>
   <data name="The user has left the game." xml:space="preserve">
@@ -1877,11 +1877,11 @@
     <comment>legacy_id=500,506</comment>
   </data>
   <data name="The user is already in another party." xml:space="preserve">
-    <value>Pengguna sudah berada di pihak lain.</value>
+    <value>Pengguna sudah berada di party lain.</value>
     <comment>legacy_id=501</comment>
   </data>
   <data name="You have just left the party." xml:space="preserve">
-    <value>Anda baru saja meninggalkan pesta.</value>
+    <value>Anda baru saja meninggalkan party.</value>
     <comment>legacy_id=502</comment>
   </data>
   <data name="Guild master has refused your request to join the guild." xml:space="preserve">
@@ -2401,7 +2401,7 @@
     <comment>legacy_id=636</comment>
   </data>
   <data name="It is used to combine items for a Devil Square Invitation" xml:space="preserve">
-    <value>Ini digunakan untuk menggabungkan item untuk Undangan Kotak Setan</value>
+    <value>Ini digunakan untuk menggabungkan item untuk Undangan Devil Square</value>
     <comment>legacy_id=637</comment>
   </data>
   <data name="The remaining time is shown" xml:space="preserve">
@@ -3493,7 +3493,7 @@
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
-    <value>Anda harus berada di sebuah pesta</value>
+    <value>Anda harus berada di dalam party</value>
     <comment>legacy_id=937</comment>
   </data>
   <data name="Command Window" xml:space="preserve">
@@ -4277,7 +4277,7 @@
     <comment>legacy_id=1143</comment>
   </data>
   <data name="Curse" xml:space="preserve">
-    <value>Menyumpahi</value>
+    <value>Kutukan</value>
     <comment>legacy_id=1144</comment>
   </data>
   <data name="Feel the new Spirit of Guardian!!" xml:space="preserve">
@@ -4417,7 +4417,7 @@
     <comment>legacy_id=1184</comment>
   </data>
   <data name="Can only be used during party" xml:space="preserve">
-    <value>Hanya dapat digunakan saat pesta</value>
+    <value>Hanya dapat digunakan saat dalam party</value>
     <comment>legacy_id=1185</comment>
   </data>
   <data name="Force wave skill (mana:%d)" xml:space="preserve">
@@ -4629,7 +4629,7 @@
     <comment>legacy_id=1238</comment>
   </data>
   <data name="Attack" xml:space="preserve">
-    <value>Menyerang</value>
+    <value>Serangan</value>
     <comment>legacy_id=1239</comment>
   </data>
   <data name="The account has been teleported general character %d, Magic Gladiator %d" xml:space="preserve">
@@ -6189,7 +6189,7 @@
     <comment>legacy_id=1659</comment>
   </data>
   <data name="IfYouHavePassedThroughThe" xml:space="preserve">
-    <value>Jika Anda telah lulus ujian Rasul Devin, Penjaga Manusia Serigala akan mengirim Anda dan anggota partai Anda Balgass' Barrack.</value>
+    <value>Jika Anda telah lulus ujian Rasul Devin, Penjaga Manusia Serigala akan mengirim Anda dan anggota party Anda ke Balgass' Barrack.</value>
     <comment>legacy_id=1660</comment>
   </data>
   <data name="InOrderToReceiveHelpFrom" xml:space="preserve">
@@ -6277,7 +6277,7 @@
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>Obrolan pesta</value>
+    <value>Obrolan party</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
@@ -6497,7 +6497,7 @@
     <comment>legacy_id=1737</comment>
   </data>
   <data name="Command" xml:space="preserve">
-    <value>Memerintah</value>
+    <value>Komando</value>
     <comment>legacy_id=1738,1900</comment>
   </data>
   <data name="Long gmae time may be harmful to your health" xml:space="preserve">
@@ -6641,7 +6641,7 @@
     <comment>legacy_id=1775</comment>
   </data>
   <data name="%d%% increment" xml:space="preserve">
-    <value>%d%% ipeningkatan</value>
+    <value>%d%% peningkatan</value>
     <comment>legacy_id=1776</comment>
   </data>
   <data name="DIncrement1777" xml:space="preserve">
@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% dpeningkatan</value>
+    <value>%d%% penurunan</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">
@@ -6873,7 +6873,7 @@
     <comment>legacy_id=1850</comment>
   </data>
   <data name="Crywolf Fortress" xml:space="preserve">
-    <value>Benteng Serigala Menangis</value>
+    <value>Benteng Crywolf</value>
     <comment>legacy_id=1851</comment>
   </data>
   <data name="Lost Kalima" xml:space="preserve">
@@ -9265,23 +9265,23 @@
     <comment>legacy_id=2614</comment>
   </data>
   <data name="/Party battle request" xml:space="preserve">
-    <value>/Permintaan pertempuran pesta</value>
+    <value>/Permintaan pertempuran party</value>
     <comment>legacy_id=2620</comment>
   </data>
   <data name="/Party battle cancellation" xml:space="preserve">
-    <value>/Pembatalan pertarungan pesta</value>
+    <value>/Pembatalan pertarungan party</value>
     <comment>legacy_id=2621</comment>
   </data>
   <data name="%s has accepted your request for party battle." xml:space="preserve">
-    <value>%s telah menerima permintaan Anda untuk pertarungan pesta.</value>
+    <value>%s telah menerima permintaan Anda untuk pertarungan party.</value>
     <comment>legacy_id=2622</comment>
   </data>
   <data name="%s has rejected your request for party battle." xml:space="preserve">
-    <value>%s telah menolak permintaan pertarungan pesta Anda.</value>
+    <value>%s telah menolak permintaan pertarungan party Anda.</value>
     <comment>legacy_id=2623</comment>
   </data>
   <data name="Party battle has been cancelled." xml:space="preserve">
-    <value>Pertarungan partai telah dibatalkan.</value>
+    <value>Pertarungan party telah dibatalkan.</value>
     <comment>legacy_id=2624</comment>
   </data>
   <data name="You cannot request another battle during the party battle." xml:space="preserve">
@@ -9289,11 +9289,11 @@
     <comment>legacy_id=2625</comment>
   </data>
   <data name="You have a request for the party battle." xml:space="preserve">
-    <value>Anda memiliki permintaan untuk pertarungan pesta.</value>
+    <value>Anda memiliki permintaan untuk pertarungan party.</value>
     <comment>legacy_id=2626</comment>
   </data>
   <data name="Would you like to accept the party battle?" xml:space="preserve">
-    <value>Apakah Anda ingin menerima pertarungan partai?</value>
+    <value>Apakah Anda ingin menerima pertarungan party?</value>
     <comment>legacy_id=2627</comment>
   </data>
   <data name="Unique" xml:space="preserve">
@@ -9817,23 +9817,23 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Putaran Penjaga Benteng Kerajaan %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>telah dibersihkan.</value>
+    <value>telah diselesaikan.</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Anda telah gagal menaklukkannya</value>
+    <value>Anda gagal menyelesaikan</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Penjaga Benteng Kerajaan.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Bulat %d (Zona %d)</value>
+    <value>Tier %d · Zona %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -9921,7 +9921,7 @@
     <comment>legacy_id=2837</comment>
   </data>
   <data name="You can only enter as a member of a party." xml:space="preserve">
-    <value>Anda hanya bisa masuk sebagai anggota partai.</value>
+    <value>Anda hanya bisa masuk sebagai anggota party.</value>
     <comment>legacy_id=2838,2843</comment>
   </data>
   <data name="Quest Item Missing" xml:space="preserve">
@@ -10449,7 +10449,7 @@
     <comment>legacy_id=2995</comment>
   </data>
   <data name="YouMustBelongToTheSame" xml:space="preserve">
-    <value>Anda harus berasal dari generasi yang sama dengan ketua guild untuk bergabung dengan guild.</value>
+    <value>Anda harus berasal dari gen yang sama dengan ketua guild untuk bergabung dengan guild.</value>
     <comment>legacy_id=2996</comment>
   </data>
   <data name="You cannot form a party within a Battle Zone." xml:space="preserve">
@@ -10701,7 +10701,7 @@
     <comment>legacy_id=3063</comment>
   </data>
   <data name="You cannot ask others to join your party while in Loren Market." xml:space="preserve">
-    <value>Anda tidak dapat meminta orang lain untuk bergabung dengan pesta Anda saat berada di Pasar Loren.</value>
+    <value>Anda tidak dapat meminta orang lain untuk bergabung dengan party Anda saat berada di Pasar Loren.</value>
     <comment>legacy_id=3064</comment>
   </data>
   <data name="Equip to transform into a Skeleton Warrior." xml:space="preserve">
@@ -10753,11 +10753,11 @@
     <comment>legacy_id=3078</comment>
   </data>
   <data name="Devil Square Lv.%lu Point x %lu/%lu" xml:space="preserve">
-    <value>Kotak Iblis Lv.%lu Poin x %lu/%lu</value>
+    <value>Devil Square Lv.%lu Poin x %lu/%lu</value>
     <comment>legacy_id=3079</comment>
   </data>
   <data name="Devil Square Lv.%lu Cleared" xml:space="preserve">
-    <value>Kotak Setan Lv.%lu Diselesaikan</value>
+    <value>Devil Square Lv.%lu Diselesaikan</value>
     <comment>legacy_id=3080</comment>
   </data>
   <data name="Illusion Temple Lv.%lu Cleared" xml:space="preserve">
@@ -10909,7 +10909,7 @@
     <comment>legacy_id=3121</comment>
   </data>
   <data name="Charm item" xml:space="preserve">
-    <value>Barang pesona</value>
+    <value>Jimat</value>
     <comment>legacy_id=3122</comment>
   </data>
   <data name="Relic item" xml:space="preserve">
@@ -11425,7 +11425,7 @@
     <comment>legacy_id=3345</comment>
   </data>
   <data name="F7: Party Chat On/Off" xml:space="preserve">
-    <value>F7: Obrolan Pesta Aktif/Nonaktif</value>
+    <value>F7: Obrolan Party Aktif/Nonaktif</value>
     <comment>legacy_id=3346</comment>
   </data>
   <data name="F8: Guild Chat On/Off" xml:space="preserve">
@@ -11733,11 +11733,11 @@
     <comment>legacy_id=3434</comment>
   </data>
   <data name="Guild Members" xml:space="preserve">
-    <value>Anggota Persekutuan</value>
+    <value>Anggota Guild</value>
     <comment>legacy_id=3435</comment>
   </data>
   <data name="Choose Hostility Guild" xml:space="preserve">
-    <value>Pilih Persekutuan Permusuhan</value>
+    <value>Pilih Guild Musuh</value>
     <comment>legacy_id=3436</comment>
   </data>
   <data name="Score3438" xml:space="preserve">
@@ -11993,7 +11993,7 @@
     <comment>legacy_id=3538</comment>
   </data>
   <data name="Preference of Party Heal" xml:space="preserve">
-    <value>Preferensi Penyembuhan Pesta</value>
+    <value>Preferensi Penyembuhan Party</value>
     <comment>legacy_id=3539</comment>
   </data>
   <data name="Buff Duration for All Party Members" xml:space="preserve">
@@ -12029,7 +12029,7 @@
     <comment>legacy_id=3549</comment>
   </data>
   <data name="HP Status of Party Members" xml:space="preserve">
-    <value>Status HP Anggota Partai</value>
+    <value>Status HP Anggota Party</value>
     <comment>legacy_id=3550</comment>
   </data>
   <data name="Time Space of Casting Buff" xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>Bongkar permata telah gagal.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Zona Dibersihkan</value>
+    <value>Zona %d selesai</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu Menit</value>
@@ -12948,10 +12948,10 @@
     <value>Saklar mahkota %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(%s buah) stat Poin %d telah menjadi Membuat.</value>
+    <value>(%ls buah) stat Poin %d telah menjadi Membuat.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(%s buah) stat Poin %d telah menjadi Mengurangi.</value>
+    <value>(%ls buah) stat Poin %d telah menjadi Mengurangi.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Stat ini tidak bisa lagi menjadi Membuat.</value>
@@ -14537,5 +14537,8 @@
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Kerajinan</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Tidak ada jaringan</value>
   </data>
 </root>

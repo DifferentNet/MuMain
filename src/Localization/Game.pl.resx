@@ -4277,7 +4277,7 @@
     <comment>legacy_id=1143</comment>
   </data>
   <data name="Curse" xml:space="preserve">
-    <value>Przekleństwo</value>
+    <value>Klątwa</value>
     <comment>legacy_id=1144</comment>
   </data>
   <data name="Feel the new Spirit of Guardian!!" xml:space="preserve">
@@ -4973,11 +4973,11 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>Przedmiot przychodzący</value>
+    <value>Wkładanie przedmiotów</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
-    <value>Przedmiot wychodzący</value>
+    <value>Wyjmowanie przedmiotów</value>
     <comment>legacy_id=1337</comment>
   </data>
   <data name="Deposit zen" xml:space="preserve">
@@ -6497,7 +6497,7 @@
     <comment>legacy_id=1737</comment>
   </data>
   <data name="Command" xml:space="preserve">
-    <value>Rozkaz</value>
+    <value>Dowodzenie</value>
     <comment>legacy_id=1738,1900</comment>
   </data>
   <data name="Long gmae time may be harmful to your health" xml:space="preserve">
@@ -9817,7 +9817,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Fortress of Empire Guardians runda %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9825,15 +9825,15 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Nie udało Ci się pokonać</value>
+    <value>Nie udało Ci się ukończyć</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Twierdza Strażników Imperium.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Runda %d (strefa %d)</value>
+    <value>Tier %d · strefa %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -14558,5 +14558,8 @@
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Rzemiosło</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Brak sieci</value>
   </data>
 </root>

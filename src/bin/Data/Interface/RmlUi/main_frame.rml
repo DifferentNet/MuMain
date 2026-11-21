@@ -1,7 +1,9 @@
 <rml>
 	<!-- rml-contract-optional-callback: mainframe_cshop_click: no MU Item Shop button since 2026-10-24 (the server has no cash shop); its slot opens the battle pass (mainframe_battle_pass_click) -->
-	<!-- bound-geometry: the health/mana/SD/AG gauges, the experience bar and every cooldown wipe are
-	     fractions -->
+	<!-- bound-geometry: the health/mana/SD/AG gauges are fractions. They keep a bound width or height:
+	     the old theme's vertical fills crop their art from the bottom and the new theme's bars have
+	     rounded ends, which a scale would squash. The experience bar and the cooldown wipes are
+	     scaled instead (a transform does not lay the document out again). -->
 <head>
 	<title>Main Frame</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -98,7 +100,7 @@
 		<div id="exp_frame_middle" class="exp-frame"></div>
 		<div id="exp_frame_right" class="exp-frame"></div>
 		<div id="exp_track" class="slot-frame slot-fill">
-			<div id="exp_fill" data-style-width="exp_fraction * 100 + '%'"></div>
+			<div id="exp_fill" data-style-transform="'scaleX(' + exp_fraction + ')'"></div>
 		</div>
 		<span id="exp_digit">{{exp_digit}}</span>
 	</div>
@@ -118,12 +120,12 @@
 	     cooldown wipe. data-class-selected marks the slot holding the current skill. -->
 	<div id="skill_slots" class="hud-part">
 		<div id="skill_list_highlight" data-class-hidden="!skill_list_up"></div>
-		<div id="skill_slot_0" class="slot-frame" data-class-selected="skill_slot_0_selected" data-event-click="skill_hotkey_click(0)" data-event-mouseover="skill_hotkey_hover(0)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_0_icon"></div><span class="skill-hotkey-label">{{skill_slot_0_hotkey}}</span><div class="cooldown-wipe" data-style-height="skill_slot_0_cooldown * 100 + '%'"></div></div>
-		<div id="skill_slot_1" class="slot-frame" data-class-selected="skill_slot_1_selected" data-event-click="skill_hotkey_click(1)" data-event-mouseover="skill_hotkey_hover(1)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_1_icon"></div><span class="skill-hotkey-label">{{skill_slot_1_hotkey}}</span><div class="cooldown-wipe" data-style-height="skill_slot_1_cooldown * 100 + '%'"></div></div>
-		<div id="skill_slot_2" class="slot-frame" data-class-selected="skill_slot_2_selected" data-event-click="skill_hotkey_click(2)" data-event-mouseover="skill_hotkey_hover(2)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_2_icon"></div><span class="skill-hotkey-label">{{skill_slot_2_hotkey}}</span><div class="cooldown-wipe" data-style-height="skill_slot_2_cooldown * 100 + '%'"></div></div>
-		<div id="skill_slot_3" class="slot-frame" data-class-selected="skill_slot_3_selected" data-event-click="skill_hotkey_click(3)" data-event-mouseover="skill_hotkey_hover(3)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_3_icon"></div><span class="skill-hotkey-label">{{skill_slot_3_hotkey}}</span><div class="cooldown-wipe" data-style-height="skill_slot_3_cooldown * 100 + '%'"></div></div>
-		<div id="skill_slot_4" class="slot-frame" data-class-selected="skill_slot_4_selected" data-event-click="skill_hotkey_click(4)" data-event-mouseover="skill_hotkey_hover(4)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_4_icon"></div><span class="skill-hotkey-label">{{skill_slot_4_hotkey}}</span><div class="cooldown-wipe" data-style-height="skill_slot_4_cooldown * 100 + '%'"></div></div>
-		<div id="current_skill_slot" class="slot-frame" data-event-click="skill_current_click" data-event-mouseover="skill_current_hover" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="current_skill_icon"></div><span class="skill-hotkey-label">{{current_skill_hotkey}}</span><div class="cooldown-wipe" data-style-height="current_skill_cooldown * 100 + '%'"></div></div>
+		<div id="skill_slot_0" class="slot-frame" data-class-selected="skill_slot_0_selected" data-event-click="skill_hotkey_click(0)" data-event-mouseover="skill_hotkey_hover(0)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_0_icon"></div><span class="skill-hotkey-label">{{skill_slot_0_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_0_cooldown + ')'"></div></div>
+		<div id="skill_slot_1" class="slot-frame" data-class-selected="skill_slot_1_selected" data-event-click="skill_hotkey_click(1)" data-event-mouseover="skill_hotkey_hover(1)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_1_icon"></div><span class="skill-hotkey-label">{{skill_slot_1_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_1_cooldown + ')'"></div></div>
+		<div id="skill_slot_2" class="slot-frame" data-class-selected="skill_slot_2_selected" data-event-click="skill_hotkey_click(2)" data-event-mouseover="skill_hotkey_hover(2)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_2_icon"></div><span class="skill-hotkey-label">{{skill_slot_2_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_2_cooldown + ')'"></div></div>
+		<div id="skill_slot_3" class="slot-frame" data-class-selected="skill_slot_3_selected" data-event-click="skill_hotkey_click(3)" data-event-mouseover="skill_hotkey_hover(3)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_3_icon"></div><span class="skill-hotkey-label">{{skill_slot_3_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_3_cooldown + ')'"></div></div>
+		<div id="skill_slot_4" class="slot-frame" data-class-selected="skill_slot_4_selected" data-event-click="skill_hotkey_click(4)" data-event-mouseover="skill_hotkey_hover(4)" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="skill_slot_4_icon"></div><span class="skill-hotkey-label">{{skill_slot_4_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + skill_slot_4_cooldown + ')'"></div></div>
+		<div id="current_skill_slot" class="slot-frame" data-event-click="skill_current_click" data-event-mouseover="skill_current_hover" data-event-mouseout="skill_unhover"><div class="skill-icon" data-style-decorator="current_skill_icon"></div><span class="skill-hotkey-label">{{current_skill_hotkey}}</span><div class="cooldown-wipe" data-style-transform="'scaleY(' + current_skill_cooldown + ')'"></div></div>
 	</div>
 
 	<!-- The skill list the current-skill slot opens: the learned skills and the pet's commands.
@@ -139,7 +141,7 @@
 			     data-event-mouseout="skill_unhover">
 				<div class="skill-icon" data-style-decorator="cell.icon"></div>
 				<span class="skill-hotkey-label">{{cell.hotkey}}</span>
-				<div class="cooldown-wipe" data-style-height="cell.cooldown_fraction * 100 + '%'"></div>
+				<div class="cooldown-wipe" data-style-transform="'scaleY(' + cell.cooldown_fraction + ')'"></div>
 			</div>
 		</div>
 		<div id="pet_skill_row" data-class-hidden="!skill_grid_open">
@@ -150,7 +152,7 @@
 			     data-event-mouseout="skill_unhover">
 				<div class="skill-icon" data-style-decorator="cell.icon"></div>
 				<span class="skill-hotkey-label">{{cell.hotkey}}</span>
-				<div class="cooldown-wipe" data-style-height="cell.cooldown_fraction * 100 + '%'"></div>
+				<div class="cooldown-wipe" data-style-transform="'scaleY(' + cell.cooldown_fraction + ')'"></div>
 			</div>
 		</div>
 	</div>

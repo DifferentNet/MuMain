@@ -31,3 +31,15 @@
 .entry-item-box { position: absolute; left: 70px; width: 20px; height: 20px; pointer-events: none; }
 #entry_item_box_1 { top: 200px; }
 #entry_item_box_2 { top: 242px; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): Registering Rena a finger's size (140 x 38), short of
+   the closing notice at y 350. Places on the 190-unit window; event_item_entry.rcss moves them right. */
+@media (theme: mobile) {
+	.entry-btn:nth-child(1) { left: 25px; top: 280px; width: 140px; height: 38px; }
+	/* The exit where every docked window has it (13 from the left, 392 down), its box grown round the
+	   sprite as theirs (docked_panel_frame.rcss); the sprite in the content box alone. */
+	.entry-btn:nth-child(2) { margin: -8px; padding: 8px; }
+	#panel .entry-btn:nth-child(2), #panel .entry-btn:nth-child(2):hover, #panel .entry-btn:nth-child(2).locked:hover,
+	#panel .entry-btn:nth-child(2).locked:active { decorator: image(gb-exit-up) content-box; }
+	#panel .entry-btn:nth-child(2):active { decorator: image(gb-exit-down) content-box; }
+}

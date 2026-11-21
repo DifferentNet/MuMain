@@ -45,6 +45,8 @@ public:
 #ifdef __EMSCRIPTEN__
     // The warm-up (UI/Core/WindowWarmUp.h).
     Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+    // Not on a phone or tablet (no keyboard); elsewhere fills the rows first, so they are warmed too.
+    bool PrepareWarmUp() override;
 #endif
 
     void OpenningProcess();

@@ -47,3 +47,30 @@
 .entry-text { display: block; position: absolute; width: 190px; }
 .entry-label { color: #ffffff; }
 .entry-btn.locked .entry-label { color: #646464; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide, so the lines the phone's
+   readable text makes longer than 190 units stay on it, and everything the rows put on the 190-unit window
+   moves 55 units right to stay centred. The frame's ends keep their art while its plain middle repeats
+   (docked_panel_frame.rcss), and the parchment repeats. The buttons are drawn from newui_btn_empty_small's
+   stretch-safe middle, so each row file can make its own a finger's size without stretching the art out of
+   shape (the id wins over the row files' button rules, whatever their order); an exit button keeps its
+   sprite there. A locked button keeps its row file's tint. */
+@spritesheet item-entry-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	item-entry-phone-btn-up: 0px 0px 64px 29px; item-entry-phone-btn-up-inner: 10px 7px 44px 15px;
+	item-entry-phone-btn-over: 0px 29px 64px 29px; item-entry-phone-btn-over-inner: 10px 36px 44px 15px;
+	item-entry-phone-btn-down: 0px 58px 64px 29px; item-entry-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	.entry-text, .entry-btn, .entry-line, .entry-item, .entry-item-box, #serial_back, #serial_field { margin-left: 55px; }
+
+	#panel .entry-btn, #panel .entry-btn.locked:hover, #panel .entry-btn.locked:active {
+		decorator: ninepatch(item-entry-phone-btn-up, item-entry-phone-btn-up-inner);
+	}
+	#panel .entry-btn:hover { decorator: ninepatch(item-entry-phone-btn-over, item-entry-phone-btn-over-inner); }
+	#panel .entry-btn:active { decorator: ninepatch(item-entry-phone-btn-down, item-entry-phone-btn-down-inner); }
+}

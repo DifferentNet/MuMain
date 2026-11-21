@@ -524,7 +524,7 @@
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P: ventana de fiesta</value>
+    <value>P: ventana de grupo</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
@@ -784,7 +784,7 @@
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>para crear una fiesta con</value>
+    <value>para crear un grupo con</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -792,7 +792,7 @@
     <comment>legacy_id=194</comment>
   </data>
   <data name="a party with them." xml:space="preserve">
-    <value>una fiesta con ellos.</value>
+    <value>un grupo con ellos.</value>
     <comment>legacy_id=195</comment>
   </data>
   <data name="You can share more Exp with" xml:space="preserve">
@@ -892,7 +892,7 @@
     <comment>legacy_id=220</comment>
   </data>
   <data name="Close Party Window (P)" xml:space="preserve">
-    <value>Cerrar ventana de fiesta (P)</value>
+    <value>Cerrar ventana de grupo (P)</value>
     <comment>legacy_id=221</comment>
   </data>
   <data name="Close Character Info Window (C)" xml:space="preserve">
@@ -1028,11 +1028,11 @@
     <comment>legacy_id=255</comment>
   </data>
   <data name="Party256" xml:space="preserve">
-    <value>/fiesta</value>
+    <value>/grupo</value>
     <comment>legacy_id=256</comment>
   </data>
   <data name="You are already in a party" xml:space="preserve">
-    <value>ya estas en una fiesta</value>
+    <value>Ya estás en un grupo</value>
     <comment>legacy_id=257</comment>
   </data>
   <data name="/exchange" xml:space="preserve">
@@ -1312,7 +1312,7 @@
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
-    <value>Partido (P)</value>
+    <value>Grupo (P)</value>
     <comment>legacy_id=361</comment>
   </data>
   <data name="Character (C)" xml:space="preserve">
@@ -1861,7 +1861,7 @@
     <comment>legacy_id=496</comment>
   </data>
   <data name="Creating a party has failed." xml:space="preserve">
-    <value>La creación de un partido ha fracasado.</value>
+    <value>No se pudo crear el grupo.</value>
     <comment>legacy_id=497</comment>
   </data>
   <data name="Your request has been denied." xml:space="preserve">
@@ -1869,7 +1869,7 @@
     <comment>legacy_id=498</comment>
   </data>
   <data name="Party is full." xml:space="preserve">
-    <value>La fiesta está llena.</value>
+    <value>El grupo está lleno.</value>
     <comment>legacy_id=499</comment>
   </data>
   <data name="The user has left the game." xml:space="preserve">
@@ -1877,11 +1877,11 @@
     <comment>legacy_id=500,506</comment>
   </data>
   <data name="The user is already in another party." xml:space="preserve">
-    <value>El usuario ya está en otro partido.</value>
+    <value>El usuario ya está en otro grupo.</value>
     <comment>legacy_id=501</comment>
   </data>
   <data name="You have just left the party." xml:space="preserve">
-    <value>Acabas de salir de la fiesta.</value>
+    <value>Acabas de salir del grupo.</value>
     <comment>legacy_id=502</comment>
   </data>
   <data name="Guild master has refused your request to join the guild." xml:space="preserve">
@@ -3493,7 +3493,7 @@
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
-    <value>Debes estar en una fiesta.</value>
+    <value>Debes estar en un grupo.</value>
     <comment>legacy_id=937</comment>
   </data>
   <data name="Command Window" xml:space="preserve">
@@ -4417,7 +4417,7 @@
     <comment>legacy_id=1184</comment>
   </data>
   <data name="Can only be used during party" xml:space="preserve">
-    <value>Sólo se puede utilizar durante la fiesta.</value>
+    <value>Solo se puede usar en grupo.</value>
     <comment>legacy_id=1185</comment>
   </data>
   <data name="Force wave skill (mana:%d)" xml:space="preserve">
@@ -4973,11 +4973,11 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>Artículo en</value>
+    <value>Depositar objetos</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
-    <value>Artículo fuera</value>
+    <value>Retirar objetos</value>
     <comment>legacy_id=1337</comment>
   </data>
   <data name="Deposit zen" xml:space="preserve">
@@ -6277,7 +6277,7 @@
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>charla de fiesta</value>
+    <value>Chat de grupo</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% daumento</value>
+    <value>%d%% disminución</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">
@@ -7161,7 +7161,7 @@
     <comment>legacy_id=1930</comment>
   </data>
   <data name="Req LV" xml:space="preserve">
-    <value>Requiere BT</value>
+    <value>LV req.</value>
     <comment>legacy_id=1931</comment>
   </data>
   <data name="Register your Lucky Coins or" xml:space="preserve">
@@ -9281,7 +9281,7 @@
     <comment>legacy_id=2623</comment>
   </data>
   <data name="Party battle has been cancelled." xml:space="preserve">
-    <value>La batalla del partido ha sido cancelada.</value>
+    <value>La batalla de grupo ha sido cancelada.</value>
     <comment>legacy_id=2624</comment>
   </data>
   <data name="You cannot request another battle during the party battle." xml:space="preserve">
@@ -9293,7 +9293,7 @@
     <comment>legacy_id=2626</comment>
   </data>
   <data name="Would you like to accept the party battle?" xml:space="preserve">
-    <value>¿Le gustaría aceptar la batalla del partido?</value>
+    <value>¿Quieres aceptar la batalla de grupo?</value>
     <comment>legacy_id=2627</comment>
   </data>
   <data name="Unique" xml:space="preserve">
@@ -9817,23 +9817,23 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Ronda de Guardianes de la Fortaleza del Imperio %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>ha sido despejado.</value>
+    <value>ha sido completado.</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>No has logrado conquistar el</value>
+    <value>No has logrado completar el</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Fortaleza de los Guardianes del Imperio.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Ronda %d (Zona %d)</value>
+    <value>Tier %d · Zona %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -10425,7 +10425,7 @@
     <comment>legacy_id=2989</comment>
   </data>
   <data name="You cannot form a party with a member of the opposing gens." xml:space="preserve">
-    <value>No se puede formar un partido con un miembro de la gens contraria.</value>
+    <value>No puedes formar un grupo con un miembro de la gens contraria.</value>
     <comment>legacy_id=2990</comment>
   </data>
   <data name="The alliance master has not joined the gens." xml:space="preserve">
@@ -10909,7 +10909,7 @@
     <comment>legacy_id=3121</comment>
   </data>
   <data name="Charm item" xml:space="preserve">
-    <value>Artículo de encanto</value>
+    <value>Amuleto</value>
     <comment>legacy_id=3122</comment>
   </data>
   <data name="Relic item" xml:space="preserve">
@@ -11489,7 +11489,7 @@
     <comment>legacy_id=3361</comment>
   </data>
   <data name="All party members must be of the same level for this area." xml:space="preserve">
-    <value>Todos los miembros del partido deben tener el mismo nivel para esta área.</value>
+    <value>Todos los miembros del grupo deben tener el mismo nivel para esta área.</value>
     <comment>legacy_id=3362</comment>
   </data>
   <data name="Players with an Outlaw or Killer status cannot enter this area." xml:space="preserve">
@@ -11993,7 +11993,7 @@
     <comment>legacy_id=3538</comment>
   </data>
   <data name="Preference of Party Heal" xml:space="preserve">
-    <value>Preferencia de curación del partido</value>
+    <value>Preferencia de curación del grupo</value>
     <comment>legacy_id=3539</comment>
   </data>
   <data name="Buff Duration for All Party Members" xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>Desmantelar joya ha fallado.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Zona despejada</value>
+    <value>Zona %d despejada</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu Minuto</value>
@@ -12948,10 +12948,10 @@
     <value>interruptor de corona %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(Fruta %s) La estadística de puntos %d ha sido Crear.</value>
+    <value>(Fruta %ls) La estadística de puntos %d ha sido Crear.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(Fruta %s) La estadística de puntos %d ha sido Disminuir.</value>
+    <value>(Fruta %ls) La estadística de puntos %d ha sido Disminuir.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Esta estadística ya no puede ser Crear.</value>
@@ -14537,5 +14537,8 @@
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Artesanía</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>Sin red</value>
   </data>
 </root>

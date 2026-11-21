@@ -128,16 +128,18 @@ body {
 @media (theme: mobile-hud) {
 	.system-log-stack { top: 100dp; }
 	.chat-stack { left: 36%; }
-	/* The timers and scores of the events go to the top centre, under the buffs (two rows) and the notice
-	   ticker (UI/Mobile/PhoneHudLayout.cpp), left of the party's cards: their PC places lie under Loot,
-	   Target and the first skill button. Each is centred on the frame's middle (320 units); the Doppelganger
-	   bar (227 x 87) is centred just under them (they never run together). */
+	/* The timers and scores of the events go under the buffs (two rows) and the notice ticker
+	   (UI/Mobile/PhoneHudLayout.cpp), left of the party's cards: their PC places lie under Loot, Target and
+	   the first skill button. Centred on the frame's middle (320 units) they covered the hero, who stands in
+	   the screen's middle at that height (874 x 402), so each starts 64 units right of the middle (384), clear
+	   of the hero and of the cards' column at the right edge. The Doppelganger bar (227 x 87) stays centred
+	   under them, below the hero's feet (they never run together). */
 	.event-hud .slot[data-window="blood_castle_time"],
 	.event-hud .slot[data-window="chaos_castle_time"],
-	.event-hud .slot[data-window="empire_guardian_timer"] { left: calc(258px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
+	.event-hud .slot[data-window="empire_guardian_timer"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="battle_soccer"],
-	.event-hud .slot[data-window="duel"] { left: calc(254px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
-	.event-hud .slot[data-window="kanturu_info"] { left: calc(270px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
+	.event-hud .slot[data-window="duel"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
+	.event-hud .slot[data-window="kanturu_info"] { left: calc(384px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="doppelganger_frame"] { left: calc(207px * var(--hud-scale)); top: calc(181px * var(--hud-scale)); }
 	/* A duel watcher's spectator list (57 wide, 18 a name) sat in the bottom-right corner, under the skill
 	   buttons. Its slot is the list's bottom-left corner and the names stack upwards from it: centred on the

@@ -48,6 +48,13 @@ public:
 
     void OpenningProcess();
     void ClosingProcess();
+#ifdef __EMSCRIPTEN__
+    // The warm-up (UI/Core/WindowWarmUp.h); its rows are filled in when the document is built.
+    // Not marked override, as none of this class's overrides are (clang's -Winconsistent-missing-override).
+    Rml::ElementDocument* GetWarmUpDocument() const { return m_RmlView.Document(); }
+    // Not on a phone or tablet: U needs a keyboard, and the button in the PC's bottom bar is not there.
+    bool PrepareWarmUp();
+#endif
 
 
 private:

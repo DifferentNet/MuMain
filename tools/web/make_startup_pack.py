@@ -381,9 +381,17 @@ def write_map_packs(root, listed, in_startup_pack, extras):
         if match and path not in in_startup_pack:
             maps.setdefault(int(match.group(2)), []).append([path, packed_size(os.path.join(root, path))])
     folder_files = {path for files in maps.values() for path, _ in files}
+    # A listed file goes in its map's pack even when it lives in another map's folder: Noria, Aida and
+    # Kanturu read Lorencia's butterflies (Data/Object1), Lost Tower the Dungeon's bats, rats and stones
+    # (Data/Object2), and those came one by one when only their own map's pack held them (2026-11-21).
+    # Only a path the pack holds already (its own folder's, or listed twice) is left out.
     for world, paths in extras.items():
-        maps.setdefault(world, []).extend([path, packed_size(os.path.join(root, path))] for path in paths
-                                          if path not in folder_files)
+        own = maps.setdefault(world, [])
+        in_own = {path for path, _ in own}
+        for path in paths:
+            if path not in in_own:
+                own.append([path, packed_size(os.path.join(root, path))])
+                in_own.add(path)
     names, packed, written, total, hashes = [], set(), 0, 0, {}
     for world, files in sorted(maps.items()):
         name = f"world{world}"

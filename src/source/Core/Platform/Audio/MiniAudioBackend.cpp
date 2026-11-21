@@ -84,6 +84,13 @@ bool IsSameMusicTrack(const std::string& identity, const char* name)
 // The page's count of the sounds that wait for their files: Module.muWaitingSounds in the browser
 // console (0 where none waits or none ever did).
 EM_JS(void, MuWeb_NoteWaitingSounds, (int count), { Module["muWaitingSounds"] = count; });
+
+// The page's counts of the sound loads that read and decoded their file and of those put off at effect
+// volume 0 (MiniAudioBackend::LoadSound), for the browser console.
+EM_JS(void, MuWeb_NoteSoundLoads, (double loaded, double putOff), {
+    Module["muSoundFilesLoaded"] = loaded;
+    Module["muSoundLoadsPutOff"] = putOff;
+});
 #endif
 } // namespace
 
@@ -145,6 +152,7 @@ void MiniAudioBackend::Shutdown()
     for (int buf = 0; buf < static_cast<int>(MAX_BUFFER); ++buf)
     {
         UnloadSlot(buf);
+        m_putOffSounds[buf] = {};
         // Clear per-slot OBJECT* tracking to prevent dangling
         // pointers if the backend is restarted. Safe even if slot was never loaded.
         SetSoundObject(buf, nullptr);
@@ -161,6 +169,7 @@ void MiniAudioBackend::Shutdown()
     m_waitedSoundFrames = 0;
     m_waitingMusicName.clear();
     m_waitingMusicPath.clear();
+    m_notePutOffLoad = false;
 #endif
 
     ma_engine_uninit(&m_engine);
@@ -195,6 +204,26 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
     // Unload previously loaded sound at this slot; this also clears its object pointer, so
     // Set3DSoundPosition() cannot dereference one that belonged to the previous load lifetime.
     UnloadSlot(bufIdx);
+    m_putOffSounds[bufIdx] = {};
+
+    // At effect volume 0 the sound is only remembered: reading and decoding it (on the web downloading it
+    // too) would be for nothing until the volume rises, and many are never played. PlaySound loads it then.
+    if (m_sfxVolume <= 0.0f)
+    {
+#ifdef __EMSCRIPTEN__
+        if (m_waitingSounds.Remove(bufIdx))
+        {
+            MuWeb_NoteWaitingSounds(static_cast<int>(m_waitingSounds.Size()));
+        }
+#endif
+        if (filename != nullptr && filename[0] != L'\0')
+        {
+            m_putOffSounds[bufIdx] = {filename, channels, enable3D, false};
+            ++m_soundLoadsPutOff;
+            NoteSoundLoads();
+        }
+        return;
+    }
 
     // Convert wchar_t filename to UTF-8 for miniaudio (which uses narrow char*)
     std::string utf8Path = AudioPathToUtf8(filename);
@@ -256,6 +285,58 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
     // Record how many slots were actually initialised so that
     // PlaySound/StopSound/AllStopSound never touch uninitialized ma_sound handles.
     m_loadedChannels[bufIdx] = numChannels;
+    ++m_soundFilesLoaded;
+    NoteSoundLoads();
+}
+
+bool MiniAudioBackend::LoadPutOffSound(int buf, bool looped)
+{
+    PutOffSound& putOff = m_putOffSounds[buf];
+    if (putOff.file.empty())
+    {
+        return false;
+    }
+    if (m_sfxVolume <= 0.0f)
+    {
+        putOff.loop = putOff.loop || looped;
+        return false;
+    }
+    const PutOffSound load = std::exchange(putOff, {});
+    LoadSound(static_cast<ESound>(buf), load.file.c_str(), load.channels, load.enable3D);
+#ifdef __EMSCRIPTEN__
+    // A looped play asked for (while it was put off, or now) of a sound whose file is still on its way: its
+    // waiting load keeps it, and LoadWaitingSounds starts it once the sound loads. The Blood Castle and Chaos
+    // Castle ambience is asked for once, and was lost when the volume rose before the sounds' part came.
+    if ((load.loop || looped) && !m_soundLoaded[buf])
+    {
+        (void)m_waitingSounds.SetLoop(buf, true);
+    }
+    if (std::exchange(m_notePutOffLoad, false))
+    {
+        std::printf("Web audio: %s loaded at its first play since the effect volume rose (%s)\n",
+                    AudioPathToUtf8(load.file.c_str()).c_str(),
+                    m_soundLoaded[buf] ? "playing" : "waiting for its file");
+    }
+#endif
+    return m_soundLoaded[buf];
+}
+
+void MiniAudioBackend::StartPutOffLoops()
+{
+    for (int buf = 0; buf < static_cast<int>(MAX_BUFFER); ++buf)
+    {
+        if (m_putOffSounds[buf].loop)
+        {
+            (void)PlaySound(static_cast<ESound>(buf), nullptr, true);
+        }
+    }
+}
+
+void MiniAudioBackend::NoteSoundLoads() const
+{
+#ifdef __EMSCRIPTEN__
+    MuWeb_NoteSoundLoads(static_cast<double>(m_soundFilesLoaded), static_cast<double>(m_soundLoadsPutOff));
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -282,7 +363,7 @@ bool MiniAudioBackend::PlaySound(ESound buffer, const void* pObject, bool looped
         return false;
     }
 
-    if (!m_soundLoaded[bufIdx])
+    if (!m_soundLoaded[bufIdx] && !LoadPutOffSound(bufIdx, looped))
     {
         return false;
     }
@@ -381,6 +462,10 @@ void MiniAudioBackend::StopSound(ESound buffer, bool resetPosition)
 
     if (!m_soundLoaded[bufIdx])
     {
+        m_putOffSounds[bufIdx].loop = false;
+#ifdef __EMSCRIPTEN__
+        (void)m_waitingSounds.SetLoop(bufIdx, false);
+#endif
         return;
     }
 
@@ -425,8 +510,12 @@ void MiniAudioBackend::AllStopSound()
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    m_waitingSounds.ClearLoops();
+#endif
     for (int buf = 0; buf < static_cast<int>(MAX_BUFFER); ++buf)
     {
+        m_putOffSounds[buf].loop = false;
         if (m_soundLoaded[buf])
         {
             // Iterate only the channels actually initialised.
@@ -457,6 +546,7 @@ void MiniAudioBackend::ReleaseSound(ESound buffer)
         MuWeb_NoteWaitingSounds(static_cast<int>(m_waitingSounds.Size()));
     }
 #endif
+    m_putOffSounds[buf] = {};
     UnloadSlot(buf);
 }
 
@@ -868,6 +958,12 @@ float MiniAudioBackend::DbToLinear(long dsVol)
 void MiniAudioBackend::SetBGMVolume(float level)
 {
     m_bgmVolume = std::clamp(level, 0.0f, 1.0f);
+#ifdef __EMSCRIPTEN__
+    if (m_bgmVolume > 0.0f)
+    {
+        mu::web::WantDeferredPart("Data/Music/");
+    }
+#endif
     if (m_initialized && m_musicLoaded)
     {
         ma_sound_set_volume(&m_musicSound, m_bgmVolume);
@@ -879,10 +975,26 @@ void MiniAudioBackend::SetBGMVolume(float level)
 // SetSFXVolume — set SFX volume (linear 0.0 to 1.0), clamped.
 // Applies per-slot ma_sound_set_volume to all loaded SFX channels.
 // Does NOT use ma_engine_set_volume (would also affect BGM).
+// Rising from 0 it starts the looped sounds asked for while they were put off (LoadSound).
 // ---------------------------------------------------------------------------
 void MiniAudioBackend::SetSFXVolume(float level)
 {
+    const bool wasSilent = m_sfxVolume <= 0.0f;
     m_sfxVolume = std::clamp(level, 0.0f, 1.0f);
+    const bool rose = wasSilent && m_sfxVolume > 0.0f;
+#ifdef __EMSCRIPTEN__
+    if (m_sfxVolume > 0.0f)
+    {
+        mu::web::WantDeferredPart("Data/Sound/");
+    }
+    if (rose && m_soundLoadsPutOff > 0)
+    {
+        std::printf("Web audio: effect volume up; %zu sound loads were put off at volume 0 and load at their "
+                    "first play (%zu sound files loaded before)\n",
+                    m_soundLoadsPutOff, m_soundFilesLoaded);
+        m_notePutOffLoad = true;
+    }
+#endif
     if (!m_initialized)
     {
         return;
@@ -898,6 +1010,10 @@ void MiniAudioBackend::SetSFXVolume(float level)
         {
             ma_sound_set_volume(&m_sounds[buf][ch], m_sfxVolume);
         }
+    }
+    if (rose)
+    {
+        StartPutOffLoops();
     }
 }
 
@@ -923,7 +1039,8 @@ float MiniAudioBackend::GetSFXVolume() const
 // replaces or drops the waiting load. Looping ambient sounds the game asks to play every frame need
 // nothing more. A looped sound asked for once (the Blood Castle and Chaos Castle ambience) before its
 // part came stays silent until the game asks for it again: accepted, as the parts come seconds after
-// the start, mostly before a player gets there.
+// the start, mostly before a player gets there. Not one put off at effect volume 0 and asked for looped:
+// its waiting load keeps the loop (LoadPutOffSound), which LoadWaitingSounds starts.
 // ---------------------------------------------------------------------------
 bool MiniAudioBackend::WaitForSoundFile(int bufIdx, const wchar_t* filename, const std::string& utf8Path, int channels,
                                         bool enable3D)
@@ -932,7 +1049,7 @@ bool MiniAudioBackend::WaitForSoundFile(int bufIdx, const wchar_t* filename, con
     const bool waits = mu::web::WaitsForDeferredPart(utf8Path);
     if (waits)
     {
-        m_waitingSounds.Add({bufIdx, filename ? filename : L"", utf8Path, channels, enable3D});
+        m_waitingSounds.Add({bufIdx, filename ? filename : L"", utf8Path, channels, enable3D, false});
     }
     if (waits || waited)
     {
@@ -1018,6 +1135,12 @@ void MiniAudioBackend::LoadWaitingSounds(double budgetMs)
     while (std::optional<WaitingSoundLoad> load = m_waitingSounds.TakeFirstReady(here))
     {
         LoadSound(static_cast<ESound>(load->slot), load->file.c_str(), load->channels, load->enable3D);
+        if (load->loop)
+        {
+            // The looped play asked for while it waited (LoadPutOffSound) starts now; where the volume fell
+            // to 0 again, the load is put off once more and PlaySound keeps the loop for the volume's rise.
+            (void)PlaySound(static_cast<ESound>(load->slot), nullptr, true);
+        }
         ++loaded;
         if (std::chrono::steady_clock::now() - start >= budget)
         {

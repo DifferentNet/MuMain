@@ -18,4 +18,6 @@
 .macro-shadow { display: none; }
 .macro-bar { position: absolute; left: 0; top: 12px; width: 54px; height: 6px; background-color: token(surface-recessed); border: 1px token(border-frame); border-radius: token(radius-sm); }
 .macro-track { position: absolute; left: 1px; top: 1px; width: 50px; height: 2px; }
-.macro-fill { position: absolute; left: 0; top: 0; height: 2px; background-color: token(semantic-success); }
+/* The track's whole width, shrunk from the left edge by a scaleX() bound to the cooldown left
+   (hud_status.rml): a transform, unlike a width, does not lay the document out again each frame. */
+.macro-fill { position: absolute; left: 0; top: 0; width: 100%; height: 2px; transform-origin: left center; transform: scaleX(0); background-color: token(semantic-success); }

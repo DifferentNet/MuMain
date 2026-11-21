@@ -397,7 +397,7 @@
     <comment>legacy_id=99,3512</comment>
   </data>
   <data name="Zen" xml:space="preserve">
-    <value>禪</value>
+    <value>Zen</value>
     <comment>legacy_id=100,224,1246,3523</comment>
   </data>
   <data name="Heart" xml:space="preserve">
@@ -449,7 +449,7 @@
     <comment>legacy_id=112</comment>
   </data>
   <data name="[Rena/Zen/Jewel/Item]" xml:space="preserve">
-    <value>[蕾娜/禪/寶石/物品]</value>
+    <value>[蕾娜/Zen/寶石/物品]</value>
     <comment>legacy_id=113</comment>
   </data>
   <data name="you will get one of the above items." xml:space="preserve">
@@ -524,7 +524,7 @@
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P : 派對窗口</value>
+    <value>P：隊伍視窗</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
@@ -680,15 +680,15 @@
     <comment>legacy_id=166</comment>
   </data>
   <data name="AGI" xml:space="preserve">
-    <value>通用人工智慧</value>
+    <value>AGI</value>
     <comment>legacy_id=167</comment>
   </data>
   <data name="ENG" xml:space="preserve">
-    <value>英語</value>
+    <value>ENG</value>
     <comment>legacy_id=168</comment>
   </data>
   <data name="STA" xml:space="preserve">
-    <value>史塔</value>
+    <value>STA</value>
     <comment>legacy_id=169</comment>
   </data>
   <data name="Wizardry Dmg:%d~%d" xml:space="preserve">
@@ -772,7 +772,7 @@
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
-    <value>派對</value>
+    <value>隊伍</value>
     <comment>legacy_id=190,944,3515,3554</comment>
   </data>
   <data name="Type /party with the mouse cursor on" xml:space="preserve">
@@ -780,11 +780,11 @@
     <comment>legacy_id=191</comment>
   </data>
   <data name="the player you would like" xml:space="preserve">
-    <value>你想要的球員</value>
+    <value>你想要的玩家</value>
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>創造一個派對</value>
+    <value>組成隊伍</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -792,7 +792,7 @@
     <comment>legacy_id=194</comment>
   </data>
   <data name="a party with them." xml:space="preserve">
-    <value>和他們一起聚會。</value>
+    <value>與他們組成隊伍。</value>
     <comment>legacy_id=195</comment>
   </data>
   <data name="You can share more Exp with" xml:space="preserve">
@@ -800,7 +800,7 @@
     <comment>legacy_id=196</comment>
   </data>
   <data name="your party members based on level." xml:space="preserve">
-    <value>您的黨員基於級別。</value>
+    <value>依等級分給隊伍成員。</value>
     <comment>legacy_id=197</comment>
   </data>
   <data name="Cost" xml:space="preserve">
@@ -884,7 +884,7 @@
     <comment>legacy_id=218,3419</comment>
   </data>
   <data name="[Zen available to be exchanged to Rena]" xml:space="preserve">
-    <value>[禪可以兌換給蕾娜]</value>
+    <value>[Zen 可以兌換給蕾娜]</value>
     <comment>legacy_id=219</comment>
   </data>
   <data name="Close Guild Window (G)" xml:space="preserve">
@@ -892,7 +892,7 @@
     <comment>legacy_id=220</comment>
   </data>
   <data name="Close Party Window (P)" xml:space="preserve">
-    <value>關閉聚會視窗 (P)</value>
+    <value>關閉隊伍視窗 (P)</value>
     <comment>legacy_id=221</comment>
   </data>
   <data name="Close Character Info Window (C)" xml:space="preserve">
@@ -912,7 +912,7 @@
     <comment>legacy_id=226,943,3465</comment>
   </data>
   <data name="Zen Trade" xml:space="preserve">
-    <value>禪宗貿易</value>
+    <value>Zen 貿易</value>
     <comment>legacy_id=227</comment>
   </data>
   <data name="OK" xml:space="preserve">
@@ -1028,11 +1028,11 @@
     <comment>legacy_id=255</comment>
   </data>
   <data name="Party256" xml:space="preserve">
-    <value>/派對</value>
+    <value>/組隊</value>
     <comment>legacy_id=256</comment>
   </data>
   <data name="You are already in a party" xml:space="preserve">
-    <value>你已經在聚會中了</value>
+    <value>你已經在隊伍中了</value>
     <comment>legacy_id=257</comment>
   </data>
   <data name="/exchange" xml:space="preserve">
@@ -1312,7 +1312,7 @@
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
-    <value>聚會（P）</value>
+    <value>隊伍（P）</value>
     <comment>legacy_id=361</comment>
   </data>
   <data name="Character (C)" xml:space="preserve">
@@ -1577,7 +1577,7 @@
     <comment>legacy_id=422</comment>
   </data>
   <data name="You are short of Zen." xml:space="preserve">
-    <value>你缺乏禪宗。</value>
+    <value>你缺乏 Zen。</value>
     <comment>legacy_id=423</comment>
   </data>
   <data name="You can not trade over 50 million Zen at once" xml:space="preserve">
@@ -1585,7 +1585,7 @@
     <comment>legacy_id=424</comment>
   </data>
   <data name="Someone requests you to join their a party" xml:space="preserve">
-    <value>有人邀請您參加他們的聚會</value>
+    <value>有人邀請您加入他們的隊伍</value>
     <comment>legacy_id=425</comment>
   </data>
   <data name="Please draw your guild emblem" xml:space="preserve">
@@ -1861,7 +1861,7 @@
     <comment>legacy_id=496</comment>
   </data>
   <data name="Creating a party has failed." xml:space="preserve">
-    <value>創建政黨失敗。</value>
+    <value>建立隊伍失敗。</value>
     <comment>legacy_id=497</comment>
   </data>
   <data name="Your request has been denied." xml:space="preserve">
@@ -1869,7 +1869,7 @@
     <comment>legacy_id=498</comment>
   </data>
   <data name="Party is full." xml:space="preserve">
-    <value>聚會已滿。</value>
+    <value>隊伍已滿。</value>
     <comment>legacy_id=499</comment>
   </data>
   <data name="The user has left the game." xml:space="preserve">
@@ -1881,7 +1881,7 @@
     <comment>legacy_id=501</comment>
   </data>
   <data name="You have just left the party." xml:space="preserve">
-    <value>你剛離開聚會。</value>
+    <value>你剛離開隊伍。</value>
     <comment>legacy_id=502</comment>
   </data>
   <data name="Guild master has refused your request to join the guild." xml:space="preserve">
@@ -2141,7 +2141,7 @@
     <comment>legacy_id=570</comment>
   </data>
   <data name="Throw it and you may receive some Zen or items" xml:space="preserve">
-    <value>丟掉它，你可能會收到一些禪宗或物品</value>
+    <value>丟掉它，你可能會收到一些 Zen 或物品</value>
     <comment>legacy_id=571</comment>
   </data>
   <data name="It is used to increase your item level up to 6" xml:space="preserve">
@@ -2241,7 +2241,7 @@
     <comment>legacy_id=595</comment>
   </data>
   <data name="Not enough Zen to combine items" xml:space="preserve">
-    <value>沒有足夠的禪宗來組合物品</value>
+    <value>沒有足夠的 Zen 來組合物品</value>
     <comment>legacy_id=596</comment>
   </data>
   <data name="Point - no more dates" xml:space="preserve">
@@ -2361,7 +2361,7 @@
     <comment>legacy_id=626</comment>
   </data>
   <data name="Increases acquisition rate of Zen after hunting monsters +30%%" xml:space="preserve">
-    <value>狩獵怪物後禪的獲得率增加+30%%</value>
+    <value>狩獵怪物後 Zen 的獲得率增加+30%%</value>
     <comment>legacy_id=627</comment>
   </data>
   <data name="Excellent Damage rate +10%%" xml:space="preserve">
@@ -2461,7 +2461,7 @@
     <comment>legacy_id=651</comment>
   </data>
   <data name="TheDevilSquareIsAPlace" xml:space="preserve">
-    <value>惡魔廣場是戰士們證明勇氣的地方。符合條件的戰士將會收到惡魔邀請函。帶著惡魔之眼、惡魔鑰匙、混沌寶石和足夠的禪宗前往諾裡亞的混沌哥布林。</value>
+    <value>惡魔廣場是戰士們證明勇氣的地方。符合條件的戰士將會收到惡魔邀請函。帶著惡魔之眼、惡魔鑰匙、混沌寶石和足夠的 Zen 前往諾裡亞的混沌哥布林。</value>
     <comment>legacy_id=652</comment>
   </data>
   <data name="YouHaveComeTooSoonYou" xml:space="preserve">
@@ -2673,7 +2673,7 @@
     <comment>legacy_id=705</comment>
   </data>
   <data name="can be exchanged into Zen" xml:space="preserve">
-    <value>可以換成禪宗</value>
+    <value>可以換成 Zen</value>
     <comment>legacy_id=706</comment>
   </data>
   <data name="June 17th ~ July 8th" xml:space="preserve">
@@ -2681,7 +2681,7 @@
     <comment>legacy_id=707</comment>
   </data>
   <data name="1 Rena = 3,000 Zen" xml:space="preserve">
-    <value>1 瑞納 = 3,000 禪</value>
+    <value>1 瑞納 = 3,000 Zen</value>
     <comment>legacy_id=708</comment>
   </data>
   <data name="Rena Exchange" xml:space="preserve">
@@ -2745,19 +2745,19 @@
     <comment>legacy_id=723</comment>
   </data>
   <data name="TheGoldenArcherWillStayAt" xml:space="preserve">
-    <value>金弓手將在洛倫西亞待到7月8日，將雷納換成禪</value>
+    <value>金弓手將在洛倫西亞待到7月8日，將雷納換成 Zen</value>
     <comment>legacy_id=724</comment>
   </data>
   <data name="AreYouThrowingRenaOnThe" xml:space="preserve">
-    <value>你把蕾娜丟在地上嗎？蕾娜在這個世界或許沒什麼用處，但可以透過金弓手兌換成禪。</value>
+    <value>你把蕾娜丟在地上嗎？蕾娜在這個世界或許沒什麼用處，但可以透過金弓手兌換成 Zen。</value>
     <comment>legacy_id=725</comment>
   </data>
   <data name="RyanTheMaidOfTheBar" xml:space="preserve">
-    <value>洛倫西亞酒吧的女服務生萊恩說，雷納可以兌換成禪。如果你有蕾娜，就去看看金弓手。</value>
+    <value>洛倫西亞酒吧的女服務生萊恩說，雷納可以兌換成 Zen。如果你有蕾娜，就去看看金弓手。</value>
     <comment>legacy_id=726</comment>
   </data>
   <data name="RenaIsATypeOfCoin" xml:space="preserve">
-    <value>「瑞納」是一種很久以前在天堂世界中使用的硬幣。這個世界不能使用，但如果你去洛倫西亞的『金弓手』那裡，他會把它兌換成禪。</value>
+    <value>「瑞納」是一種很久以前在天堂世界中使用的硬幣。這個世界不能使用，但如果你去洛倫西亞的『金弓手』那裡，他會把它兌換成 Zen。</value>
     <comment>legacy_id=727</comment>
   </data>
   <data name="Loren (New)" xml:space="preserve">
@@ -3217,7 +3217,7 @@
     <comment>legacy_id=861,2771</comment>
   </data>
   <data name="Rewarded Zen: %d" xml:space="preserve">
-    <value>獎勵禪宗：%d</value>
+    <value>獎勵 Zen：%d</value>
     <comment>legacy_id=862</comment>
   </data>
   <data name="Blood Castle Point: %d" xml:space="preserve">
@@ -3361,7 +3361,7 @@
     <comment>legacy_id=901</comment>
   </data>
   <data name="1 Stone = 3,000 Zen" xml:space="preserve">
-    <value>1 石頭 = 3,000 禪</value>
+    <value>1 石頭 = 3,000 Zen</value>
     <comment>legacy_id=902</comment>
   </data>
   <data name="Stone Exchange" xml:space="preserve">
@@ -3493,7 +3493,7 @@
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
-    <value>你必須參加聚會</value>
+    <value>你必須在隊伍中</value>
     <comment>legacy_id=937</comment>
   </data>
   <data name="Command Window" xml:space="preserve">
@@ -4233,7 +4233,7 @@
     <comment>legacy_id=1131</comment>
   </data>
   <data name="Selling price : %s zen" xml:space="preserve">
-    <value>售價：%s 禪宗</value>
+    <value>售價：%s Zen</value>
     <comment>legacy_id=1132</comment>
   </data>
   <data name="Do you want to sell item at this price?" xml:space="preserve">
@@ -4245,7 +4245,7 @@
     <comment>legacy_id=1134</comment>
   </data>
   <data name="can only be done using zen." xml:space="preserve">
-    <value>只能用禪來完成。</value>
+    <value>只能用 Zen 來完成。</value>
     <comment>legacy_id=1135</comment>
   </data>
   <data name="/View store on" xml:space="preserve">
@@ -4417,7 +4417,7 @@
     <comment>legacy_id=1184</comment>
   </data>
   <data name="Can only be used during party" xml:space="preserve">
-    <value>只能在聚會期間使用</value>
+    <value>只能在組隊時使用</value>
     <comment>legacy_id=1185</comment>
   </data>
   <data name="Force wave skill (mana:%d)" xml:space="preserve">
@@ -4597,11 +4597,11 @@
     <comment>legacy_id=1230</comment>
   </data>
   <data name="%s zen is lacking to recover life." xml:space="preserve">
-    <value>%s 缺乏恢復生命的禪宗。</value>
+    <value>%s 缺乏恢復生命的 Zen。</value>
     <comment>legacy_id=1231</comment>
   </data>
   <data name="%s zen is required to recover life." xml:space="preserve">
-    <value>%s 恢復生命需要禪宗。</value>
+    <value>%s 恢復生命需要 Zen。</value>
     <comment>legacy_id=1232</comment>
   </data>
   <data name="No %s." xml:space="preserve">
@@ -4973,19 +4973,19 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>項目在</value>
+    <value>存入物品</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
-    <value>專案輸出</value>
+    <value>取出物品</value>
     <comment>legacy_id=1337</comment>
   </data>
   <data name="Deposit zen" xml:space="preserve">
-    <value>存款禪</value>
+    <value>存入 Zen</value>
     <comment>legacy_id=1338</comment>
   </data>
   <data name="Withdraw zen" xml:space="preserve">
-    <value>撤禪</value>
+    <value>提取 Zen</value>
     <comment>legacy_id=1339</comment>
   </data>
   <data name="Withdrawal limit" xml:space="preserve">
@@ -5081,7 +5081,7 @@
     <comment>legacy_id=1363</comment>
   </data>
   <data name="All the items and zen in the guild vault will disappear" xml:space="preserve">
-    <value>公會金庫中的所有物品和禪宗都會消失</value>
+    <value>公會金庫中的所有物品和 Zen 都會消失</value>
     <comment>legacy_id=1364</comment>
   </data>
   <data name="Also the guild ranking information will disappear." xml:space="preserve">
@@ -5109,7 +5109,7 @@
     <comment>legacy_id=1370</comment>
   </data>
   <data name="X zen and N Jewel of Bless is" xml:space="preserve">
-    <value>X 禪和 N 祝福寶石是</value>
+    <value>X Zen 和 N 祝福寶石是</value>
     <comment>legacy_id=1371</comment>
   </data>
   <data name="Required" xml:space="preserve">
@@ -5777,7 +5777,7 @@
     <comment>legacy_id=1552</comment>
   </data>
   <data name="%d Guardian jewel and %d zen are required." xml:space="preserve">
-    <value>需要 %d 守護寶石和 %d 禪。</value>
+    <value>需要 %d 守護寶石和 %d Zen。</value>
     <comment>legacy_id=1553</comment>
   </data>
   <data name="Would you like to repair?" xml:space="preserve">
@@ -5897,7 +5897,7 @@
     <comment>legacy_id=1583</comment>
   </data>
   <data name="Retaining zen of castle: %I64d" xml:space="preserve">
-    <value>保留城堡的禪意：%I64d</value>
+    <value>保留城堡的 Zen：%I64d</value>
     <comment>legacy_id=1584</comment>
   </data>
   <data name="Tax belongs to the castle" xml:space="preserve">
@@ -6037,7 +6037,7 @@
     <comment>legacy_id=1621</comment>
   </data>
   <data name="Required zen: %s(%s)" xml:space="preserve">
-    <value>所需禪宗：%s(%s)</value>
+    <value>所需 Zen：%s(%s)</value>
     <comment>legacy_id=1622</comment>
   </data>
   <data name="Tax rate: %d%% (changed in real-time)" xml:space="preserve">
@@ -6061,7 +6061,7 @@
     <comment>legacy_id=1627</comment>
   </data>
   <data name="Insufficient zen for entering" xml:space="preserve">
-    <value>禪意不足，無法進入</value>
+    <value>Zen 不足，無法進入</value>
     <comment>legacy_id=1628</comment>
   </data>
   <data name="Approval from the lord of a castle is required" xml:space="preserve">
@@ -6093,7 +6093,7 @@
     <comment>legacy_id=1635</comment>
   </data>
   <data name="Required zen for potion: %s(%s)" xml:space="preserve">
-    <value>藥水所需的禪宗：%s(%s)</value>
+    <value>藥水所需的 Zen：%s(%s)</value>
     <comment>legacy_id=1636</comment>
   </data>
   <data name="Alliance function will be restricted due to the Castle Siege." xml:space="preserve">
@@ -6277,7 +6277,7 @@
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>聚會聊天</value>
+    <value>隊伍聊天</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
@@ -6497,7 +6497,7 @@
     <comment>legacy_id=1737</comment>
   </data>
   <data name="Command" xml:space="preserve">
-    <value>命令</value>
+    <value>統率</value>
     <comment>legacy_id=1738,1900</comment>
   </data>
   <data name="Long gmae time may be harmful to your health" xml:space="preserve">
@@ -6641,7 +6641,7 @@
     <comment>legacy_id=1775</comment>
   </data>
   <data name="%d%% increment" xml:space="preserve">
-    <value>%d%% i增量</value>
+    <value>%d%% 增量</value>
     <comment>legacy_id=1776</comment>
   </data>
   <data name="DIncrement1777" xml:space="preserve">
@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% d減少</value>
+    <value>%d%% 減少</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">
@@ -6741,7 +6741,7 @@
     <comment>legacy_id=1810</comment>
   </data>
   <data name="Zen is insufficient." xml:space="preserve">
-    <value>禪是不夠的。</value>
+    <value>Zen 是不夠的。</value>
     <comment>legacy_id=1811</comment>
   </data>
   <data name="Corresponding item is inappropriate." xml:space="preserve">
@@ -7589,7 +7589,7 @@
     <comment>legacy_id=2086</comment>
   </data>
   <data name="Lacks %d zen" xml:space="preserve">
-    <value>缺乏 %d 禪宗</value>
+    <value>缺乏 %d Zen</value>
     <comment>legacy_id=2087</comment>
   </data>
   <data name="For restoring reinforced item," xml:space="preserve">
@@ -7613,7 +7613,7 @@
     <comment>legacy_id=2093</comment>
   </data>
   <data name="Required zen : %d zen" xml:space="preserve">
-    <value>所需禪宗：%d 禪宗</value>
+    <value>所需 Zen：%d Zen</value>
     <comment>legacy_id=2094</comment>
   </data>
   <data name="of Jewel of Harmony, orignal" xml:space="preserve">
@@ -9281,7 +9281,7 @@
     <comment>legacy_id=2623</comment>
   </data>
   <data name="Party battle has been cancelled." xml:space="preserve">
-    <value>黨戰已取消。</value>
+    <value>組隊戰鬥已取消。</value>
     <comment>legacy_id=2624</comment>
   </data>
   <data name="You cannot request another battle during the party battle." xml:space="preserve">
@@ -9293,7 +9293,7 @@
     <comment>legacy_id=2626</comment>
   </data>
   <data name="Would you like to accept the party battle?" xml:space="preserve">
-    <value>你願意接受黨戰嗎？</value>
+    <value>你願意接受組隊戰鬥嗎？</value>
     <comment>legacy_id=2627</comment>
   </data>
   <data name="Unique" xml:space="preserve">
@@ -9641,7 +9641,7 @@
     <comment>legacy_id=2743</comment>
   </data>
   <data name="Zen increase 50%%" xml:space="preserve">
-    <value>禪宗增加50%%</value>
+    <value>Zen 增加50%%</value>
     <comment>legacy_id=2744</comment>
   </data>
   <data name="Damage/Wizardry/Curse +30" xml:space="preserve">
@@ -9649,7 +9649,7 @@
     <comment>legacy_id=2745</comment>
   </data>
   <data name="Auto-collects zen around you." xml:space="preserve">
-    <value>自動收集你周圍的禪宗。</value>
+    <value>自動收集你周圍的 Zen。</value>
     <comment>legacy_id=2746</comment>
   </data>
   <data name="EXP rate 50%% increase" xml:space="preserve">
@@ -9817,23 +9817,23 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>帝國堡壘守護者回合 %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>已被清除。</value>
+    <value>已通關。</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>你未能征服</value>
+    <value>你未能通關</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>帝國守護者要塞。</value>
+    <value>Tier Map。</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>圓形 %d（%d 區）</value>
+    <value>Tier %d · 區域 %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -9853,7 +9853,7 @@
     <comment>legacy_id=2814</comment>
   </data>
   <data name="You have reached your Zen limit." xml:space="preserve">
-    <value>你已經達到禪宗的極限了。</value>
+    <value>你已經達到 Zen 的極限了。</value>
     <comment>legacy_id=2816</comment>
   </data>
   <data name="IfYouGiveUpYouWill" xml:space="preserve">
@@ -9921,7 +9921,7 @@
     <comment>legacy_id=2837</comment>
   </data>
   <data name="You can only enter as a member of a party." xml:space="preserve">
-    <value>您只能以政黨成員的身分參加。</value>
+    <value>您只能以隊伍成員的身分進入。</value>
     <comment>legacy_id=2838,2843</comment>
   </data>
   <data name="Quest Item Missing" xml:space="preserve">
@@ -10425,7 +10425,7 @@
     <comment>legacy_id=2989</comment>
   </data>
   <data name="You cannot form a party with a member of the opposing gens." xml:space="preserve">
-    <value>你不能與敵對氏族的成員組成政黨。</value>
+    <value>你不能與敵對氏族的成員組隊。</value>
     <comment>legacy_id=2990</comment>
   </data>
   <data name="The alliance master has not joined the gens." xml:space="preserve">
@@ -10909,7 +10909,7 @@
     <comment>legacy_id=3121</comment>
   </data>
   <data name="Charm item" xml:space="preserve">
-    <value>魅力物品</value>
+    <value>護身符</value>
     <comment>legacy_id=3122</comment>
   </data>
   <data name="Relic item" xml:space="preserve">
@@ -11013,7 +11013,7 @@
     <comment>legacy_id=3147</comment>
   </data>
   <data name="Exceeded maximum amount of Zen you can possess." xml:space="preserve">
-    <value>超過了您可以擁有的最大禪宗數量。</value>
+    <value>超過了您可以擁有的最大 Zen 數量。</value>
     <comment>legacy_id=3148</comment>
   </data>
   <data name="You cannot join the gens while you're in a guild alliance." xml:space="preserve">
@@ -11029,7 +11029,7 @@
     <comment>legacy_id=3151</comment>
   </data>
   <data name="LegitimateBearersOfTheKarutanRoyal" xml:space="preserve">
-    <value>卡魯坦皇家騎士團的合法持有者和體力強大的武術家。他們也透過鑄造輔助愛好者來幫助其他政黨成員。</value>
+    <value>卡魯坦皇家騎士團的正統傳人，擁有強大體力的武術家。他們也會施放輔助增益來幫助其他隊伍成員。</value>
     <comment>legacy_id=3152</comment>
   </data>
   <data name="Killing Blow (Mana: %d)" xml:space="preserve">
@@ -11425,7 +11425,7 @@
     <comment>legacy_id=3345</comment>
   </data>
   <data name="F7: Party Chat On/Off" xml:space="preserve">
-    <value>F7：聚會聊天開/關</value>
+    <value>F7：隊伍聊天開/關</value>
     <comment>legacy_id=3346</comment>
   </data>
   <data name="F8: Guild Chat On/Off" xml:space="preserve">
@@ -11469,7 +11469,7 @@
     <comment>legacy_id=3356</comment>
   </data>
   <data name="Increases the amount of Zen received from killing monsters by 60%%" xml:space="preserve">
-    <value>殺死怪物獲得的禪宗數量增加 60%%</value>
+    <value>殺死怪物獲得的 Zen 數量增加 60%%</value>
     <comment>legacy_id=3357</comment>
   </data>
   <data name="Increases the chance of causing Excellent Damage by 15%%" xml:space="preserve">
@@ -11489,7 +11489,7 @@
     <comment>legacy_id=3361</comment>
   </data>
   <data name="All party members must be of the same level for this area." xml:space="preserve">
-    <value>該區域的所有黨員必須處於同一級別。</value>
+    <value>該區域的所有隊伍成員必須處於同一等級。</value>
     <comment>legacy_id=3362</comment>
   </data>
   <data name="Players with an Outlaw or Killer status cannot enter this area." xml:space="preserve">
@@ -11993,7 +11993,7 @@
     <comment>legacy_id=3538</comment>
   </data>
   <data name="Preference of Party Heal" xml:space="preserve">
-    <value>派對治療的偏好</value>
+    <value>隊伍治療偏好</value>
     <comment>legacy_id=3539</comment>
   </data>
   <data name="Buff Duration for All Party Members" xml:space="preserve">
@@ -12029,7 +12029,7 @@
     <comment>legacy_id=3549</comment>
   </data>
   <data name="HP Status of Party Members" xml:space="preserve">
-    <value>黨員HP狀況</value>
+    <value>隊伍成員HP狀況</value>
     <comment>legacy_id=3550</comment>
   </data>
   <data name="Time Space of Casting Buff" xml:space="preserve">
@@ -12161,7 +12161,7 @@
     <comment>legacy_id=3583</comment>
   </data>
   <data name="Spent Time %d Minute(s)/ Spent Zen? %d Stage / Cost %d zen(s)" xml:space="preserve">
-    <value>花時間 %d 分鐘/花費禪宗？ %d 階段/成本 %d zen(s)</value>
+    <value>花時間 %d 分鐘/花費 Zen？ %d 階段/成本 %d zen(s)</value>
     <comment>legacy_id=3584</comment>
   </data>
   <data name="Spent Time %d hour(s) %d Minute(s)/ Spent Zen  %d Stage / Cost %d zen(s)" xml:space="preserve">
@@ -12577,7 +12577,7 @@
     <comment>legacy_id=3708</comment>
   </data>
   <data name="NotEnoughZenToCombineItems3709" xml:space="preserve">
-    <value>沒有足夠的禪宗來組合物品。</value>
+    <value>沒有足夠的 Zen 來組合物品。</value>
     <comment>legacy_id=3709</comment>
   </data>
   <data name="Combination failed. Item has disappeared." xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>拆卸寶石 失敗。</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d區域已清除</value>
+    <value>區域 %d 已通關</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu分分鐘</value>
@@ -12948,10 +12948,10 @@
     <value>皇冠開關%d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>（%s 果實）統計 %d 積分已為 創造。</value>
+    <value>（%ls 果實）統計 %d 積分已為 創造。</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>（%s 果實）統計 %d 積分已為 減少。</value>
+    <value>（%ls 果實）統計 %d 積分已為 減少。</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>該統計數據不能再是 創造。</value>
@@ -14537,5 +14537,8 @@
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>製作</value>
+  </data>
+  <data name="No network" xml:space="preserve">
+    <value>沒有網路</value>
   </data>
 </root>
