@@ -29,6 +29,7 @@
 #include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Chat/ChatFade.h"
+#include "UI/Chat/ChatLogCap.h"
 #include "UI/Chat/ItemLinkAttach.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -168,8 +169,6 @@ void mu::ui::window::CChatLogWindow::AddWithLinks(const type_string& strID, cons
         return;
     }
 
-    DropOldestAtCap(MsgType);
-
     if (m_vecFilters.empty())
     {
         ProcessAddText(strID, strText, MsgType, ErrMsgType, links);
@@ -243,15 +242,14 @@ bool mu::ui::window::CChatLogWindow::AddRow(type_vector_msgs& msgs, const type_s
 
 void mu::ui::window::CChatLogWindow::DropOldestAtCap(MESSAGE_TYPE MsgType)
 {
-    if (GetNumberOfLines(MsgType) >= MAX_NUMBER_OF_LINES)
+    const auto dropAtCap = [this](MESSAGE_TYPE type)
     {
-        RemoveFrontLine(MsgType, LINES_DROPPED_AT_CAP);
-    }
-
-    if (GetNumberOfLines(TYPE_ALL_MESSAGE) >= MAX_NUMBER_OF_LINES)
-    {
-        RemoveFrontLine(TYPE_ALL_MESSAGE, LINES_DROPPED_AT_CAP);
-    }
+        const int lines = static_cast<int>(GetNumberOfLines(type));
+        if (const int dropped = UI::Chat::LinesDroppedAtCap(lines, MAX_NUMBER_OF_LINES, LINES_DROPPED_AT_CAP))
+            RemoveFrontLine(type, dropped);
+    };
+    dropAtCap(MsgType);
+    dropAtCap(TYPE_ALL_MESSAGE);
 }
 
 void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
@@ -276,7 +274,6 @@ void mu::ui::window::CChatLogWindow::AddPendingMessages()
     {
         const PendingMessage message = std::move(m_PendingMessages.front());
         m_PendingMessages.pop_front();
-        DropOldestAtCap(message.type);
         AddRows(message.id, message.text, message.type, message.errType, message.links);
     }
 }
@@ -291,6 +288,8 @@ void mu::ui::window::CChatLogWindow::AddRows(const type_string& strID, const typ
         assert(!"Empty Message");
         return;
     }
+    // Here only: a message the filter left out, or one still waiting (ProcessAddText()), evicts nothing.
+    DropOldestAtCap(MsgType);
 
     const int rowScroll = (GetCurrentMsgType() == TYPE_ALL_MESSAGE || GetCurrentMsgType() == MsgType) ? 1 : 0;
     // Every row goes to the message's own list, the all-messages list and the error list as one message did
@@ -533,8 +532,8 @@ bool mu::ui::window::CChatLogWindow::UpdateMouseEvent()
 {
     // Everything this used to do belongs to RmlUi now: the wheel, the scrollbar and the per-line
     // hit tests are #lines' (base.rcss's .scroll-pane), and the resize is a drag on #resize_handle
-    // (ResizeToPointer()). Only an item's name is the log's own while the chat is open, and the world must not
-    // take the pointer there.
+    // (ResizeToPointer()). Only an item's name is the log's own, and the world must not take the pointer there:
+    // while the chat is open the pointer over it, and with the chat closed (and on a phone) a press on it.
     return !TakeLinkPointer();
 }
 
@@ -1191,16 +1190,22 @@ bool mu::ui::window::CChatLogWindow::OtherUiUnderPointer() const
 
 bool mu::ui::window::CChatLogWindow::TakeLinkPointer()
 {
-    // A phone opens a tooltip by a tap on the history (OnLinesTapped()); a closed chat lets the pointer through.
-    if (UI::Mobile::IsPhoneView() || !IsChatOpen() || OtherUiUnderPointer())
+    // A phone's open chat takes a tap on its history through RmlUi (OnLinesTapped()).
+    const bool phone = UI::Mobile::IsPhoneView();
+    if ((phone && m_bShowFrame) || OtherUiUnderPointer())
+        return false;
+    // The press the world would walk on, also when the button went down and up within one frame (only
+    // MouseLButtonPush tells then).
+    const bool press = mu::ui::window::IsPress(VK_LBUTTON) || MouseLButtonPush;
+    // With the chat closed, and on a phone, the lines stand over the world: only a press on a name is the log's
+    // (a finger's tap, not a drag or a long press), and a walk held across a name or a hover goes on to the world.
+    if ((phone || !IsChatOpen()) && (!press || (phone && !UI::Mobile::ClickSource::IsFingerTap())))
         return false;
     std::optional<ItemLinkTip> link = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
     if (!link)
         return false;
 
-    // The press the world would walk on, also when the button went down and up within one frame (only
-    // MouseLButtonPush tells then).
-    if (mu::ui::window::IsPress(VK_LBUTTON) || MouseLButtonPush)
+    if (press)
     {
         m_bLinkPressTaken = true;
         const bool same = m_PinnedLink && m_PinnedLink->item == link->item;
@@ -1224,7 +1229,11 @@ void mu::ui::window::CChatLogWindow::FollowItemLinks()
         m_LinkClosedByPress = m_PinnedLink ? m_PinnedLink->item : nullptr;
         m_PinnedLink.reset();
     }
-    if (m_PinnedLink && (!IsChatOpen() || !m_bShowChatLog))
+    // Closing the chat closes its tooltip; one opened on the lines of a closed chat stays until its line fades out
+    // (LinkAgain()).
+    const bool chatOpen = IsChatOpen();
+    const bool chatClosed = std::exchange(m_bChatWasOpen, chatOpen) && !chatOpen;
+    if (m_PinnedLink && (chatClosed || !m_bShowChatLog))
         UnpinLink();
     // The shown tooltip stays on its line as it moves, and goes with it.
     if (m_PinnedLink)

@@ -285,6 +285,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Utilities/RecentNames.cpp
 )
 
+# A log line's wide format: %hs as %s outside Windows (the web build's musl knows no %hs), a refused format kept.
+mu_add_test(
+    NAME log_wide_format_tests
+    SOURCES
+        test_wide_format.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Utilities/Log/WideFormat.cpp
+)
+
 # Reading a whole stream in one read (texture files): same bytes as a byte-by-byte read.
 mu_add_test(
     NAME stream_bytes_tests

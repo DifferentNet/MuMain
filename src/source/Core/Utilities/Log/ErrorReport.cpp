@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Core/Utilities/Log/WideFormat.h"
 #ifdef _WIN32
 #include <ddraw.h>
 #include <dinput.h>
@@ -61,7 +62,8 @@ void CErrorReport::Write(const wchar_t* lpszFormat, ...)
     wchar_t lpszBuffer[1024] = { 0, };
     va_list va;
     va_start(va, lpszFormat);
-    vswprintf(lpszBuffer, 1024, lpszFormat, va);
+    // Core::Log::FormatLogLine(): a %hs in the web build (musl) and a format the C library refuses still give a line.
+    Core::Log::FormatLogLine(lpszBuffer, std::size(lpszBuffer), lpszFormat, va);
     va_end(va);
 
     WriteDebugInfoStr(lpszBuffer);

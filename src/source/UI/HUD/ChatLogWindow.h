@@ -287,7 +287,8 @@ namespace mu::ui::window
         UI::Tooltip::AboveRow TipSpot(const ItemLinkTip& tip);
         // PC, while the chat is open: the pointer over an item's name is the log's (the world neither walks nor
         // picks there), and a left click on it shows its tooltip until the next click (FollowItemLinks()) and goes
-        // no further. True when the pointer is on a name.
+        // no further. With the chat closed, and on a phone with its chat closed, only such a press (a finger's tap)
+        // is the log's. True when the log takes the pointer.
         bool TakeLinkPointer();
         // Another window, the HUD's bar or another document is under the pointer: no name of the log is pointed
         // then (the tests the world's own click uses, UI/HUD/GamepadControls.cpp IsPointerOverUi(), less the log).
@@ -299,6 +300,8 @@ namespace mu::ui::window
         // The tooltip a click or tap opened; it stays until the next click, Esc, the chat closing or its line going
         // out of view.
         std::optional<ItemLinkTip> m_PinnedLink;
+        // The chat was open last frame (IsChatOpen()): its closing closes the tooltip (FollowItemLinks()).
+        bool m_bChatWasOpen = false;
         // The name the pointer is over this frame.
         std::optional<ItemLinkTip> m_HoveredLink;
         // This frame's left press went to an item's name (TakeLinkPointer()).
@@ -348,7 +351,7 @@ namespace mu::ui::window
         };
         std::deque<PendingMessage> m_PendingMessages;
         void AddPendingMessages();
-        // A full list drops its oldest lines before a message comes in (AddText()).
+        // A full list drops its oldest lines before a message's rows are added (AddRows(), LinesDroppedAtCap()).
         void DropOldestAtCap(MESSAGE_TYPE MsgType);
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatLogRmlModel& model);

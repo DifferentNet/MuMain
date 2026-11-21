@@ -254,10 +254,11 @@ void CCreditWin::LoadText()
 #endif
 	if (!file)
 	{
-		wchar_t szMessage[256];
-		std::swprintf(szMessage, std::size(szMessage), L"%hs file not found.\r\n", kCreditDataPath.data());
-		g_ErrorReport.Write(szMessage);
-		::MessageBox(g_hWnd, szMessage, NULL, MB_OK);
+		// The path goes to the log as an argument (CErrorReport::Write() takes %hs on the web too, the C library there
+		// doesn't), and to the box widened (StringUtils::NarrowToWide(), on every platform).
+		g_ErrorReport.Write(L"%hs file not found.\r\n", kCreditDataPath.data());
+		const std::wstring message = StringUtils::NarrowToWide(std::string(kCreditDataPath)) + L" file not found.\r\n";
+		::MessageBox(g_hWnd, message.c_str(), NULL, MB_OK);
 		::PostMessage(g_hWnd, WM_DESTROY, 0, 0);
 		return;
 	}
@@ -265,10 +266,11 @@ void CCreditWin::LoadText()
 	const std::size_t nSize = sizeof(SCreditItem) * CRW_ITEM_MAX;
 	if (std::fread(m_aCredit, nSize, 1, file.get()) != 1)
 	{
-		wchar_t szMessage[256];
-		std::swprintf(szMessage, std::size(szMessage), L"Failed to read %hs file or file is corrupt.\r\n", kCreditDataPath.data());
-		g_ErrorReport.Write(szMessage);
-		::MessageBox(g_hWnd, szMessage, NULL, MB_OK);
+		// As above: the path an argument of the log line, widened for the box.
+		g_ErrorReport.Write(L"Failed to read %hs file or file is corrupt.\r\n", kCreditDataPath.data());
+		const std::wstring message =
+			L"Failed to read " + StringUtils::NarrowToWide(std::string(kCreditDataPath)) + L" file or file is corrupt.\r\n";
+		::MessageBox(g_hWnd, message.c_str(), NULL, MB_OK);
 		::PostMessage(g_hWnd, WM_DESTROY, 0, 0);
 		return;
 	}

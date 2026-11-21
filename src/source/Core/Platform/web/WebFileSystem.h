@@ -18,6 +18,7 @@ bool MountGameFiles();
 // map's pack, packs/world<world>, tools/web/make_startup_pack.py) before the game reads them, instead of
 // a request per file. Call it before loading a map; blocks until done, yielding to the browser meanwhile.
 // Without a pack, or where it failed to load, the files still download one by one as the game opens them.
+// Each call starts a map entry for the page's log line about those (fetch-backend.js, MuWeb_MapEntries).
 void LoadWorldFiles(int world);
 
 // Starts reading the pack of map folder `world` (LoadWorldFiles' number) as soon as the map the game is
