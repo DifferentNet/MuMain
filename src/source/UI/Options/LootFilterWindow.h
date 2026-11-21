@@ -48,6 +48,11 @@ public:
 
     void OpenningProcess();
     void ClosingProcess();
+#ifdef __EMSCRIPTEN__
+    // The warm-up (UI/Core/WindowWarmUp.h): the document with the player's settings in it.
+    Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+    bool PrepareWarmUp() override;
+#endif
 
     // A click RmlUi reported, applied in Update(). Public for the .cpp's helpers only: this header stays clear of
     // GameLogic::Items, whose name would hide the global Items[] in every file that includes WindowSystem.h.

@@ -6641,7 +6641,7 @@
     <comment>legacy_id=1775</comment>
   </data>
   <data name="%d%% increment" xml:space="preserve">
-    <value>%d%% i增量</value>
+    <value>%d%% 增量</value>
     <comment>legacy_id=1776</comment>
   </data>
   <data name="DIncrement1777" xml:space="preserve">
@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% d減少</value>
+    <value>%d%% 減少</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">

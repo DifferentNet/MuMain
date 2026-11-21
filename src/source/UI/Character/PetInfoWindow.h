@@ -43,6 +43,10 @@ namespace mu::ui::window
         void Show(bool bShow) override;
         Rml::ElementDocument* GetFillDocument() const override { return m_RmlView.Document(); }
         Rml::ElementDocument* GetPlacedDocument() const override { return m_RmlView.Document(); }
+#ifdef __EMSCRIPTEN__
+        // The warm-up (UI/Core/WindowWarmUp.h): only for the classes that can open it (Dark Lord, Lord Emperor).
+        bool PrepareWarmUp() override { return IsAvailable(); }
+#endif
 
         bool UpdateMouseEvent();
         bool UpdateKeyEvent();

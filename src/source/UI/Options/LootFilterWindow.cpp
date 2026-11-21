@@ -304,6 +304,17 @@ void CLootFilterWindow::OpenningProcess()
     m_pending.clear();
 }
 
+#ifdef __EMSCRIPTEN__
+bool CLootFilterWindow::PrepareWarmUp()
+{
+    if (!m_RmlView.Document())
+        return false;
+    // Filled in only while shown (SyncRmlModel()); the settings are the player's own, nothing is asked for.
+    SyncContent();
+    return true;
+}
+#endif
+
 void CLootFilterWindow::ClosingProcess()
 {
     m_pending.clear();

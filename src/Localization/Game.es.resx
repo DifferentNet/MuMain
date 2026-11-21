@@ -6689,7 +6689,7 @@
     <comment>legacy_id=1787</comment>
   </data>
   <data name="%d%% decrease" xml:space="preserve">
-    <value>%d%% daumento</value>
+    <value>%d%% disminución</value>
     <comment>legacy_id=1788</comment>
   </data>
   <data name="Pollution skill (Mana: %d)" xml:space="preserve">
