@@ -989,7 +989,8 @@
   // keypress): sooner, the game would paste once more. Ctrl+C and Ctrl+X go to the game as Ctrl and the
   // Latin letter, so they work in any keyboard layout and with Cmd, and what the field copies comes back
   // in muClipboard.copy() for the browser's clipboard. Nothing is copied out of a password field, here
-  // or in the game (Render/RmlUi/RmlUiSystemInterface.cpp), and Ctrl+X does not cut there either.
+  // or in the game (Render/RmlUi/RmlUiSystemInterface.cpp), and Ctrl+X does not cut there either. Text
+  // selected on the page itself copies as on any page (keyForPage).
   const PASSWORD_KEYS = FIELD_KEYS.indexOf("password");
   const PASTE_MAX_CHARS = 1000;          // more than any of the game's fields takes
   const PASTE_WAIT_MS = 300;             // how long a Ctrl+V waits for the browser's paste
@@ -1060,10 +1061,34 @@
   }
   for (const type of ["keydown", "keyup", "pointerdown"]) addEventListener(type, followPlayerModifiers, true);
   addEventListener("blur", releaseShortcutCtrl);
+  // A field of the page's own (#keyboard on a phone, the footer's Quality).
+  function isPageField(target) {
+    return target instanceof Element &&
+      (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+  }
+  // A Ctrl+C, Ctrl+X or Ctrl+V the browser does itself: in a field of the page's own, and Ctrl+C or Ctrl+X
+  // with text selected on the page (the footer's Log). A click on the page leaves the keys with the game's
+  // field, which would copy instead. #keyboard stands in for the game's field: its keys are the game's.
+  function keyForPage(event, letter) {
+    if (event.target === keyboardInput) return false;
+    if (isPageField(event.target)) return true;
+    if (letter === "v") return false;   // a paste goes to the game's field all the same (pasteForGame)
+    const selection = getSelection();
+    if (!selection || selection.isCollapsed || !selection.rangeCount) return false;
+    // Not text hidden since: the Log closed by its button keeps its selection.
+    if (!selection.getRangeAt(0).getClientRects().length) return false;
+    return !canvas.contains(selection.anchorNode) && !canvas.contains(selection.focusNode);
+  }
   addEventListener("keydown", (event) => {
     const letter = CLIPBOARD_LETTERS[event.code];
-    if (!letter || !event.isTrusted || crashed || !window.muClipboard.field) return;
+    if (!letter || !event.isTrusted || crashed) return;
     if (!(event.ctrlKey || event.metaKey) || event.altKey) return;   // AltGr is Ctrl+Alt: a letter of its own
+    if (keyForPage(event, letter)) {
+      // SDL would take the Ctrl key and keep the browser from doing it.
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (!window.muClipboard.field) return;
     if (window.muClipboard.field === PASSWORD_KEYS) {
       if (letter === "c") return;   // the game copies nothing out of it
       if (letter === "x") {
@@ -1087,10 +1112,7 @@
   // A paste for the game's field: one has the keys, and no field of the page's own (#keyboard on a
   // phone) is the one pasted into.
   function pasteForGame(event) {
-    const target = event.target;
-    const pageField = target instanceof Element &&
-      (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-    return !crashed && window.muClipboard.field !== 0 && !pageField;
+    return !crashed && window.muClipboard.field !== 0 && !isPageField(event.target);
   }
   // Safari sends a paste where nothing can be edited only to a page that asks for it so.
   document.addEventListener("beforepaste", (event) => { if (pasteForGame(event)) event.preventDefault(); });
