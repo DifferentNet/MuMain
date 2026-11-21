@@ -16,7 +16,8 @@ namespace UI::Items
 {
 struct ItemGridCell
 {
-    // Under an item: "tint-normal", "tint-durability-50", "-70", "-80", "-100", "tint-untradeable".
+    // Under an item: "tint-normal", "tint-durability-50", "-70", "-80", "-100", "tint-untradeable", then
+    // "pad-item-<n>" and, in a theme with ItemRarityCells=1, the item's rarity classes (ItemCellRarityClass.h).
     Rml::String tint;
     // Under the item on the cursor: "drop-free" (an empty cell), "drop-blocked" (empty, but the
     // window refuses it), "drop-valid" (an item it acts on: a jewel, a stack), "drop-invalid".

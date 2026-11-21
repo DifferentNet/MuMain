@@ -26,7 +26,7 @@ body { --item-cell: 20px; }
 .item-cell, .item-count { position: relative; flex: 0 0 var(--item-cell); width: var(--item-cell); height: var(--item-cell); }
 /* The original's tints: translucent teal, then yellow, amber, orange and red with wear, and
    red-orange for an item that cannot be traded. */
-.item-cell.tint-normal { background-color: rgba(80, 128, 128, 153); }
+.item-cell.tint-normal { background-color: token(cell-tint-normal); }
 .item-cell.tint-durability-50 { background-color: rgba(255, 255, 0, 102); }
 .item-cell.tint-durability-70 { background-color: rgba(255, 168, 0, 102); }
 .item-cell.tint-durability-80 { background-color: rgba(255, 84, 0, 102); }
@@ -38,6 +38,30 @@ body { --item-cell: 20px; }
 .item-cell.drop-free .item-cell-drop { background-color: rgba(26, 102, 204, 102); }
 .item-cell.drop-blocked .item-cell-drop, .item-cell.drop-invalid .item-cell-drop { background-color: rgba(255, 51, 51, 102); }
 .item-cell.drop-valid .item-cell-drop { background-color: rgba(51, 102, 51, 102); }
+
+/* An item's rarity (ItemRarityCells=1 in theme.ini, UI/Inventory/ItemCellRarityClass.h; no other theme's cells carry
+   these classes): ancient, excellent and socket items tint their cells, +13..+15 a plain item's gold, in place of the
+   normal tint only, so wear and untradeable tints still show. A frame runs round the item's outer edges (re-t, -b,
+   -l, -r) on the drop preview's own box: gold at +13..+15 (cell-frame-gold-width wide), else the rarity's colour,
+   else +7..+12's thin yellow. The tokens are neutral here (tokens.ini). */
+.item-cell.tint-normal.up-gold { background-color: token(cell-tint-gold); }
+.item-cell.tint-normal.rar-exc { background-color: token(cell-tint-exc); }
+.item-cell.tint-normal.rar-anc { background-color: token(cell-tint-anc); }
+.item-cell.tint-normal.rar-socket { background-color: token(cell-tint-socket); }
+.item-cell.rf .item-cell-drop { width: auto; height: auto; right: 0px; bottom: 0px; border-width: 0px; }
+.item-cell.rf.up-fine .item-cell-drop { border-color: token(cell-frame-fine); }
+.item-cell.rf.rar-exc .item-cell-drop { border-color: token(cell-frame-exc); }
+.item-cell.rf.rar-anc .item-cell-drop { border-color: token(cell-frame-anc); }
+.item-cell.rf.rar-socket .item-cell-drop { border-color: token(cell-frame-socket); }
+.item-cell.rf.up-gold .item-cell-drop { border-color: token(cell-frame-gold); }
+.item-cell.rf.re-t .item-cell-drop { border-top-width: token(cell-frame-width); }
+.item-cell.rf.re-b .item-cell-drop { border-bottom-width: token(cell-frame-width); }
+.item-cell.rf.re-l .item-cell-drop { border-left-width: token(cell-frame-width); }
+.item-cell.rf.re-r .item-cell-drop { border-right-width: token(cell-frame-width); }
+.item-cell.rf.up-gold.re-t .item-cell-drop { border-top-width: token(cell-frame-gold-width); }
+.item-cell.rf.up-gold.re-b .item-cell-drop { border-bottom-width: token(cell-frame-gold-width); }
+.item-cell.rf.up-gold.re-l .item-cell-drop { border-left-width: token(cell-frame-gold-width); }
+.item-cell.rf.up-gold.re-r .item-cell-drop { border-right-width: token(cell-frame-gold-width); }
 
 /* The table frame, drawn from 4 left and 3 above the first cell to 5 right and 6 below the last. */
 .item-grid-frame { position: absolute; left: -4px; top: -3px; right: -5px; bottom: -6px; }

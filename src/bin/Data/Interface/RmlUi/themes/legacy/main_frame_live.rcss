@@ -1,0 +1,3 @@
+/* The live HUD's gems (main_frame.rml's .live-only elements, theme capability LiveHud): not in this theme, so its
+   HUD stays as main_frame.rcss draws it. */
+.live-only { display: none; }

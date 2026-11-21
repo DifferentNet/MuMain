@@ -250,6 +250,8 @@ namespace mu::ui::window
         void RmlToggleOverheadNpcNames();
         void RmlToggleOverheadTitles();
         void RmlToggleTitleEffects();
+        // MU Skynet: the live HUD's animation (UI::HUD::LiveHud), saved in config.ini at once.
+        void RmlToggleHudEffects();
         void RmlToggleTitlesTownsOnly();
         // MU Skynet: pad and touch players take the zen they walk over (GameLogic::Touch::TakeZenUnderfoot).
         void RmlToggleZenWalkPickup();
@@ -595,6 +597,10 @@ namespace mu::ui::window
             Rml::String overheadTitlesLabel;
             bool titleEffects = true;
             Rml::String titleEffectsLabel;
+            bool hudEffects = true;
+            Rml::String hudEffectsLabel;
+            // Only under a theme with a live HUD (UI::RmlBridge::ThemeHasLiveHud()), and not on the phone's HUD.
+            bool hudEffectsShown = false;
             bool titlesTownsOnly = true;
             bool backgroundSound = true;
             Rml::String backgroundSoundLabel;

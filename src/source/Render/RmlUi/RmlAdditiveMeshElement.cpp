@@ -35,18 +35,36 @@ Rml::ColourbPremultiplied Blended(std::uint32_t abgr, float opacity)
 }
 } // namespace
 
+RMLUI_RTTI_Define(Render::RmlUi::AdditiveMeshElement);
+
 Render::RmlUi::AdditiveMeshElement::AdditiveMeshElement(const Rml::String& tag) : Rml::Element(tag) {}
 
 void Render::RmlUi::AdditiveMeshElement::SetMesh(const Rml::String& source,
                                                  std::span<const Render::Renderer::RecordedVertex> quads,
                                                  float opacity, bool additive)
 {
+    m_plain = false;
     if (m_source != source)
     {
         m_source = source;
         m_textureDirty = true;
     }
+    FillMesh(quads, opacity, additive);
+}
 
+void Render::RmlUi::AdditiveMeshElement::SetPlainMesh(std::span<const Render::Renderer::RecordedVertex> quads,
+                                                      float opacity, bool additive)
+{
+    m_plain = true;
+    m_source.clear();
+    m_texture = {};
+    m_textureDirty = false;
+    FillMesh(quads, opacity, additive);
+}
+
+void Render::RmlUi::AdditiveMeshElement::FillMesh(std::span<const Render::Renderer::RecordedVertex> quads,
+                                                  float opacity, bool additive)
+{
     m_mesh.vertices.clear();
     m_mesh.indices.clear();
     const std::size_t quadCount = quads.size() / QuadVertices;
@@ -69,7 +87,7 @@ void Render::RmlUi::AdditiveMeshElement::SetMesh(const Rml::String& source,
 void Render::RmlUi::AdditiveMeshElement::OnRender()
 {
     Rml::RenderManager* renderManager = GetRenderManager();
-    if (renderManager == nullptr || m_source.empty())
+    if (renderManager == nullptr || (m_source.empty() && !m_plain))
         return;
 
     if (m_textureDirty)
@@ -90,7 +108,11 @@ void Render::RmlUi::AdditiveMeshElement::OnRender()
         m_geometry = renderManager->MakeGeometry(std::move(m_mesh));
         m_mesh = std::move(spare);
     }
-    if (m_texture && m_geometry)
+    if (!m_geometry)
+        return;
+    if (m_plain)
+        m_geometry.Render(GetAbsoluteOffset(Rml::BoxArea::Border));
+    else if (m_texture)
         m_geometry.Render(GetAbsoluteOffset(Rml::BoxArea::Border), m_texture);
 }
 

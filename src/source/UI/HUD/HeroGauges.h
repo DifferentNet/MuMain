@@ -35,6 +35,8 @@ struct Gauge
 // amount the next level needs, and how far the hero is from this level's start to the next.
 struct Experience
 {
+    // Whether `level` and the experience are the master level's.
+    bool master = false;
     std::int64_t level = 0;
     std::int64_t current = 0;
     std::int64_t next = 0;

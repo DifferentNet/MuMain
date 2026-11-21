@@ -42,6 +42,7 @@ extern bool SelectFlag;
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/Inventory/BagPages.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/ItemCellRarityClass.h"
 #include "UI/Inventory/JunkSale.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Inventory/InventoryExtension.h"
@@ -73,6 +74,7 @@ extern bool SelectFlag;
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 #include <cmath>
+#include <string_view>
 #include <utility>
 #include "UI/Chat/CharacterChangeLines.h"
 #ifdef __EMSCRIPTEN__
@@ -1924,6 +1926,8 @@ void CMyInventory::SyncSlotStates()
     bool changed = false;
     // Built in place each frame and copied into the model only when a slot's state changed.
     Rml::String& value = m_SlotStateScratch;
+    // A worn item's rarity frame, in a theme with ItemRarityCells=1 (UI/Inventory/ItemCellRarityClass.h).
+    const bool rarityCells = UI::RmlBridge::ThemeHasItemRarityCells();
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
     {
         const char* state = "";
@@ -1958,6 +1962,14 @@ void CMyInventory::SyncSlotStates()
         // Nothing worn there: the pad's frame offers nothing to take (UI/HUD/PadTargets).
         if (CharacterMachine->Equipment[i].Type == -1)
             value += value.empty() ? "bare" : " bare";
+        else if (rarityCells)
+        {
+            const GameLogic::Items::Rarity::CellLook look = ItemCellLookOf(&CharacterMachine->Equipment[i]);
+            std::string_view classes = UI::Inventory::RarityCellClasses(look.tier, look.band);
+            if (value.empty() && !classes.empty())
+                classes.remove_prefix(1); // each starts with a space, which an empty value does not need
+            value += classes;
+        }
         if (i == m_iPointedSlot && CInventoryCtrl::GetPickedItem())
         {
             ITEM* pItemObj = CInventoryCtrl::GetPickedItem()->GetItem();

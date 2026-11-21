@@ -17534,6 +17534,14 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>A new item that is better: hold D-pad right to put it on. In the bag {Y} opens the item card (junk mark); at a merchant {A} on the Sell junk button sells the junk. Zen under your feet is picked up by itself</value>
   </data>
+  <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
+  <data name="TooltipShiftForDetails" xml:space="preserve">
+    <value>Hold Shift for details</value>
+  </data>
+  <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
+  <data name="HudEffects" xml:space="preserve">
+    <value>HUD animation</value>
+  </data>
   <data name="No network" xml:space="preserve">
     <value>No network</value>
   </data>

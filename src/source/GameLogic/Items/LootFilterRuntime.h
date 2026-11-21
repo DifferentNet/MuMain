@@ -19,6 +19,9 @@ void Apply(const LootFilter::Settings& settings);
 // excellent bits but are not excellent.
 [[nodiscard]] bool IsExcellent(const ITEM& item);
 
+// The filter's category of any item (the item tooltip names it too).
+[[nodiscard]] LootFilter::Category CategoryOfItem(const ITEM& item);
+
 // What the rules need to know about one item on the ground: its type, options and the name its label shows.
 [[nodiscard]] LootFilter::Facts BuildFacts(OBJECT& object, ITEM& item);
 

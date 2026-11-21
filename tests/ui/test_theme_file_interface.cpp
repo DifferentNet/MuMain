@@ -215,6 +215,16 @@ TEST_CASE("saved theme recovery validates ancestry before choosing a fallback [u
     CHECK(UI::RmlBridge::ResolveStartupThemeName("missing").empty());
 }
 
+TEST_CASE("a phone or tablet starts in legacy whatever theme was saved [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.Write(fixture.Theme("legacy") / "base.rcss", "body { color: white; }");
+    fixture.Write(fixture.Theme("skynet") / "theme.ini", "[Theme]\nBase=legacy\n");
+    fixture.ActivateRoot();
+    CHECK(UI::RmlBridge::ResolveStartupThemeName("skynet", true) == "legacy");
+    CHECK(UI::RmlBridge::ResolveStartupThemeName("skynet", false) == "skynet");
+}
+
 TEST_CASE("focused confirmation input claims its document and accepts Enter and Escape [ui][dialog-input]")
 {
     Fixture fixture;

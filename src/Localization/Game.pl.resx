@@ -14559,6 +14559,14 @@
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Rzemiosło</value>
   </data>
+  <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
+  <data name="TooltipShiftForDetails" xml:space="preserve">
+    <value>Przytrzymaj Shift: szczegóły</value>
+  </data>
+  <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
+  <data name="HudEffects" xml:space="preserve">
+    <value>Animacja HUD</value>
+  </data>
   <data name="No network" xml:space="preserve">
     <value>Brak sieci</value>
   </data>

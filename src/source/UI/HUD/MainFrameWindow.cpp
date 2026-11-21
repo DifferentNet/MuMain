@@ -4,7 +4,9 @@
 #include "UI/HUD/KeyHint.h"
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <string>
+#include <string_view>
 #include "I18N/All.h"
 
 #include "UI/HUD/MainFrameWindow.h"	// self
@@ -24,6 +26,8 @@
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
+#include "UI/HUD/LiveHudTest.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/ExperiencePaceText.h"
 #include "UI/Text/GroupedNumberText.h"
@@ -50,9 +54,12 @@
 #include "UI/Placement/WindowPlacement.h"
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
+#include <RmlUi/Core/SystemInterface.h>
 #include "GameLogic/Quests/QuestMng.h"
 #include "UI/Social/FriendWindow.h"
 
@@ -303,6 +310,7 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
 void mu::ui::window::CMainFrameWindow::OnRmlReloaded()
 {
     UI::Placement::Invalidate();
+    m_LiveHud.Unbind();
 }
 
 // Not shown here: Create() runs before SceneFlag reaches MAIN_SCENE, and an eager Show() let the
@@ -539,6 +547,7 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     if (document != m_pSyncedDocument || phoneHud != m_bSyncedPhoneHud)
     {
         ResetSyncCaches();
+        m_LiveHud.Unbind();
         m_pSyncedDocument = document;
         m_bSyncedPhoneHud = phoneHud;
     }
@@ -561,12 +570,90 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         SyncExperience();
         SyncButtons();
         SyncSkillRow();
+        SyncLiveHud(document);
         SyncItemSlots();
     }
+    SyncLiveHudStats(!phoneHud && UI::RmlBridge::ThemeHasLiveHud());
 
     SyncAlerts();
     SyncSkillList();
     SyncSkillTooltip();
+}
+
+void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* document)
+{
+    if (!UI::RmlBridge::ThemeHasLiveHud())
+    {
+        m_LiveHud.Unbind();
+        return;
+    }
+    // Hidden (scene gate, a map loading): nothing to draw, and the meshes pick up again where they were.
+    if (!document->IsVisible())
+        return;
+
+    UI::HUD::LiveHud::Inputs inputs;
+    inputs.life = UI::HUD::HeroGauges::Life().Fraction();
+    inputs.mana = UI::HUD::HeroGauges::Mana().Fraction();
+    inputs.shield = UI::HUD::HeroGauges::Shield().Fraction();
+    inputs.skillMana = UI::HUD::HeroGauges::SkillMana().Fraction();
+    inputs.poisoned = g_isCharacterBuff((&Hero->Object), eDeBuff_Poison);
+    const UI::HUD::LiveHudTest::Overrides& overrides = UI::HUD::LiveHudTest::Current();
+    inputs.life = overrides.life.value_or(inputs.life);
+    inputs.mana = overrides.mana.value_or(inputs.mana);
+    inputs.shield = overrides.shield.value_or(inputs.shield);
+    inputs.skillMana = overrides.skillMana.value_or(inputs.skillMana);
+    inputs.poisoned = overrides.poisoned.value_or(inputs.poisoned);
+    inputs.effects = GameConfig::GetInstance().GetHudEffects();
+
+    // The skill row's cooldowns, or $hudtest cd's on all six slots.
+    const double now = Rml::GetSystemInterface()->GetElapsedTime();
+    for (int i = 0; i < 5; ++i)
+    {
+        const int hotKey = g_pSkillList->GetHotKeySlotNumber(i);
+        const UI::HUD::LiveGauge::SkillCooldown cooldown = g_pSkillList->GetHotKeySlotLiveCooldown(i);
+        inputs.cooldowns[i] = {cooldown.fraction, cooldown.remainingMs,
+                               hotKey >= 0 ? g_pSkillList->GetHotKey(hotKey) : -1};
+    }
+    const UI::HUD::LiveGauge::SkillCooldown current = g_pSkillList->GetCurrentSkillLiveCooldown();
+    inputs.cooldowns[5] = {current.fraction, current.remainingMs, Hero->CurrentSkill};
+    if (const auto testCooldown = m_LiveHudTestCooldown.At(overrides, now))
+    {
+        for (UI::HUD::LiveHud::Inputs::Cooldown& cooldown : inputs.cooldowns)
+        {
+            cooldown.fraction = testCooldown->fraction;
+            cooldown.remainingMs = testCooldown->remainingMs;
+        }
+    }
+
+    // The EXP bar as SyncExperience() just filled it; $hudtest exp and lvl count on top of the hero's own gains and
+    // level, so each request plays once and `off` plays nothing.
+    inputs.expFill = m_RmlView.GetModel().expFraction;
+    inputs.expGains = m_uExpGains + static_cast<std::uint32_t>(overrides.expGains);
+    inputs.hero = std::hash<std::wstring_view>{}(std::wstring_view(Hero->ID));
+    const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
+    inputs.masterLevel = experience.master;
+    inputs.level = experience.level + overrides.levelUps;
+    m_LiveHud.Sync(document, inputs, now);
+}
+
+void mu::ui::window::CMainFrameWindow::SyncLiveHudStats(bool liveHud)
+{
+    // `off` and leaving the game scene put the requests back to 0: only a count above the last one answered is new.
+    const UI::HUD::LiveHudTest::Overrides& overrides = UI::HUD::LiveHudTest::Current();
+    const bool asked = overrides.statsRequests > m_iLiveHudStatsAnswered;
+    m_iLiveHudStatsAnswered = overrides.statsRequests;
+    const UI::HUD::LiveHudTest::StatsWindow& stats = m_LiveHud.Stats();
+    const bool log = overrides.statsLog && liveHud && stats.Filled() != m_iLiveHudStatsLogged;
+    m_iLiveHudStatsLogged = stats.Filled();
+    if (!asked && !log)
+        return;
+
+    const std::string line =
+        liveHud ? UI::HUD::LiveHudTest::FormatStats(stats.Latest()) : UI::HUD::LiveHudTest::NoLiveHudStats;
+    if (asked)
+        g_pSystemLogBox->AddText(std::wstring(line.begin(), line.end()).c_str(), mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    if (log)
+        MU_LOG_INFO(mu::log::Get("ui"), "{}", line);
 }
 
 void mu::ui::window::CMainFrameWindow::SyncGauges()
@@ -677,6 +764,9 @@ void mu::ui::window::CMainFrameWindow::SyncExperience()
     int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
     double fProgress = std::clamp(scaled - static_cast<double>(static_cast<long long>(scaled)), 0.0, 1.0);
     if (fRatio >= 1.0) { iExp = 9; fProgress = 1.0; }
+    // $hudtest expfill: the bar (and the live HUD's spark at its end) filled to a chosen point.
+    if (const std::optional<float> testFill = UI::HUD::LiveHudTest::Current().expFill)
+        fProgress = *testFill;
 
     SyncFloat(&MainFrameRmlModel::expFraction, "exp_fraction", static_cast<float>(fProgress));
     if (m_TextSources.expDigit.Changed(kNumberFormat, iExp))
@@ -1027,6 +1117,7 @@ void mu::ui::window::CMainFrameWindow::SetGetExp_Wide(__int64 dwGetExp)
     {
         m_bExpEffect = true;
         m_dwExpEffectTime = timeGetTime();
+        ++m_uExpGains;
     }
 }
 
@@ -1043,6 +1134,7 @@ void mu::ui::window::CMainFrameWindow::SetGetExp(__int64 dwGetExp)
     {
         m_bExpEffect = true;
         m_dwExpEffectTime = timeGetTime();
+        ++m_uExpGains;
     }
 }
 
@@ -1096,6 +1188,11 @@ void mu::ui::window::CMainFrameWindow::SetBtnState(int iBtnType, bool bStateDown
 
 void mu::ui::window::CMainFrameWindow::SyncDocVisibility(bool sceneAllowsShow)
 {
+    // The window lives as long as the game, so $hudtest's overrides go when the game scene does: a relog or another
+    // character starts with the real gauges.
+    if (SceneFlag != MAIN_SCENE)
+        UI::HUD::LiveHudTest::Current() = {};
+
     const bool show = IsVisible() && sceneAllowsShow;
 
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), show);

@@ -106,6 +106,15 @@ public:
     // The title plates' effects (UI::TitlePlates::Effects).
     bool GetTitleEffects() const { return m_titleEffects; }
     void SetTitleEffects(bool shown) { m_titleEffects = shown; }
+    // The live HUD's animation (UI::HUD::LiveHud::Inputs::effects).
+    bool GetHudEffects() const
+    {
+        return m_hudEffects;
+    }
+    void SetHudEffects(bool on)
+    {
+        m_hudEffects = on;
+    }
     bool GetBackgroundSound() const { return m_backgroundSound; }
     void SetBackgroundSound(bool on) { m_backgroundSound = on; }
     bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
@@ -480,6 +489,7 @@ private:
     bool m_overheadNpcNames = false;
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
+    bool m_hudEffects = true;
     bool m_titlesTownsOnly = true;
     bool m_declineInvitations = false;
     bool m_lootFilterEnabled = true;

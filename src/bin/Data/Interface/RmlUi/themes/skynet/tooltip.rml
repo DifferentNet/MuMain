@@ -1,0 +1,54 @@
+<rml>
+	<!-- bound-geometry: tooltip is placed against the pointer -->
+<head>
+	<title>Tooltip</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="tooltip.rcss"/>
+	<link type="text/rcss" href="tooltip_rich.rcss"/>
+</head>
+<!-- Skynet's fork of legacy's tooltip.rml: the same document, native metrics and bindings, plus the rich item layout
+     this theme declares (theme.ini RichItemTooltip=1, UI/Tooltip/ItemTooltipLayout.h). Every binding legacy's copy
+     has is here unchanged; tooltip_rich.rcss styles what this copy adds:
+     - on #tooltip_panel: its text size (so tooltip_rich.rcss sizes in em), its side padding as --pad-px and its
+       frame width as --border-px, the rich flag, one class per rarity and the +13..+15 band; a rich tooltip is
+       at least 15em wide; tt-tall when, fitted to the window's height, it is still taller than the window;
+     - on each line: its role in the layout (name, kind, Combat Power, section, set pieces, hint) and the header
+       flags; the name a size larger; the text in a span, for the Combat Power pill;
+     - after the lines: the +13..+15 gold frame and the four corner diamonds.
+     #tooltip_panel's first children must stay exactly the data-for-generated line divs, in order, with no other
+     sibling before them -- RmlTooltip.cpp's width-measurement pass indexes panel->GetChild(i) against
+     config.lines[i] directly; the frame and the diamonds come after them. -->
+<body data-model="tooltip" data-style-left="pos_x + 'px'" data-style-top="pos_y + 'px'">
+	<div id="tooltip_panel" data-class-tt-centered="center_text" data-class-tt-button-hint="button_hint"
+	     data-class-tt-rich="rich" data-class-rar-magic="rar_magic" data-class-rar-fine="rar_fine"
+	     data-class-rar-exc="rar_exc" data-class-rar-anc="rar_anc" data-class-rar-socket="rar_socket"
+	     data-class-rar-special="rar_special" data-class-rar-divine="rar_divine" data-class-up-gold="up_gold"
+	     data-class-tt-tall="tall"
+	     data-style-border-width="border_px + 'px'" data-style-min-width="rich ? '15em' : (fixed_width_px + 'px')"
+	     data-style-padding-left="padding_px + 'px'" data-style-padding-right="padding_px + 'px'"
+	     data-style-font-size="text_px + 'px'" data-style---pad-px="padding_px + 'px'"
+	     data-style---border-px="border_px + 'px'"
+	     data-style---line-px="line_height_px + 'px'" data-style---bold-line-px="bold_line_height_px + 'px'">
+		<div class="tt-line" data-for="line : lines"
+		     data-class-tt-blue="line.color_blue" data-class-tt-gray="line.color_gray"
+		     data-class-tt-red="line.color_red" data-class-tt-yellow="line.color_yellow"
+		     data-class-tt-green="line.color_green" data-class-tt-purple="line.color_purple"
+		     data-class-tt-redpurple="line.color_redpurple" data-class-tt-violet="line.color_violet"
+		     data-class-tt-orange="line.color_orange" data-class-tt-hl-darkred="line.highlight_darkred"
+		     data-class-tt-hl-darkblue="line.highlight_darkblue" data-class-tt-hl-darkyellow="line.highlight_darkyellow"
+		     data-class-tt-hl-greenblue="line.highlight_greenblue" data-class-bold="line.bold"
+		     data-class-tt-half-spacer="line.is_half_spacer" data-class-tt-full-spacer="line.is_full_spacer"
+		     data-class-tt-name="line.role_name" data-class-tt-kind="line.role_kind" data-class-tt-cp="line.role_cp"
+		     data-class-tt-section="line.role_section" data-class-tt-piece-owned="line.role_piece_owned"
+		     data-class-tt-piece-missing="line.role_piece_missing" data-class-tt-hint="line.role_hint"
+		     data-class-tt-head="line.head" data-class-tt-head-last="line.head_last"
+		     data-style-font-size="(line.role_name ? name_px : text_px) + 'px'"
+		><span class="tt-text">{{line.text}}</span></div>
+		<div id="tt_gold"><div id="tt_gold_pulse"></div></div>
+		<div class="tt-k tt-k1"></div>
+		<div class="tt-k tt-k2"></div>
+		<div class="tt-k tt-k3"></div>
+		<div class="tt-k tt-k4"></div>
+	</div>
+</body>
+</rml>
