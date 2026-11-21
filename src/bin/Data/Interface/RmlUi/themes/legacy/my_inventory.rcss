@@ -128,12 +128,14 @@
 
 /* Set option and Combat Power header -- one centred line at the native y + 25: the set option gray by default,
    yellow when the set bonus is active (RenderSetOption()'s colors); the Combat Power in the item tooltip's CP
-   colour. */
+   colour. The line is .counter-scaled, so its lengths are physical: the box is the panel's 190 px times
+   --root-scale, centred on the panel's middle (x 95). A plain 190 px box was narrower than the text once the
+   panel was scaled up: the overflowing line started at the box's left edge and ran out to the close button. */
 .option-labels {
 	position: absolute;
-	left: 0;
+	left: calc(95px - 95px * var(--root-scale, 1));
 	top: 25px;
-	width: 190px;
+	width: calc(190px * var(--root-scale, 1));
 	text-align: center;
 	transform-origin: center top;
 	font-weight: bold;
@@ -333,7 +335,8 @@
 	#slot_ring_left { left: 208px; top: 262px; width: 40px; height: 40px; }
 	#slot_boots { left: 250px; top: 262px; width: 70px; height: 70px; }
 
-	.option-labels { left: 20px; top: 42px; width: 300px; }
+	/* The line across the equipment (x 20-320, middle 170), in physical lengths as above. */
+	.option-labels { left: calc(170px - 150px * var(--root-scale, 1)); top: 42px; width: calc(300px * var(--root-scale, 1)); }
 	.option-hover { top: 38px; width: 150px; height: 22px; }
 	.option-hover-set { left: 20px; }
 	.option-hover-cp { left: 170px; }
