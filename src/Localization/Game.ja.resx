@@ -9528,7 +9528,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>バルカ要塞第%d要塞の</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9536,7 +9536,7 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>バルカ要塞の制圧に</value>
+    <value>Tier Mapの攻略に</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
@@ -9544,7 +9544,7 @@
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>第%d要塞、%dの間</value>
+    <value>Tier %d · 第%dの間</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -11026,7 +11026,7 @@
     <value>宝石解体が失敗しました</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d要塞進行成功</value>
+    <value>第%dの間 攻略成功</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Bonus: %ls x %lu分</value>

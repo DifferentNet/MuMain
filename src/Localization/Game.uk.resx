@@ -397,7 +397,7 @@
     <comment>legacy_id=99,3512</comment>
   </data>
   <data name="Zen" xml:space="preserve">
-    <value>Дзен</value>
+    <value>Зен</value>
     <comment>legacy_id=100,224,1246,3523</comment>
   </data>
   <data name="Heart" xml:space="preserve">
@@ -524,7 +524,7 @@
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P : Вікно вечірки</value>
+    <value>P : Вікно групи</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
@@ -672,7 +672,7 @@
     <comment>legacy_id=164</comment>
   </data>
   <data name="DEF rate" xml:space="preserve">
-    <value>ставка DEF</value>
+    <value>Ухилення</value>
     <comment>legacy_id=165</comment>
   </data>
   <data name="STR" xml:space="preserve">
@@ -784,7 +784,7 @@
     <comment>legacy_id=192</comment>
   </data>
   <data name="to create a party with" xml:space="preserve">
-    <value>створити вечірку з</value>
+    <value>створити групу з</value>
     <comment>legacy_id=193</comment>
   </data>
   <data name="and you can create" xml:space="preserve">
@@ -792,7 +792,7 @@
     <comment>legacy_id=194</comment>
   </data>
   <data name="a party with them." xml:space="preserve">
-    <value>вечірка з ними.</value>
+    <value>групу з ними.</value>
     <comment>legacy_id=195</comment>
   </data>
   <data name="You can share more Exp with" xml:space="preserve">
@@ -884,7 +884,7 @@
     <comment>legacy_id=218,3419</comment>
   </data>
   <data name="[Zen available to be exchanged to Rena]" xml:space="preserve">
-    <value>[Дзен доступний для обміну на Рену]</value>
+    <value>[Рену можна обміняти на зен]</value>
     <comment>legacy_id=219</comment>
   </data>
   <data name="Close Guild Window (G)" xml:space="preserve">
@@ -892,7 +892,7 @@
     <comment>legacy_id=220</comment>
   </data>
   <data name="Close Party Window (P)" xml:space="preserve">
-    <value>Закрити вікно вечірки (P)</value>
+    <value>Закрити вікно групи (P)</value>
     <comment>legacy_id=221</comment>
   </data>
   <data name="Close Character Info Window (C)" xml:space="preserve">
@@ -912,7 +912,7 @@
     <comment>legacy_id=226,943,3465</comment>
   </data>
   <data name="Zen Trade" xml:space="preserve">
-    <value>Дзен Трейд</value>
+    <value>Зен Трейд</value>
     <comment>legacy_id=227</comment>
   </data>
   <data name="OK" xml:space="preserve">
@@ -1028,7 +1028,7 @@
     <comment>legacy_id=255</comment>
   </data>
   <data name="Party256" xml:space="preserve">
-    <value>/вечірка</value>
+    <value>/група</value>
     <comment>legacy_id=256</comment>
   </data>
   <data name="You are already in a party" xml:space="preserve">
@@ -1052,7 +1052,7 @@
     <comment>legacy_id=261</comment>
   </data>
   <data name="You can enter Altans only after joining a party." xml:space="preserve">
-    <value>Ви можете увійти в Altans тільки після приєднання до партії.</value>
+    <value>Ви можете увійти в Altans тільки після приєднання до групи.</value>
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
@@ -1312,7 +1312,7 @@
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
-    <value>вечірка (P)</value>
+    <value>Група (P)</value>
     <comment>legacy_id=361</comment>
   </data>
   <data name="Character (C)" xml:space="preserve">
@@ -1577,7 +1577,7 @@
     <comment>legacy_id=422</comment>
   </data>
   <data name="You are short of Zen." xml:space="preserve">
-    <value>Вам не вистачає Дзен.</value>
+    <value>Вам не вистачає Зен.</value>
     <comment>legacy_id=423</comment>
   </data>
   <data name="You can not trade over 50 million Zen at once" xml:space="preserve">
@@ -1585,7 +1585,7 @@
     <comment>legacy_id=424</comment>
   </data>
   <data name="Someone requests you to join their a party" xml:space="preserve">
-    <value>Хтось просить вас приєднатися до його вечірки</value>
+    <value>Хтось запрошує вас до своєї групи</value>
     <comment>legacy_id=425</comment>
   </data>
   <data name="Please draw your guild emblem" xml:space="preserve">
@@ -1861,7 +1861,7 @@
     <comment>legacy_id=496</comment>
   </data>
   <data name="Creating a party has failed." xml:space="preserve">
-    <value>Створити партію не вдалося.</value>
+    <value>Не вдалося створити групу.</value>
     <comment>legacy_id=497</comment>
   </data>
   <data name="Your request has been denied." xml:space="preserve">
@@ -1869,7 +1869,7 @@
     <comment>legacy_id=498</comment>
   </data>
   <data name="Party is full." xml:space="preserve">
-    <value>Партія повна.</value>
+    <value>Група заповнена.</value>
     <comment>legacy_id=499</comment>
   </data>
   <data name="The user has left the game." xml:space="preserve">
@@ -1881,7 +1881,7 @@
     <comment>legacy_id=501</comment>
   </data>
   <data name="You have just left the party." xml:space="preserve">
-    <value>Ви щойно вийшли з вечірки.</value>
+    <value>Ви щойно вийшли з групи.</value>
     <comment>legacy_id=502</comment>
   </data>
   <data name="Guild master has refused your request to join the guild." xml:space="preserve">
@@ -2141,7 +2141,7 @@
     <comment>legacy_id=570</comment>
   </data>
   <data name="Throw it and you may receive some Zen or items" xml:space="preserve">
-    <value>Киньте його, і ви можете отримати дзен або предмети</value>
+    <value>Киньте його, і ви можете отримати зен або предмети</value>
     <comment>legacy_id=571</comment>
   </data>
   <data name="It is used to increase your item level up to 6" xml:space="preserve">
@@ -2197,7 +2197,7 @@
     <comment>legacy_id=584</comment>
   </data>
   <data name="%s Required Zen: %s" xml:space="preserve">
-    <value>%s Необхідний Дзен: %s</value>
+    <value>%s Необхідний Зен: %s</value>
     <comment>legacy_id=585</comment>
   </data>
   <data name="when %s, You must have a Jewel of Chaos" xml:space="preserve">
@@ -2361,7 +2361,7 @@
     <comment>legacy_id=626</comment>
   </data>
   <data name="Increases acquisition rate of Zen after hunting monsters +30%%" xml:space="preserve">
-    <value>Збільшує швидкість отримання Дзен після полювання на монстрів +30%%</value>
+    <value>Збільшує швидкість отримання Зен після полювання на монстрів +30%%</value>
     <comment>legacy_id=627</comment>
   </data>
   <data name="Excellent Damage rate +10%%" xml:space="preserve">
@@ -2433,11 +2433,11 @@
     <comment>legacy_id=644</comment>
   </data>
   <data name="The %d Square (%d-%d level)" xml:space="preserve">
-    <value>Квадрат %d (рівень %d-%d)</value>
+    <value>Площа %d (рівень %d-%d)</value>
     <comment>legacy_id=645</comment>
   </data>
   <data name="The %d Square (Over %d level)" xml:space="preserve">
-    <value>Квадрат %d (понад рівень %d)</value>
+    <value>Площа %d (понад рівень %d)</value>
     <comment>legacy_id=646</comment>
   </data>
   <data name="Congratulations!" xml:space="preserve">
@@ -2461,7 +2461,7 @@
     <comment>legacy_id=651</comment>
   </data>
   <data name="TheDevilSquareIsAPlace" xml:space="preserve">
-    <value>Площа Диявола – місце, де воїни доводять свою мужність. Кваліфіковані воїни отримають запрошення Диявола. Ідіть до гобліна Хаосу в Норії з оком диявола, ключем диявола, коштовністю хаосу та достатньо дзен.</value>
+    <value>Площа Диявола – місце, де воїни доводять свою мужність. Кваліфіковані воїни отримають запрошення Диявола. Ідіть до гобліна Хаосу в Норії з оком диявола, ключем диявола, коштовністю хаосу та достатньо зен.</value>
     <comment>legacy_id=652</comment>
   </data>
   <data name="YouHaveComeTooSoonYou" xml:space="preserve">
@@ -2681,7 +2681,7 @@
     <comment>legacy_id=707</comment>
   </data>
   <data name="1 Rena = 3,000 Zen" xml:space="preserve">
-    <value>1 Рена = 3000 Дзен</value>
+    <value>1 Рена = 3000 Зен</value>
     <comment>legacy_id=708</comment>
   </data>
   <data name="Rena Exchange" xml:space="preserve">
@@ -2745,19 +2745,19 @@
     <comment>legacy_id=723</comment>
   </data>
   <data name="TheGoldenArcherWillStayAt" xml:space="preserve">
-    <value>Золотий лучник залишиться в Лоренсії до 8 липня, щоб обміняти Рену на Дзен</value>
+    <value>Золотий лучник залишиться в Лоренсії до 8 липня, щоб обміняти Рену на Зен</value>
     <comment>legacy_id=724</comment>
   </data>
   <data name="AreYouThrowingRenaOnThe" xml:space="preserve">
-    <value>Ви кидаєте Рену на землю? Рена може бути малокорисною в цьому світі, але Золотий лучник може її обміняти на Дзен.</value>
+    <value>Ви кидаєте Рену на землю? Рена може бути малокорисною в цьому світі, але Золотий лучник може її обміняти на Зен.</value>
     <comment>legacy_id=725</comment>
   </data>
   <data name="RyanTheMaidOfTheBar" xml:space="preserve">
-    <value>Райан, покоївка бару в Лоренсії, каже, що Рену можна обміняти на Дзен. Ідіть до Золотого Лучника, якщо у вас є Рена.</value>
+    <value>Райан, покоївка бару в Лоренсії, каже, що Рену можна обміняти на Зен. Ідіть до Золотого Лучника, якщо у вас є Рена.</value>
     <comment>legacy_id=726</comment>
   </data>
   <data name="RenaIsATypeOfCoin" xml:space="preserve">
-    <value>&quot;Рена&quot; - це тип монети, який використовувався у світі Неба багато років тому. Його не можна використовувати в цьому світі, але якщо ви підете до «Золотого лучника» в Лоренсії, він обміняє його на Дзен.</value>
+    <value>&quot;Рена&quot; - це тип монети, який використовувався у світі Неба багато років тому. Його не можна використовувати в цьому світі, але якщо ви підете до «Золотого лучника» в Лоренсії, він обміняє його на Зен.</value>
     <comment>legacy_id=727</comment>
   </data>
   <data name="Loren (New)" xml:space="preserve">
@@ -3217,7 +3217,7 @@
     <comment>legacy_id=861,2771</comment>
   </data>
   <data name="Rewarded Zen: %d" xml:space="preserve">
-    <value>Нагороджений дзен: %d</value>
+    <value>Нагороджений зен: %d</value>
     <comment>legacy_id=862</comment>
   </data>
   <data name="Blood Castle Point: %d" xml:space="preserve">
@@ -3361,7 +3361,7 @@
     <comment>legacy_id=901</comment>
   </data>
   <data name="1 Stone = 3,000 Zen" xml:space="preserve">
-    <value>1 Стоун = 3000 Дзен</value>
+    <value>1 Стоун = 3000 Зен</value>
     <comment>legacy_id=902</comment>
   </data>
   <data name="Stone Exchange" xml:space="preserve">
@@ -3493,7 +3493,7 @@
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
-    <value>Ви повинні бути в вечірці</value>
+    <value>Ви повинні бути в групі</value>
     <comment>legacy_id=937</comment>
   </data>
   <data name="Command Window" xml:space="preserve">
@@ -3549,7 +3549,7 @@
     <comment>legacy_id=953,987</comment>
   </data>
   <data name="Increase command +%d" xml:space="preserve">
-    <value>Збільшити команду +%d</value>
+    <value>Командування +%d</value>
     <comment>legacy_id=954</comment>
   </data>
   <data name="Increase min. damage +%d" xml:space="preserve">
@@ -3993,7 +3993,7 @@
     <comment>legacy_id=1070</comment>
   </data>
   <data name="Write letter (Cost: %d zen)" xml:space="preserve">
-    <value>Написати листа (Вартість: %d дзен)</value>
+    <value>Написати листа (Вартість: %d зен)</value>
     <comment>legacy_id=1071</comment>
   </data>
   <data name="%d letters are saved in your mailbox (Max: %d)" xml:space="preserve">
@@ -4233,7 +4233,7 @@
     <comment>legacy_id=1131</comment>
   </data>
   <data name="Selling price : %s zen" xml:space="preserve">
-    <value>Ціна продажу: %s дзен</value>
+    <value>Ціна продажу: %s зен</value>
     <comment>legacy_id=1132</comment>
   </data>
   <data name="Do you want to sell item at this price?" xml:space="preserve">
@@ -4245,7 +4245,7 @@
     <comment>legacy_id=1134</comment>
   </data>
   <data name="can only be done using zen." xml:space="preserve">
-    <value>можна зробити лише за допомогою дзен.</value>
+    <value>можна зробити лише за допомогою зен.</value>
     <comment>legacy_id=1135</comment>
   </data>
   <data name="/View store on" xml:space="preserve">
@@ -4357,7 +4357,7 @@
     <comment>legacy_id=1169</comment>
   </data>
   <data name="CommandD1170" xml:space="preserve">
-    <value>Команда: %d</value>
+    <value>Командування: %d</value>
     <comment>legacy_id=1170</comment>
   </data>
   <data name="Only level %d above can do cloak combination." xml:space="preserve">
@@ -4417,7 +4417,7 @@
     <comment>legacy_id=1184</comment>
   </data>
   <data name="Can only be used during party" xml:space="preserve">
-    <value>Можна використовувати лише під час вечірки</value>
+    <value>Можна використовувати лише в групі</value>
     <comment>legacy_id=1185</comment>
   </data>
   <data name="Force wave skill (mana:%d)" xml:space="preserve">
@@ -4597,11 +4597,11 @@
     <comment>legacy_id=1230</comment>
   </data>
   <data name="%s zen is lacking to recover life." xml:space="preserve">
-    <value>%s дзен не вистачає для відновлення життя.</value>
+    <value>%s зен не вистачає для відновлення життя.</value>
     <comment>legacy_id=1231</comment>
   </data>
   <data name="%s zen is required to recover life." xml:space="preserve">
-    <value>Для відновлення життя потрібен дзен %s.</value>
+    <value>Для відновлення життя потрібен зен %s.</value>
     <comment>legacy_id=1232</comment>
   </data>
   <data name="No %s." xml:space="preserve">
@@ -4717,7 +4717,7 @@
     <comment>legacy_id=1264</comment>
   </data>
   <data name="guild alliance. Request the" xml:space="preserve">
-    <value>цеховий союз. Запит на</value>
+    <value>союз гільдій. Запит на</value>
     <comment>legacy_id=1265</comment>
   </data>
   <data name="registration to opposite alliance," xml:space="preserve">
@@ -4973,19 +4973,19 @@
     <comment>legacy_id=1335</comment>
   </data>
   <data name="Item in" xml:space="preserve">
-    <value>Пункт в</value>
+    <value>Покласти предмети</value>
     <comment>legacy_id=1336</comment>
   </data>
   <data name="Item out" xml:space="preserve">
-    <value>Пункт вийшов</value>
+    <value>Забрати предмети</value>
     <comment>legacy_id=1337</comment>
   </data>
   <data name="Deposit zen" xml:space="preserve">
-    <value>Депозит дзен</value>
+    <value>Депозит зен</value>
     <comment>legacy_id=1338</comment>
   </data>
   <data name="Withdraw zen" xml:space="preserve">
-    <value>Зняти дзен</value>
+    <value>Зняти зен</value>
     <comment>legacy_id=1339</comment>
   </data>
   <data name="Withdrawal limit" xml:space="preserve">
@@ -5081,7 +5081,7 @@
     <comment>legacy_id=1363</comment>
   </data>
   <data name="All the items and zen in the guild vault will disappear" xml:space="preserve">
-    <value>Усі предмети та дзен у сховищі гільдії зникнуть</value>
+    <value>Усі предмети та зен у сховищі гільдії зникнуть</value>
     <comment>legacy_id=1364</comment>
   </data>
   <data name="Also the guild ranking information will disappear." xml:space="preserve">
@@ -5777,7 +5777,7 @@
     <comment>legacy_id=1552</comment>
   </data>
   <data name="%d Guardian jewel and %d zen are required." xml:space="preserve">
-    <value>Потрібні %d Guardian jewel і %d дзен.</value>
+    <value>Потрібні %d Guardian jewel і %d зен.</value>
     <comment>legacy_id=1553</comment>
   </data>
   <data name="Would you like to repair?" xml:space="preserve">
@@ -5897,7 +5897,7 @@
     <comment>legacy_id=1583</comment>
   </data>
   <data name="Retaining zen of castle: %I64d" xml:space="preserve">
-    <value>Збереження дзен замку: %I64d</value>
+    <value>Збереження зен замку: %I64d</value>
     <comment>legacy_id=1584</comment>
   </data>
   <data name="Tax belongs to the castle" xml:space="preserve">
@@ -5953,7 +5953,7 @@
     <comment>legacy_id=1598</comment>
   </data>
   <data name="Entrance fee range: 0 ~ %s zen" xml:space="preserve">
-    <value>Діапазон вхідних плат: 0 ~ %s дзен</value>
+    <value>Діапазон вхідних плат: 0 ~ %s зен</value>
     <comment>legacy_id=1600</comment>
   </data>
   <data name="for setting" xml:space="preserve">
@@ -5961,7 +5961,7 @@
     <comment>legacy_id=1601</comment>
   </data>
   <data name="Entrance fee : %s Zen" xml:space="preserve">
-    <value>Плата за вхід: %s Дзен</value>
+    <value>Плата за вхід: %s Зен</value>
     <comment>legacy_id=1602</comment>
   </data>
   <data name="Camp" xml:space="preserve">
@@ -6017,11 +6017,11 @@
     <comment>legacy_id=1616</comment>
   </data>
   <data name="%d zen is required." xml:space="preserve">
-    <value>Потрібен дзен %d.</value>
+    <value>Потрібен зен %d.</value>
     <comment>legacy_id=1617</comment>
   </data>
   <data name="(Increase unit:%s zen)" xml:space="preserve">
-    <value>(Одиниця збільшення: %s дзен)</value>
+    <value>(Одиниця збільшення: %s зен)</value>
     <comment>legacy_id=1618</comment>
   </data>
   <data name="Confirm" xml:space="preserve">
@@ -6037,7 +6037,7 @@
     <comment>legacy_id=1621</comment>
   </data>
   <data name="Required zen: %s(%s)" xml:space="preserve">
-    <value>Необхідний дзен: %s(%s)</value>
+    <value>Необхідний зен: %s(%s)</value>
     <comment>legacy_id=1622</comment>
   </data>
   <data name="Tax rate: %d%% (changed in real-time)" xml:space="preserve">
@@ -6061,7 +6061,7 @@
     <comment>legacy_id=1627</comment>
   </data>
   <data name="Insufficient zen for entering" xml:space="preserve">
-    <value>Недостатньо дзен для входу</value>
+    <value>Недостатньо зен для входу</value>
     <comment>legacy_id=1628</comment>
   </data>
   <data name="Approval from the lord of a castle is required" xml:space="preserve">
@@ -6093,7 +6093,7 @@
     <comment>legacy_id=1635</comment>
   </data>
   <data name="Required zen for potion: %s(%s)" xml:space="preserve">
-    <value>Необхідний дзен для зілля: %s(%s)</value>
+    <value>Необхідний зен для зілля: %s(%s)</value>
     <comment>legacy_id=1636</comment>
   </data>
   <data name="Alliance function will be restricted due to the Castle Siege." xml:space="preserve">
@@ -6193,7 +6193,7 @@
     <comment>legacy_id=1660</comment>
   </data>
   <data name="InOrderToReceiveHelpFrom" xml:space="preserve">
-    <value>Щоб отримати допомогу від Werewolf Guardsman; ви повинні заплатити йому 3 000 000 дзен.</value>
+    <value>Щоб отримати допомогу від Werewolf Guardsman; ви повинні заплатити йому 3 000 000 зен.</value>
     <comment>legacy_id=1661</comment>
   </data>
   <data name="Gatekeeper" xml:space="preserve">
@@ -6277,7 +6277,7 @@
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>Партійний чат</value>
+    <value>Груповий чат</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
@@ -6497,7 +6497,7 @@
     <comment>legacy_id=1737</comment>
   </data>
   <data name="Command" xml:space="preserve">
-    <value>Команда</value>
+    <value>Командування</value>
     <comment>legacy_id=1738,1900</comment>
   </data>
   <data name="Long gmae time may be harmful to your health" xml:space="preserve">
@@ -6729,7 +6729,7 @@
     <comment>legacy_id=1807</comment>
   </data>
   <data name="Combine %d (%d zen is required)" xml:space="preserve">
-    <value>Комбінуйте %d (потрібен дзен %d)</value>
+    <value>Комбінуйте %d (потрібен зен %d)</value>
     <comment>legacy_id=1808</comment>
   </data>
   <data name="Are you sure to combine %s x %d?" xml:space="preserve">
@@ -6737,11 +6737,11 @@
     <comment>legacy_id=1809</comment>
   </data>
   <data name="Combination cost: %d zen" xml:space="preserve">
-    <value>Вартість комбінації: %d дзен</value>
+    <value>Вартість комбінації: %d зен</value>
     <comment>legacy_id=1810</comment>
   </data>
   <data name="Zen is insufficient." xml:space="preserve">
-    <value>Дзен недостатньо.</value>
+    <value>Зен недостатньо.</value>
     <comment>legacy_id=1811</comment>
   </data>
   <data name="Corresponding item is inappropriate." xml:space="preserve">
@@ -6753,7 +6753,7 @@
     <comment>legacy_id=1813</comment>
   </data>
   <data name="Dissolving cost: %d zen" xml:space="preserve">
-    <value>Вартість розчинення: %d дзен</value>
+    <value>Вартість розчинення: %d зен</value>
     <comment>legacy_id=1814</comment>
   </data>
   <data name="Inventory space is insufficient." xml:space="preserve">
@@ -7589,7 +7589,7 @@
     <comment>legacy_id=2086</comment>
   </data>
   <data name="Lacks %d zen" xml:space="preserve">
-    <value>Не вистачає %d дзен</value>
+    <value>Не вистачає %d зен</value>
     <comment>legacy_id=2087</comment>
   </data>
   <data name="For restoring reinforced item," xml:space="preserve">
@@ -7613,7 +7613,7 @@
     <comment>legacy_id=2093</comment>
   </data>
   <data name="Required zen : %d zen" xml:space="preserve">
-    <value>Необхідний дзен: %d дзен</value>
+    <value>Необхідний зен: %d зен</value>
     <comment>legacy_id=2094</comment>
   </data>
   <data name="of Jewel of Harmony, orignal" xml:space="preserve">
@@ -9265,11 +9265,11 @@
     <comment>legacy_id=2614</comment>
   </data>
   <data name="/Party battle request" xml:space="preserve">
-    <value>/Запит партії на бій</value>
+    <value>/Запит на групову битву</value>
     <comment>legacy_id=2620</comment>
   </data>
   <data name="/Party battle cancellation" xml:space="preserve">
-    <value>/Скасування битви партії</value>
+    <value>/Скасування групової битви</value>
     <comment>legacy_id=2621</comment>
   </data>
   <data name="%s has accepted your request for party battle." xml:space="preserve">
@@ -9277,7 +9277,7 @@
     <comment>legacy_id=2622</comment>
   </data>
   <data name="%s has rejected your request for party battle." xml:space="preserve">
-    <value>%s відхилив ваш запит на партійну битву.</value>
+    <value>%s відхилив ваш запит на групову битву.</value>
     <comment>legacy_id=2623</comment>
   </data>
   <data name="Party battle has been cancelled." xml:space="preserve">
@@ -9285,7 +9285,7 @@
     <comment>legacy_id=2624</comment>
   </data>
   <data name="You cannot request another battle during the party battle." xml:space="preserve">
-    <value>Ви не можете запросити ще одну битву під час вечірньої битви.</value>
+    <value>Ви не можете запросити ще одну битву під час групової битви.</value>
     <comment>legacy_id=2625</comment>
   </data>
   <data name="You have a request for the party battle." xml:space="preserve">
@@ -9293,7 +9293,7 @@
     <comment>legacy_id=2626</comment>
   </data>
   <data name="Would you like to accept the party battle?" xml:space="preserve">
-    <value>Бажаєте прийняти партійну битву?</value>
+    <value>Бажаєте прийняти групову битву?</value>
     <comment>legacy_id=2627</comment>
   </data>
   <data name="Unique" xml:space="preserve">
@@ -9641,7 +9641,7 @@
     <comment>legacy_id=2743</comment>
   </data>
   <data name="Zen increase 50%%" xml:space="preserve">
-    <value>Дзен збільшення 50%%</value>
+    <value>Зен збільшення 50%%</value>
     <comment>legacy_id=2744</comment>
   </data>
   <data name="Damage/Wizardry/Curse +30" xml:space="preserve">
@@ -9649,7 +9649,7 @@
     <comment>legacy_id=2745</comment>
   </data>
   <data name="Auto-collects zen around you." xml:space="preserve">
-    <value>Автоматично збирає дзен навколо вас.</value>
+    <value>Автоматично збирає зен навколо вас.</value>
     <comment>legacy_id=2746</comment>
   </data>
   <data name="EXP rate 50%% increase" xml:space="preserve">
@@ -9817,23 +9817,23 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Фортеця Вартових Імперії Кругла %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>було очищено.</value>
+    <value>пройдено.</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Вам не вдалося перемогти</value>
+    <value>Вам не вдалося пройти</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Фортеця Вартових Імперії.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Круглий %d (зона %d)</value>
+    <value>Tier %d · зона %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -9853,7 +9853,7 @@
     <comment>legacy_id=2814</comment>
   </data>
   <data name="You have reached your Zen limit." xml:space="preserve">
-    <value>Ви досягли свого дзен-ліміту.</value>
+    <value>Ви досягли свого зен-ліміту.</value>
     <comment>legacy_id=2816</comment>
   </data>
   <data name="IfYouGiveUpYouWill" xml:space="preserve">
@@ -9921,7 +9921,7 @@
     <comment>legacy_id=2837</comment>
   </data>
   <data name="You can only enter as a member of a party." xml:space="preserve">
-    <value>Увійти можна лише як член партії.</value>
+    <value>Увійти можна лише як член групи.</value>
     <comment>legacy_id=2838,2843</comment>
   </data>
   <data name="Quest Item Missing" xml:space="preserve">
@@ -10425,7 +10425,7 @@
     <comment>legacy_id=2989</comment>
   </data>
   <data name="You cannot form a party with a member of the opposing gens." xml:space="preserve">
-    <value>Ви не можете створити партію з представником протилежного роду.</value>
+    <value>Ви не можете створити групу з представником протилежного роду.</value>
     <comment>legacy_id=2990</comment>
   </data>
   <data name="The alliance master has not joined the gens." xml:space="preserve">
@@ -10433,7 +10433,7 @@
     <comment>legacy_id=2991</comment>
   </data>
   <data name="The guild master has not joined the gens." xml:space="preserve">
-    <value>Цеховий майстер не приєднався до роду.</value>
+    <value>Майстер гільдії не приєднався до роду.</value>
     <comment>legacy_id=2992</comment>
   </data>
   <data name="You are with a different gens than the alliance master." xml:space="preserve">
@@ -10753,7 +10753,7 @@
     <comment>legacy_id=3078</comment>
   </data>
   <data name="Devil Square Lv.%lu Point x %lu/%lu" xml:space="preserve">
-    <value>Квадрат Диявола Lv.%lu Точка x %lu/%lu</value>
+    <value>Площа Диявола Lv.%lu Очки x %lu/%lu</value>
     <comment>legacy_id=3079</comment>
   </data>
   <data name="Devil Square Lv.%lu Cleared" xml:space="preserve">
@@ -11013,7 +11013,7 @@
     <comment>legacy_id=3147</comment>
   </data>
   <data name="Exceeded maximum amount of Zen you can possess." xml:space="preserve">
-    <value>Перевищено максимальну кількість Дзен, якою ви можете володіти.</value>
+    <value>Перевищено максимальну кількість Зен, якою ви можете володіти.</value>
     <comment>legacy_id=3148</comment>
   </data>
   <data name="You cannot join the gens while you're in a guild alliance." xml:space="preserve">
@@ -11165,7 +11165,7 @@
     <comment>legacy_id=3277</comment>
   </data>
   <data name="Enemy Gens Member x %lu/%lu" xml:space="preserve">
-    <value>Член ворожого покоління x %lu/%lu</value>
+    <value>Член ворожого роду x %lu/%lu</value>
     <comment>legacy_id=3278</comment>
   </data>
   <data name="You cannot accept any more quest." xml:space="preserve">
@@ -11469,7 +11469,7 @@
     <comment>legacy_id=3356</comment>
   </data>
   <data name="Increases the amount of Zen received from killing monsters by 60%%" xml:space="preserve">
-    <value>Збільшує кількість дзен, отриманого від вбивства монстрів, на 60%%</value>
+    <value>Збільшує кількість зен, отриманого від вбивства монстрів, на 60%%</value>
     <comment>legacy_id=3357</comment>
   </data>
   <data name="Increases the chance of causing Excellent Damage by 15%%" xml:space="preserve">
@@ -12029,7 +12029,7 @@
     <comment>legacy_id=3549</comment>
   </data>
   <data name="HP Status of Party Members" xml:space="preserve">
-    <value>HP Статус членів партії</value>
+    <value>HP членів групи</value>
     <comment>legacy_id=3550</comment>
   </data>
   <data name="Time Space of Casting Buff" xml:space="preserve">
@@ -12153,7 +12153,7 @@
     <comment>legacy_id=3581</comment>
   </data>
   <data name="CertainAmountOfZenIsSpent" xml:space="preserve">
-    <value>Певна кількість дзен витрачається кожні 5 хвилин на впровадження офіційного MU Helper</value>
+    <value>Певна кількість зен витрачається кожні 5 хвилин на впровадження офіційного MU Helper</value>
     <comment>legacy_id=3582</comment>
   </data>
   <data name="Spent Time %d Minute(s)/" xml:space="preserve">
@@ -12161,11 +12161,11 @@
     <comment>legacy_id=3583</comment>
   </data>
   <data name="Spent Time %d Minute(s)/ Spent Zen? %d Stage / Cost %d zen(s)" xml:space="preserve">
-    <value>Витрачений час %d хвилин/витрачений дзен? %d Етап / Вартість %d zen(s)</value>
+    <value>Витрачений час %d хвилин/витрачений зен? %d Етап / Вартість %d zen(s)</value>
     <comment>legacy_id=3584</comment>
   </data>
   <data name="Spent Time %d hour(s) %d Minute(s)/ Spent Zen  %d Stage / Cost %d zen(s)" xml:space="preserve">
-    <value>Витрачений час %d годин(и) %d хвилин(и)/ Витрачений дзен %d Етап/вартість %d дзен(и)</value>
+    <value>Витрачений час %d годин(и) %d хвилин(и)/ Витрачений зен %d Етап/вартість %d зен(и)</value>
     <comment>legacy_id=3585</comment>
   </data>
   <data name="%d zen(s) have been spent in implementing Official MU Helper" xml:space="preserve">
@@ -12939,7 +12939,7 @@
     <value>Демонтувати коштовність не вдалося.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Зона очищена</value>
+    <value>Зону %d пройдено</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Бонус: %ls на %lu хв.</value>
