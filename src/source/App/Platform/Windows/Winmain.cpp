@@ -77,6 +77,7 @@
 #include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebClipboard.h"
 #include "Core/Platform/web/WebDevice.h"
 #include "Core/Platform/web/WebDisplay.h"
 #include "Core/Platform/web/WebFileSystem.h"
@@ -1540,11 +1541,13 @@ mu::web::FieldKeys PhoneKeysFor(const Rml::Element* field)
 }
 
 // The phone's keyboard follows the game's text fields: the focused one, and the one a finger on the
-// screen would tap (mu::web::SyncTapOnTextField()).
+// screen would tap (mu::web::SyncTapOnTextField()). The page's paste and copy keys follow the focused one.
 void SyncPhoneKeyboard()
 {
     RmlUiRuntime& ui = RmlUiRuntime::Instance();
-    mu::web::SyncKeyboard(PhoneKeysFor(ui.GetFocusedTextField()));
+    const mu::web::FieldKeys focused = PhoneKeysFor(ui.GetFocusedTextField());
+    mu::web::SyncKeyboard(focused);
+    mu::web::SyncClipboardField(focused);
 
     const std::optional<SDL_FPoint> tap = Core::Input::Touch::TapPoint();
     const Rml::Element* tapped = tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr;

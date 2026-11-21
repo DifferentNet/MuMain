@@ -25,4 +25,11 @@ ServerProbeResult PollServerProbe(std::int32_t probe);
 
 // Closes the probe's socket and forgets it; harmless for an unknown probe.
 void CloseServerProbe(std::int32_t probe);
+
+// The browser says it has a network (navigator.onLine). False only when it knows there is none: a
+// true is no promise the server can be reached.
+bool BrowserOnline();
+
+// True once after the browser's network came back (the page's `online` event): probe at once.
+bool TakeNetworkBack();
 } // namespace mu::web

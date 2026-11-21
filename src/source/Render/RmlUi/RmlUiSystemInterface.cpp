@@ -2,20 +2,33 @@
 #include "RmlUiSystemInterface.h"
 
 #include "Core/Utilities/Log/MuLogger.h"
+#include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
+#include <RmlUi/Core/Element.h>
 #include <SDL3/SDL.h>
 #include <chrono>
 
 #ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebClipboard.h"
 #include "Core/Platform/web/WebKeyboard.h"
-#include <RmlUi/Core/Context.h>
-#include <RmlUi/Core/Core.h>
-#include <RmlUi/Core/Element.h>
 #endif
 
 namespace
 {
     // RmlUi animation and double-click timing must advance independently of game pause/ticks.
     const std::chrono::steady_clock::time_point g_StartTime = std::chrono::steady_clock::now();
+
+    bool IsPasswordField(const Rml::Element* field)
+    {
+        return field && field->GetAttribute<Rml::String>("type", "") == "password";
+    }
+
+    // RmlUi copies a password field's real text on Ctrl+C / Ctrl+X, though the field shows only dots.
+    bool CopyingFromPasswordField()
+    {
+        Rml::Context* context = Rml::GetContext("main");
+        return context && IsPasswordField(context->GetFocusElement());
+    }
 
 #ifdef __EMSCRIPTEN__
     // A phone has no keys until its own keyboard comes up (Core/Platform/web/WebKeyboard.h). RmlUi
@@ -26,8 +39,7 @@ namespace
         if (!context)
             return;
 
-        const Rml::Element* focused = context->GetFocusElement();
-        const bool password = focused && focused->GetAttribute<Rml::String>("type", "") == "password";
+        const bool password = IsPasswordField(context->GetFocusElement());
         const int height = context->GetDimensions().y;
         const float scale = height > 0 ? 1.0f / static_cast<float>(height) : 0.0f;
         mu::web::ShowKeyboard(password, lineTop * scale, (lineTop + lineHeight) * scale);
@@ -60,10 +72,16 @@ bool RmlUiSystemInterface::LogMessage(Rml::Log::Type type, const Rml::String& me
 
 void RmlUiSystemInterface::SetClipboardText(const Rml::String& text)
 {
+    if (CopyingFromPasswordField())
+        return;
     // SDL3's clipboard API (UTF-8, cross-platform) rather than raw Win32 OpenClipboard/
     // SetClipboardData -- consistent with this engine's SDL-based platform abstraction and its
     // existing portability discipline (GdiText.cpp etc.).
     SDL_SetClipboardText(text.c_str());
+#ifdef __EMSCRIPTEN__
+    // SDL has no clipboard of its own on the web: the page writes it to the browser's too.
+    mu::web::CopyToBrowserClipboard(text.c_str());
+#endif
 }
 
 void RmlUiSystemInterface::GetClipboardText(Rml::String& text)
