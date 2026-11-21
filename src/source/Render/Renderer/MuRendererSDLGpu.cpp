@@ -1720,10 +1720,14 @@ static int s_cachedWinW = 0;
 static int s_cachedWinH = 0;
 
 #if MU_HAS_SDL_TTF
+// Cyrillic too (round 29): the chat's Russian letters, first drawn mid-game, were added to the atlas then.
 static void WarmTtfFonts()
 {
     static constexpr const char* k_WarmupGlyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                                                  "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+                                                  "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
                                                   "0123456789 !@#$%^&*()-_=+[]{}|;:',.<>?/~`\"\\한글";
+    const auto started = std::chrono::steady_clock::now();
     using Render::Text::SdlTtfFontRole;
     for (SdlTtfFontRole role :
          {SdlTtfFontRole::Normal, SdlTtfFontRole::Bold, SdlTtfFontRole::Big, SdlTtfFontRole::Fixed})
@@ -1735,6 +1739,8 @@ static void WarmTtfFonts()
         TTF_GetGPUTextDrawData(warmup);
         TTF_DestroyText(warmup);
     }
+    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
+    mu::log::Get("render")->info("SDL_ttf -- glyph warm-up {:.1f} ms", ms);
 }
 
 [[nodiscard]] static bool LoadTtfFonts(std::string_view configuredFamily, float normalPointSize, float bigPointSize,
