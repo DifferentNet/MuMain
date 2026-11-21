@@ -36,6 +36,8 @@ namespace UI::RmlBridge
 
     // Validates a saved selection; falls back to legacy, or returns empty if neither is usable.
     std::string ResolveStartupThemeName(const std::string& savedName);
+    // The same, `handheld` saying whether this is a phone or tablet: those start in legacy whatever was saved.
+    std::string ResolveStartupThemeName(const std::string& savedName, bool handheld);
 
     // Overwrites the live active-theme cache GetActiveThemeName() reads
     // from (lowercased, same normalization GetActiveThemeName() has always applied). Does not touch

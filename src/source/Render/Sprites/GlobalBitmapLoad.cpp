@@ -429,6 +429,68 @@ GLuint CGlobalBitmap::LoadChangedImage(const std::wstring& filename, const std::
     return index;
 }
 
+namespace
+{
+// Never the name of a file: a lookup by file name doesn't find a changed copy.
+constexpr std::wstring_view ChangedImageSuffix = L"|reforge";
+
+// Clears the image change when the load ends, also by an exception, so that no other load is changed.
+class ImageChangeScope
+{
+public:
+    ImageChangeScope(const CGlobalBitmap::ImageChange*& slot, const CGlobalBitmap::ImageChange& change) : m_slot(slot)
+    {
+        m_slot = &change;
+    }
+    ~ImageChangeScope()
+    {
+        m_slot = nullptr;
+    }
+    ImageChangeScope(const ImageChangeScope&) = delete;
+    ImageChangeScope& operator=(const ImageChangeScope&) = delete;
+
+private:
+    const CGlobalBitmap::ImageChange*& m_slot;
+};
+} // namespace
+
+GLuint CGlobalBitmap::LoadChangedImageExclusive(const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode,
+                                                bool padToPowerOfTwo, bool premultiplyAlpha, const ImageChange& change)
+{
+    std::wstring ext;
+    SplitExt(filename, ext, false);
+    const bool jpg = 0 == _wcsicmp(ext.c_str(), L"jpg");
+    if (!jpg && 0 != _wcsicmp(ext.c_str(), L"tga"))
+    {
+        return BITMAP_UNKNOWN;
+    }
+
+    // Opened directly: a deferred load would upload the file later, unchanged.
+    const GLuint index = GenerateTextureIndex();
+    const bool worldTexture = Render::Textures::IsWorldTexturePath(filename);
+    const auto start = std::chrono::steady_clock::now();
+    bool loaded = false;
+    {
+        const ImageChangeScope scope(m_imageChange, change);
+        loaded = jpg ? OpenJpegTurbo(index, filename, uiFilter, uiWrapMode, worldTexture, padToPowerOfTwo)
+                     : OpenTga(index, filename, uiFilter, uiWrapMode, worldTexture, padToPowerOfTwo, premultiplyAlpha);
+    }
+    m_textureLoadSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    const auto added = m_mapBitmap.find(index);
+    if (!loaded || added == m_mapBitmap.end())
+    {
+        return BITMAP_UNKNOWN;
+    }
+
+    const std::wstring name = filename + std::wstring(ChangedImageSuffix);
+    BITMAP_t& copy = *added->second;
+    wcsncpy(copy.FileName, name.c_str(), MAX_BITMAP_FILE_NAME - 1);
+    copy.FileName[MAX_BITMAP_FILE_NAME - 1] = L'\0';
+    m_listNonamedIndex.push_back(index);
+    m_BitmapCache.Remove(index);
+    return index;
+}
+
 bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode,
                               bool padToPowerOfTwo, bool premultiplyAlpha, bool keepPixels)
 {
@@ -914,6 +976,10 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     {
         (*m_pixelChange)(rgbaData.data(), rgbaData.size() / 4u, 4);
     }
+    if (m_imageChange != nullptr)
+    {
+        (*m_imageChange)(rgbaData.data(), uploadWidth, uploadHeight, 4, pNewBitmap->scale);
+    }
     const MipLevels mips = PlanMipLevels(upscaled || (worldTexture && m_textureFilteringEnabled), rgbaData.data(),
                                          uploadWidth, uploadHeight, false, m_mipChainSeconds, upscaled);
     if (!UploadTextureSDLGpu(pNewBitmap.get(), rgbaData, uploadWidth, uploadHeight, MapGLFilterToSDL(uiFilter),
@@ -1022,6 +1088,11 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     if (m_pixelChange != nullptr)
     {
         (*m_pixelChange)(pNewBitmap->Buffer, BufferSize / Ozt::BytesPerPixel, Ozt::BytesPerPixel);
+    }
+    if (m_imageChange != nullptr)
+    {
+        // The whole file's pixels, before the half size below: the HD copy's own scale.
+        (*m_imageChange)(pNewBitmap->Buffer, Width, Height, Ozt::BytesPerPixel, upscaled ? std::max(fileScale, 1) : 1);
     }
     if (premultiplyAlpha)
     {

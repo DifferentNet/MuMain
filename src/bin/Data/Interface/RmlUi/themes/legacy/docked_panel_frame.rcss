@@ -28,6 +28,7 @@
 	height: 429px;
 	decorator: image(docked-bg-fill);
 	font-family: "token(font-body)";
+	box-shadow: token(window-shadow);
 }
 
 .frame-piece { position: absolute; pointer-events: none; }

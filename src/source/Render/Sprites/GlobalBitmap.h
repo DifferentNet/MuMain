@@ -142,6 +142,9 @@ class CGlobalBitmap
 public:
     // Changes the pixels of a texture before its upload: `count` pixels of `components` bytes (3 RGB, 4 RGBA).
     using PixelChange = std::function<void(std::uint8_t* pixels, std::size_t count, int components)>;
+    // Changes a whole image before its upload, straight alpha: width x height pixels of `components` bytes, rows
+    // top-down; `scale` is its pixels per pixel of the original art (1, or 2 or 4 for an HD copy).
+    using ImageChange = std::function<void(std::uint8_t* pixels, int width, int height, int components, int scale)>;
 
 private:
     using BitmapPtr = std::unique_ptr<BITMAP_t>;
@@ -181,6 +184,8 @@ private:
     bool m_deferLoads = false;
     // Set while LoadChangedImage loads its copy: OpenJpegTurbo and OpenTga change the pixels before the upload.
     const PixelChange* m_pixelChange = nullptr;
+    // Set while LoadChangedImageExclusive loads its copy, the same way.
+    const ImageChange* m_imageChange = nullptr;
     std::size_t m_pendingLoads = 0;
 #ifdef DEBUG_BITMAP_CACHE
     CTimer2				m_DebugOutputTimer;
@@ -216,6 +221,11 @@ public:
     // deferred. Asked again for a name it has, it returns the same number. BITMAP_UNKNOWN when the file fails.
     GLuint LoadChangedImage(const std::wstring& filename, const std::wstring& name, GLuint uiFilter,
                             GLuint uiWrapMode, const PixelChange& change);
+    // LoadImageExclusive with the decoded image changed before the upload (RmlUi's reforged sprites,
+    // Render/Textures/SpriteReforge.h): an entry of its own every time, named "<file>|reforge" so that a lookup by
+    // file name never finds it. Loads now, also while loads are deferred. BITMAP_UNKNOWN when the file fails.
+    GLuint LoadChangedImageExclusive(const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode,
+                                     bool padToPowerOfTwo, bool premultiplyAlpha, const ImageChange& change);
     void UnloadImage(GLuint uiBitmapIndex, bool bForce = false);
     void UnloadAllImages();
 

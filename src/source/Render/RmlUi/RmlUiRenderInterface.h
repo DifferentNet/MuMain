@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
+#include "Render/Sprites/GlobalBitmap.h"
 #include <RmlUi_Renderer_SDL_GPU.h>
 #include <functional>
 #include <unordered_map>
@@ -27,8 +28,17 @@ public:
     using TextureFileResolver = std::function<Rml::String(const Rml::String&)>;
     void SetTextureFileResolver(TextureFileResolver resolver) { m_ResolveTextureFile = std::move(resolver); }
 
+    // The change a resolved texture file gets before its upload (RmlUiRuntimeHooks::textureImageChange);
+    // an empty change loads the file as it is.
+    using TextureImageChange = std::function<CGlobalBitmap::ImageChange(const Rml::String& resolvedFile)>;
+    void SetTextureImageChange(TextureImageChange change)
+    {
+        m_TextureImageChange = std::move(change);
+    }
+
 private:
     TextureFileResolver m_ResolveTextureFile;
+    TextureImageChange m_TextureImageChange;
     TextureSourceResolver m_ResolveTextureSource;
     // RmlUi's own TextureHandle IS the raw SDL_GPUTexture* (see RenderInterface_SDL_GPU.cpp) --
     // ReleaseTexture only gets that value back, not which path created it, so this engine needs

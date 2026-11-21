@@ -4,6 +4,7 @@
 #include "RmlStackingOrder.h"
 #include "UI/RmlBridge/ThemeInheritance.h"
 #include "UI/RmlBridge/ThemeFonts.h"
+#include "UI/RmlBridge/ThemeReforge.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Core/Platform/WinIni.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -92,10 +93,15 @@ namespace UI::RmlBridge
 
     std::string ResolveStartupThemeName(const std::string& savedName)
     {
+        return ResolveStartupThemeName(savedName, UI::Mobile::IsHandheld());
+    }
+
+    std::string ResolveStartupThemeName(const std::string& savedName, bool handheld)
+    {
         // A phone or tablet plays the legacy theme whatever was saved (the saved one waits for a computer):
         // the modern theme's windows are not ready for a phone yet (ghinzuro 2026-11-11).
         constexpr const char* handheldTheme = "legacy";
-        if (UI::Mobile::IsHandheld() && ThemeExists(handheldTheme))
+        if (handheld && ThemeExists(handheldTheme))
             return handheldTheme;
 
         const std::string name = ToLower(savedName);
@@ -123,6 +129,7 @@ namespace UI::RmlBridge
     {
         ActiveThemeNameStorage() = ToLower(themeName);
         UsesNativeTextSizeStorage() = ComputeUsesNativeTextSize(ActiveThemeNameStorage());
+        InvalidateActiveReforge();
 
         // Both themes deliberately reuse the same <template name="..."> for a shared concept
         // (e.g. "window_shell_bg") in their own themes/<theme>/ copy. Rml::TemplateCache caches a

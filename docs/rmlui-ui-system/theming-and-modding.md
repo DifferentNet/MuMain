@@ -242,6 +242,60 @@ way) before assuming something else is wrong.
 Plain-image loading is not implemented for theme assets. A custom theme must supply the
 containers described above.
 
+## Reforge: recolouring the game's own sprites
+
+A theme can give the game's interface art other colours without shipping any image: its
+`theme.ini` lists sprites in a `[Reforge]` section, each with a preset, and the client recolours
+the decoded pixels as RmlUi loads the texture, before the upload. The original and its HD copy
+(Remaster) go through the same preset, scaled to the copy's size, so both look alike. The bundled
+`skynet` theme (`Base=legacy`) is built this way: legacy's documents, stylesheets and art, forged.
+
+```ini
+[Reforge]
+newui_msgbox_back=stone
+newui_item_table01(l)=metal-flat
+partcharge1/newui_menu03=gild
+```
+
+- **Key**: the sprite's path under `Data/Interface/`, lower-case, without its extension
+  (`.tga`/`.OZT` and `.jpg`/`.OZJ` all match). `../../../newui_msgbox_back.jpg` in a stylesheet is
+  `newui_msgbox_back`; `Data/Interface/partCharge1/newui_menu03.OZJ` is `partcharge1/newui_menu03`.
+  A theme's own art (under `Data/Interface/RmlUi/themes/`) is never reforged.
+- **Presets** (`Render/Textures/SpriteReforge.h`): `metal` (frames: dark iron, antique gold on the
+  light curls, deeper relief, a warm glow), `metal-flat` (the same colours without relief or glow,
+  for thin and tiling pieces and buttons), `metal-bright` (`metal-flat` lifted, for buttons with a
+  light icon such as the HUD's menu buttons, so the icon stays readable), `cell` (the inventory
+  lattice: dark bronze lines), `stone` (window bodies, lit from the top), `socket` (equipment
+  slots), `gild` (the HUD's current-skill box: `metal`, its green frame gold and its green fill
+  deep bronze, so a skill icon on it stands out) and `none`. They recolour the grey parts only
+  (`cell` recolours all, `gild` its green too): saturated pixels (coloured gems, painted marks)
+  keep their colour, and `metal` and `stone` also keep bright text.
+  The blurred parts (`metal`'s relief and glow, `stone`'s softening) are worked out on the
+  original's grid and spread over an HD copy, so a copy at four times the size costs little more
+  than one pass over its pixels.
+  A `metal` piece that shows a seam where it meets its neighbour (its relief and glow blur within
+  the sprite) goes to `metal-flat`.
+- **Inheritance**: the section merges down the chain like any other; a child replaces a parent's
+  entry and `none` turns one off. An unknown preset name is logged once in `MuError.log` and the
+  sprite is drawn as it is.
+- **Scope**: only textures RmlUi loads. A window still drawn by native code keeps the original
+  colours, since RmlUi loads its own copy of each sprite (`LoadChangedImageExclusive`).
+- **Theme switch**: RmlUi keeps a texture by its source path, which is the same in every theme, so
+  `UI::Theme::Select` releases the sprites whose preset changes at once (no frame draws them
+  with the old preset); RmlUi loads them again, with the new preset, when it next draws them. No
+  restart.
+- **Colours that go with the art** stay tokens: `skynet/tokens.ini` sets the window titles
+  (`window-title-color`, `window-title-effect`), the window shadow (`window-shadow`), the item cell
+  tint (`cell-tint-normal`), the character window's stats (`stat-accent`) and `text-heading`;
+  `legacy/tokens.ini` holds the literals those stylesheets had, so legacy draws as before.
+
+Code: `UI/RmlBridge/ThemeReforge.h` (keys, the list, the switch), the `textureImageChange` hook
+(`RmlRuntimeHooks.cpp` → `RmlUiRenderInterface::LoadTexture`), `CGlobalBitmap::ImageChange`.
+Tests: `tests/render/test_sprite_reforge.cpp` (`sprite_reforge_tests`) and
+`tests/ui/test_theme_reforge.cpp` (`theme_file_interface_tests`); the latter also checks that
+every `skynet` key names a sprite that exists. `sprite_reforge_preview` (built with the tests)
+forges one raw RGBA image, to look at a preset on real art without starting the game.
+
 ## Design tokens: `themes/<theme>/tokens.ini`
 
 Both built-in themes have a `tokens.ini` file (`[Tokens]` section, plain `name=value` lines) that a theme's own `.rcss`

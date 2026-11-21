@@ -225,6 +225,23 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
 )
 
+# Reforge: the theme presets that recolour interface sprites at load.
+mu_add_test(
+    NAME sprite_reforge_tests
+    SOURCES
+        test_sprite_reforge.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/SpriteReforge.cpp
+)
+
+# Developer tool, not a test: forges a raw RGBA file with a preset, to look at the presets on real
+# sprites (sprite_reforge_preview <in.rgba> <width> <height> <scale> <preset> <out.rgba>).
+add_executable(sprite_reforge_preview
+    sprite_reforge_preview.cpp
+    ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/SpriteReforge.cpp
+)
+target_include_directories(sprite_reforge_preview PRIVATE ${CMAKE_SOURCE_DIR}/src/source)
+target_compile_features(sprite_reforge_preview PRIVATE cxx_std_20)
+
 # Leaf litter: which model texture it is and when a sprig hangs in the air.
 mu_add_test(
     NAME leaf_litter_tests

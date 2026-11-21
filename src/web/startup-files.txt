@@ -28,6 +28,8 @@ fonts/LiberationSans-Regular.ttf
 fonts/LiberationSans-Bold.ttf
 Data/Interface/RmlUi/themes/legacy/theme.ini
 Data/Interface/RmlUi/themes/legacy/tokens.ini
+Data/Interface/RmlUi/themes/skynet/theme.ini
+Data/Interface/RmlUi/themes/skynet/tokens.ini
 Data/Interface/RmlUi/themes/legacy/base.rcss
 Data/Render/Look.json
 Data/Maps/LightMood.json

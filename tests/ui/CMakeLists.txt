@@ -502,6 +502,7 @@ mu_add_test(
     SOURCES
         test_theme_file_interface.cpp
         test_theme_inheritance.cpp
+        test_theme_reforge.cpp
         ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
     LINK_LIBS MuClient
 )

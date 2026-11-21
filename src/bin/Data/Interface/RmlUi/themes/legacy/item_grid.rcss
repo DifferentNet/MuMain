@@ -26,7 +26,7 @@ body { --item-cell: 20px; }
 .item-cell, .item-count { position: relative; flex: 0 0 var(--item-cell); width: var(--item-cell); height: var(--item-cell); }
 /* The original's tints: translucent teal, then yellow, amber, orange and red with wear, and
    red-orange for an item that cannot be traded. */
-.item-cell.tint-normal { background-color: rgba(80, 128, 128, 153); }
+.item-cell.tint-normal { background-color: token(cell-tint-normal); }
 .item-cell.tint-durability-50 { background-color: rgba(255, 255, 0, 102); }
 .item-cell.tint-durability-70 { background-color: rgba(255, 168, 0, 102); }
 .item-cell.tint-durability-80 { background-color: rgba(255, 84, 0, 102); }

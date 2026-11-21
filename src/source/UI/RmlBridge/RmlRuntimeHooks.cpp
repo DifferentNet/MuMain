@@ -18,6 +18,7 @@
 #include "UI/RmlBridge/ThemeFileInterface.h"
 #include "UI/RmlBridge/ThemeInheritance.h"
 #include "UI/RmlBridge/ThemeFonts.h"
+#include "UI/RmlBridge/ThemeReforge.h"
 #include "UI/Scaling/UITransform.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ChatLogWindow.h"
@@ -48,6 +49,7 @@ void InstallRuntimeHooks()
     hooks.beforeDestroy = [] { UI::Diagnostics::Release(); ClearThemeFontCache(); };
     hooks.beforeUpdate = []
     {
+        ReleaseQueuedReforgeTextures();
         SuspendMainSceneDocumentsOutsideMainScene();
         ApplySceneStackingDepths();
         ApplyViewStackingDepths(UI::Mobile::IsPhoneView());
@@ -73,6 +75,15 @@ void InstallRuntimeHooks()
     };
 #endif
     hooks.resolveTextureFile = [](const Rml::String& source) { return ResolveThemeResource(source, true); };
+    // The active theme's [Reforge] preset for the file (ThemeReforge.h); none loads it as it is.
+    hooks.textureImageChange = [](const Rml::String& resolvedFile) -> CGlobalBitmap::ImageChange
+    {
+        const auto preset = ActiveReforgePreset(resolvedFile);
+        if (preset == Render::Textures::Reforge::Preset::None)
+            return {};
+        return [preset](std::uint8_t* pixels, int width, int height, int components, int scale)
+        { Render::Textures::Reforge::Apply(preset, pixels, width, height, components, scale); };
+    };
     hooks.createFileInterface = [] { return std::make_unique<ThemeFileInterface>(); };
     hooks.resolveTexture = [](const Rml::String& source, void*& texture, int& width, int& height)
     {
