@@ -30,6 +30,11 @@ constexpr float SloshPerLevel = 12.f;
 constexpr float SloshMaxExtra = 1.5f;
 constexpr double SloshFade = 0.6;
 
+constexpr float HaloBase = 0.10f;
+constexpr float HaloPerLevel = 0.25f;
+constexpr float HaloPulseLow = 0.25f;
+constexpr float HaloPulseHigh = 0.60f;
+
 constexpr float PercentScale = 100.f;
 constexpr std::size_t MinOutlinePoints = 3;
 
@@ -192,6 +197,7 @@ LiveHudConfig ReadLiveHudConfig(const std::map<std::string, std::string>& sectio
     ReadColour(section, "rimouter", config.rimOuter);
     ReadColour(section, "riminner", config.rimInner);
     ReadFloat(section, "rimwidth", 0.f, NoLimit, config.rimWidth);
+    ReadFloat(section, "cresttint", 0.f, 1.f, config.crestTint);
     return config;
 }
 
@@ -284,11 +290,23 @@ ArcRange ArcSpan(float level, float startDegrees, float sweepDegrees)
     return {startDegrees, startDegrees + share * sweepDegrees};
 }
 
+bool IsLowLife(float life, float lowLife)
+{
+    return life > 0.f && life < lowLife;
+}
+
 float PulseLevel(float life, float lowLife, float period, double t)
 {
-    if (!(life > 0.f && life < lowLife) || period <= 0.f)
+    if (!IsLowLife(life, lowLife) || period <= 0.f)
         return 0.f;
     return static_cast<float>(0.5 + 0.5 * std::sin(TwoPi * Fraction(t / period)));
+}
+
+float HaloStrength(float level, bool pulsing, float pulse)
+{
+    if (pulsing)
+        return HaloPulseLow + (HaloPulseHigh - HaloPulseLow) * std::clamp(pulse, 0.f, 1.f);
+    return HaloBase + HaloPerLevel * std::clamp(level, 0.f, 1.f);
 }
 
 bool ReadyFlash::Update(float cooldownFraction)

@@ -53,6 +53,8 @@ struct LiveHudConfig
     std::uint32_t rimOuter = 0xFF2A465Cu; // #5c462a
     std::uint32_t rimInner = 0xFF07090Bu; // #0b0907
     float rimWidth = 1.5f;
+    // The crest's brightness at the liquid's surface (UI/HUD/LiveGaugeMesh.h, ShineInputs).
+    float crestTint = 0.45f;
 };
 
 // The section's values by lower-case key, as UI::RmlBridge::ThemeInheritance reads them; a missing or unreadable
@@ -125,9 +127,15 @@ struct ArcRange
 };
 [[nodiscard]] ArcRange ArcSpan(float level, float startDegrees, float sweepDegrees);
 
-// The low-life pulse at time `t`, 0..1 on a sine of `period` seconds, while 0 < `life` < `lowLife`; 0 otherwise
-// (a dead hero gets none).
+// Whether the life gem pulses: 0 < `life` < `lowLife` (a dead hero gets none).
+[[nodiscard]] bool IsLowLife(float life, float lowLife);
+
+// The low-life pulse at time `t`, 0..1 on a sine of `period` seconds, while IsLowLife(); 0 otherwise.
 [[nodiscard]] float PulseLevel(float life, float lowLife, float period, double t);
+
+// How strong a gem's halo glows: 0.10 + 0.25 `level` (the gem's shown level, clamped to 0..1); while the low-life
+// pulse runs (`pulsing`), 0.25 at its dimmest to 0.60 at its brightest instead (`pulse` 0..1, PulseLevel()).
+[[nodiscard]] float HaloStrength(float level, bool pulsing, float pulse);
 
 // A skill slot's cooldown ending: Update() is true once when the fraction left falls to 0 from above it.
 class ReadyFlash

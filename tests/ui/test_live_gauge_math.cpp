@@ -240,6 +240,33 @@ TEST_CASE("the life gem pulses only while life is low and not zero [ui][live_gau
     }
 }
 
+TEST_CASE("low life is above zero and under the threshold [ui][live_gauge]")
+{
+    CHECK(IsLowLife(0.29f, 0.3f));
+    CHECK(IsLowLife(0.01f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.3f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.31f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.f, 0.3f));
+    CHECK_FALSE(IsLowLife(-0.1f, 0.3f));
+    CHECK_FALSE(IsLowLife(0.2f, 0.f));
+}
+
+TEST_CASE("a halo glows with its gem's level, and from 0.25 to 0.60 while it pulses [ui][live_gauge]")
+{
+    CHECK(HaloStrength(0.f, false, 0.f) == doctest::Approx(0.10f));
+    CHECK(HaloStrength(0.5f, false, 0.f) == doctest::Approx(0.225f));
+    CHECK(HaloStrength(1.f, false, 0.f) == doctest::Approx(0.35f));
+    CHECK(HaloStrength(2.f, false, 0.f) == doctest::Approx(0.35f));
+    CHECK(HaloStrength(-1.f, false, 0.f) == doctest::Approx(0.10f));
+    CHECK(HaloStrength(1.f, false, 1.f) == doctest::Approx(0.35f));
+    // While it pulses the level doesn't matter.
+    CHECK(HaloStrength(0.2f, true, 0.f) == doctest::Approx(0.25f));
+    CHECK(HaloStrength(0.2f, true, 1.f) == doctest::Approx(0.60f));
+    CHECK(HaloStrength(0.1f, true, 0.5f) == doctest::Approx(0.425f));
+    CHECK(HaloStrength(0.1f, true, 3.f) == doctest::Approx(0.60f));
+    CHECK(HaloStrength(0.1f, true, -1.f) == doctest::Approx(0.25f));
+}
+
 TEST_CASE("a skill's ready flash fires once when its cooldown ends [ui][live_gauge]")
 {
     ReadyFlash flash;
@@ -326,6 +353,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(defaults.rimOuter == 0xFF2A465Cu);
     CHECK(defaults.rimInner == 0xFF07090Bu);
     CHECK(defaults.rimWidth == doctest::Approx(1.5f));
+    CHECK(defaults.crestTint == doctest::Approx(0.45f));
 
     const std::map<std::string, std::string> set = {{"gemoutline", "10,20 90,20 50,90"},
                                                     {"gemzoom", "1.3"},
@@ -345,7 +373,8 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
                                                     {"sweepshade", "#00000080"},
                                                     {"rimouter", "#102030"},
                                                     {"riminner", "#40506070"},
-                                                    {"rimwidth", "2.5"}};
+                                                    {"rimwidth", "2.5"},
+                                                    {"cresttint", "0.6"}};
     const LiveHudConfig read = ReadLiveHudConfig(set);
     CHECK(read.gemOutline.size() == 3);
     CHECK(read.gemZoom == doctest::Approx(1.3f));
@@ -366,13 +395,15 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(read.rimOuter == 0xFF302010u);
     CHECK(read.rimInner == 0x70605040u);
     CHECK(read.rimWidth == doctest::Approx(2.5f));
+    CHECK(read.crestTint == doctest::Approx(0.6f));
 
     // Out of range, not a number, a trailing comment, an upper-case key (ThemeInheritance lower-cases them).
     const std::map<std::string, std::string> bad = {
         {"gemzoom", "0.9"},      {"emptyshade", "1.5"},  {"waveamplitude", "-1"},
         {"waveperiodlife", "0"}, {"arcsweep", "400"},    {"lowlife", "0.3 ; life"},
         {"pulseperiod", "fast"}, {"halolife", "red"},    {"GemOutline", "10,20 90,20 50,90"},
-        {"rimouter", "#5c46"},   {"riminner", "bronze"}, {"rimwidth", "-1"}};
+        {"rimouter", "#5c46"},   {"riminner", "bronze"}, {"rimwidth", "-1"},
+        {"cresttint", "1.5"}};
     const LiveHudConfig kept = ReadLiveHudConfig(bad);
     CHECK(SameOutline(kept.gemOutline, DefaultOutline()));
     CHECK(kept.gemZoom == doctest::Approx(1.32f));
@@ -386,6 +417,7 @@ TEST_CASE("[LiveHud] keeps its defaults for missing and unreadable values [ui][l
     CHECK(kept.rimOuter == 0xFF2A465Cu);
     CHECK(kept.rimInner == 0xFF07090Bu);
     CHECK(kept.rimWidth == doctest::Approx(1.5f));
+    CHECK(kept.crestTint == doctest::Approx(0.45f));
 }
 
 TEST_CASE("$hudtest sets a gauge, the cooldown, poison and the cues, and off clears them [ui][live_gauge]")

@@ -17535,4 +17535,8 @@
   <data name="TooltipShiftForDetails" xml:space="preserve">
     <value>Подробно — держи Shift</value>
   </data>
+  <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
+  <data name="HudEffects" xml:space="preserve">
+    <value>Анимация панели</value>
+  </data>
 </root>

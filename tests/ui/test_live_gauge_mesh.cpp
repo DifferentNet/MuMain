@@ -69,6 +69,48 @@ std::uint32_t Channel(std::uint32_t abgr)
 {
     return abgr & 0xFFu;
 }
+
+// Skynet's SD ring at 1 px per dp: the value band inside the 27.5..31 track, round the gem's centre.
+constexpr Ring ValueRing{31.f, 31.f, 28.f, 30.5f, 140.f, 260.f};
+constexpr float DegreesPerRadian = 57.29577951308232f;
+constexpr float AngleNear = 1e-2f;
+
+float RadiusOf(const Ring& ring, const Vertex& vertex)
+{
+    return std::hypot(vertex.x - ring.centreX, vertex.y - ring.centreY);
+}
+
+// A vertex's angle round the ring's centre, in degrees past its start: 0..360.
+float SweptTo(const Ring& ring, const Vertex& vertex)
+{
+    float degrees = std::atan2(vertex.y - ring.centreY, vertex.x - ring.centreX) * DegreesPerRadian - ring.startDegrees;
+    while (degrees < -AngleNear)
+        degrees += 360.f;
+    while (degrees >= 360.f - AngleNear)
+        degrees -= 360.f;
+    return degrees;
+}
+
+// Every vertex in the band and within `fromDegrees`..`toDegrees` past the start; u at the band's two edges, v along
+// the sweep.
+void CheckArcVertices(const std::vector<Vertex>& quads, const Ring& ring, float fromDegrees, float toDegrees)
+{
+    CHECK(quads.size() % 4 == 0);
+    for (const Vertex& vertex : quads)
+    {
+        const float radius = RadiusOf(ring, vertex);
+        CHECK(radius >= ring.inner - Near);
+        CHECK(radius <= ring.outer + Near);
+        const float swept = SweptTo(ring, vertex);
+        CHECK(swept >= fromDegrees - AngleNear);
+        CHECK(swept <= toDegrees + AngleNear);
+        if (std::fabs(radius - ring.outer) <= Near)
+            CHECK(vertex.u == doctest::Approx(0.15f));
+        else
+            CHECK(vertex.u == doctest::Approx(0.85f));
+        CHECK(vertex.v == doctest::Approx(0.05f + 0.9f * swept / ring.sweepDegrees).epsilon(1e-3));
+    }
+}
 } // namespace
 
 TEST_CASE("a gem's silhouette is sampled at even columns and its corners [ui][live_gauge]")
@@ -393,5 +435,190 @@ TEST_CASE("a gem's socket rim is as wide as asked all round the outline [ui][liv
     }
 
     BuildOrbUnder(GemBox, outline, 0.f, Colours, quads);
+    CHECK(quads.empty());
+}
+
+TEST_CASE("an SD/AG arc is the level's share of 40 even cuts, textured across the band [ui][live_gauge]")
+{
+    std::vector<Vertex> quads;
+    SUBCASE("full: every cut, from the start to the end of the sweep")
+    {
+        BuildArc(ValueRing, {1.f, 0.f, 0.6f}, quads);
+        REQUIRE(quads.size() == static_cast<std::size_t>(ArcSegments) * 4);
+        CheckArcVertices(quads, ValueRing, 0.f, 260.f);
+        CHECK(CountColoured(quads, FillGrey) == static_cast<std::size_t>(ArcSegments));
+        CHECK(SweptTo(ValueRing, quads.front()) == doctest::Approx(0.f).epsilon(1e-3));
+        CHECK(SweptTo(ValueRing, quads.back()) == doctest::Approx(260.f).epsilon(1e-3));
+        CHECK(quads.front().v == doctest::Approx(0.05f));
+        CHECK(quads.back().v == doctest::Approx(0.95f));
+    }
+    SUBCASE("half: 20 cuts ending at the top (270 degrees)")
+    {
+        BuildArc(ValueRing, {0.5f, 0.f, 0.6f}, quads);
+        REQUIRE(quads.size() == 20 * 4);
+        CheckArcVertices(quads, ValueRing, 0.f, 130.f);
+        CHECK(quads.back().x == doctest::Approx(ValueRing.centreX).epsilon(1e-3));
+        CHECK(quads.back().y == doctest::Approx(ValueRing.centreY - ValueRing.outer).epsilon(1e-3));
+    }
+    SUBCASE("between two cuts: the last quad ends at the level")
+    {
+        BuildArc(ValueRing, {0.51f, 0.f, 0.6f}, quads);
+        REQUIRE(quads.size() == 21 * 4);
+        CheckArcVertices(quads, ValueRing, 0.f, 0.51f * 260.f);
+        CHECK(SweptTo(ValueRing, quads.back()) == doctest::Approx(0.51f * 260.f).epsilon(1e-3));
+    }
+    SUBCASE("a ghost carries on from the level at its shade")
+    {
+        BuildArc(ValueRing, {0.5f, 0.75f, 0.6f}, quads);
+        REQUIRE(quads.size() == 30 * 4);
+        CHECK(CountColoured(quads, FillGrey) == 20);
+        CHECK(CountColoured(quads, GhostGrey) == 10);
+        CheckArcVertices(quads, ValueRing, 0.f, 195.f);
+        for (std::size_t q = 20 * 4; q < quads.size(); ++q)
+            CHECK(SweptTo(ValueRing, quads[q]) >= 130.f - AngleNear);
+    }
+    SUBCASE("no ghost at or under the level")
+    {
+        BuildArc(ValueRing, {0.5f, 0.4f, 0.6f}, quads);
+        CHECK(quads.size() == 20 * 4);
+        CHECK(CountColoured(quads, GhostGrey) == 0);
+        BuildArc(ValueRing, {0.5f, 0.5f, 0.6f}, quads);
+        CHECK(quads.size() == 20 * 4);
+    }
+    SUBCASE("empty: nothing, unless a ghost still drains")
+    {
+        BuildArc(ValueRing, {0.f, 0.f, 0.6f}, quads);
+        CHECK(quads.empty());
+        BuildArc(ValueRing, {-1.f, 0.f, 0.6f}, quads);
+        CHECK(quads.empty());
+        BuildArc(ValueRing, {0.f, 0.25f, 0.6f}, quads);
+        CHECK(quads.size() == 10 * 4);
+        CHECK(CountColoured(quads, GhostGrey) == 10);
+    }
+    SUBCASE("a ring without a band or a sweep draws nothing")
+    {
+        BuildArc({31.f, 31.f, 30.f, 30.f, 140.f, 260.f}, {1.f, 0.f, 0.6f}, quads);
+        CHECK(quads.empty());
+        BuildArc({31.f, 31.f, 28.f, 30.5f, 140.f, 0.f}, {1.f, 0.f, 0.6f}, quads);
+        CHECK(quads.empty());
+    }
+}
+
+TEST_CASE("an arc's cap is its last 2 px, the art added at a tint [ui][live_gauge]")
+{
+    std::vector<Vertex> quads;
+    const float middle = 0.5f * (ValueRing.inner + ValueRing.outer);
+    const float capDegrees = 2.f / middle * DegreesPerRadian;
+
+    BuildArcCap(ValueRing, 0.5f, 2.f, 0.3f, quads);
+    REQUIRE_FALSE(quads.empty());
+    CheckArcVertices(quads, ValueRing, 130.f - capDegrees, 130.f);
+    CHECK(CountColoured(quads, EmptyGrey) == quads.size() / 4);
+    CHECK(SweptTo(ValueRing, quads.front()) == doctest::Approx(130.f - capDegrees).epsilon(1e-3));
+    CHECK(SweptTo(ValueRing, quads.back()) == doctest::Approx(130.f).epsilon(1e-3));
+
+    // Across a cut it takes the two quads round it.
+    const float level = (130.f + 0.5f * capDegrees) / 260.f;
+    BuildArcCap(ValueRing, level, 2.f, 0.3f, quads);
+    CHECK(quads.size() == 2 * 4);
+
+    // A level shorter than the cap: the cap starts at the sweep's start.
+    BuildArcCap(ValueRing, 0.002f, 2.f, 0.3f, quads);
+    REQUIRE(quads.size() == 4);
+    CheckArcVertices(quads, ValueRing, 0.f, 0.002f * 260.f);
+    CHECK(SweptTo(ValueRing, quads.front()) == doctest::Approx(0.f).epsilon(1e-3));
+
+    BuildArcCap(ValueRing, 0.f, 2.f, 0.3f, quads);
+    CHECK(quads.empty());
+    BuildArcCap(ValueRing, 0.5f, 0.f, 0.3f, quads);
+    CHECK(quads.empty());
+    BuildArcCap(ValueRing, 0.5f, 2.f, 0.f, quads);
+    CHECK(quads.empty());
+}
+
+TEST_CASE("an arc's track is bronze at both edges and dark midway, added after the socket [ui][live_gauge]")
+{
+    constexpr Ring Track{31.f, 31.f, 27.5f, 31.f, 140.f, 260.f};
+    constexpr RimColours Colours{0xFF2A465Cu, 0xFF07090Bu};
+    std::vector<Vertex> quads(4, Vertex{});
+    AppendArcTrack(Track, Colours, quads);
+    REQUIRE(quads.size() == 4 + 2 * static_cast<std::size_t>(ArcSegments) * 4);
+    for (std::size_t i = 0; i < 4; ++i)
+        CHECK(quads[i].abgr == 0u);
+
+    const float middle = 0.5f * (Track.inner + Track.outer);
+    for (std::size_t i = 4; i < quads.size(); ++i)
+    {
+        const Vertex& vertex = quads[i];
+        const float radius = RadiusOf(Track, vertex);
+        CHECK(radius >= Track.inner - Near);
+        CHECK(radius <= Track.outer + Near);
+        CHECK(SweptTo(Track, vertex) <= 260.f + AngleNear);
+        CHECK(vertex.u == 0.f);
+        CHECK(vertex.v == 0.f);
+        if (std::fabs(radius - middle) <= Near)
+            CHECK(vertex.abgr == Colours.inner);
+        else
+            CHECK(vertex.abgr == Colours.outer);
+    }
+
+    const std::size_t before = quads.size();
+    AppendArcTrack({31.f, 31.f, 31.f, 31.f, 140.f, 260.f}, Colours, quads);
+    CHECK(quads.size() == before);
+}
+
+TEST_CASE("a gem's halo fans from its outline to the ring, cut at the group's bottom [ui][live_gauge]")
+{
+    const std::vector<OutlinePoint> outline = DefaultOutline();
+    const float centreX = GemBox.left + GemBox.width / 2.f;
+    const float centreY = GemBox.top + GemBox.height / 2.f;
+    const float bottom = GemBox.top + GemBox.height;
+    const HaloShape shape{centreX, centreY, 31.f, bottom};
+    constexpr std::uint32_t Red = 0xFF1834FFu;
+    constexpr std::uint32_t HalfRed = 0x800C1A80u;
+    std::vector<Vertex> quads;
+    BuildHalo(GemBox, outline, shape, Red, 0.5f, quads);
+    REQUIRE(quads.size() >= 48 * 4);
+    REQUIRE(quads.size() % 4 == 0);
+
+    float lowest = 0.f;
+    for (std::size_t q = 0; q < quads.size(); q += 4)
+    {
+        CAPTURE(q / 4);
+        const Vertex& outer0 = quads[q];
+        const Vertex& inner0 = quads[q + 1];
+        const Vertex& inner1 = quads[q + 2];
+        const Vertex& outer1 = quads[q + 3];
+        CHECK(outer0.abgr == 0u);
+        CHECK(outer1.abgr == 0u);
+        CHECK(inner0.abgr == HalfRed);
+        CHECK(inner1.abgr == HalfRed);
+        for (const Vertex* vertex : {&outer0, &inner0, &inner1, &outer1})
+        {
+            CHECK(std::hypot(vertex->x - centreX, vertex->y - centreY) <= shape.radius + Near);
+            CHECK(vertex->y <= bottom + Near);
+            lowest = std::max(lowest, vertex->y);
+        }
+        // The inner edge is on the gem's outline, inside its box; the outer one never nearer the centre.
+        for (const Vertex* inner : {&inner0, &inner1})
+        {
+            CHECK(inner->x >= GemBox.left - Near);
+            CHECK(inner->x <= GemBox.left + GemBox.width + Near);
+            CHECK(inner->y >= GemBox.top - Near);
+            CHECK(inner->y <= bottom + Near);
+        }
+        CHECK(std::hypot(outer0.x - centreX, outer0.y - centreY) >=
+              std::hypot(inner0.x - centreX, inner0.y - centreY) - Near);
+    }
+    // Straight down it reaches the group's bottom and no further.
+    CHECK(lowest == doctest::Approx(bottom));
+
+    BuildHalo(GemBox, outline, shape, Red, 1.f, quads);
+    CHECK(CountColoured(quads, 0u) == quads.size() / 4);
+    CHECK(quads[1].abgr == Red);
+
+    BuildHalo(GemBox, outline, shape, Red, 0.f, quads);
+    CHECK(quads.empty());
+    BuildHalo(GemBox, outline, {centreX, centreY, 0.f, bottom}, Red, 0.5f, quads);
     CHECK(quads.empty());
 }

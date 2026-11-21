@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -514,9 +515,10 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
         CHECK(setting.value.find(';') == std::string::npos);
         values.emplace(key, setting.value);
     }
-    for (const char* key : {"gemoutline", "gemzoom", "emptyshade", "waveamplitude", "waveperiodlife", "waveperiodmana",
-                            "arcstart", "arcsweep", "arcwidth", "lowlife", "pulseperiod", "pulsestrength", "halolife",
-                            "halomana", "halopoison", "sweepshade", "rimouter", "riminner", "rimwidth"})
+    for (const char* key :
+         {"gemoutline", "gemzoom",    "emptyshade", "waveamplitude", "waveperiodlife", "waveperiodmana", "arcstart",
+          "arcsweep",   "arcwidth",   "lowlife",    "pulseperiod",   "pulsestrength",  "halolife",       "halomana",
+          "halopoison", "sweepshade", "rimouter",   "riminner",      "rimwidth",       "cresttint"})
     {
         CAPTURE(key);
         CHECK(values.count(key) == 1);
@@ -531,6 +533,7 @@ TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whol
     CHECK(config.rimOuter == 0xFF2A465Cu);
     CHECK(config.rimInner == 0xFF07090Bu);
     CHECK(config.rimWidth == doctest::Approx(1.5f));
+    CHECK(config.crestTint == doctest::Approx(0.45f));
     CHECK(ThemeInheritance(fixture.Theme("legacy")).Section("LiveHud").empty());
 }
 
@@ -757,11 +760,15 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
             auto* document = fixture.LoadThemed(name, "main_frame.rml");
             CHECK(display(document, "#orb_left") == Display::None);
             CHECK(display(document, "#orb_right") == Display::None);
+            CHECK(display(document, "#bar_sd .arc-hits") == Display::None);
+            CHECK(display(document, "#bar_ag .arc-hits") == Display::None);
             if (std::string(name) == "legacy")
             {
                 CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(51.f));
                 CHECK(display(document, "#bar_hp_fill") != Display::None);
                 CHECK(BorderSize(*Fixture::First(document, "#bar_hp")).x == doctest::Approx(45.f));
+                CHECK(BorderSize(*Fixture::First(document, "#bar_sd")).x == doctest::Approx(16.f));
+                CHECK(BorderSize(*Fixture::First(document, "#bar_sd")).y == doctest::Approx(39.f));
             }
             document->Close();
         }
@@ -817,6 +824,80 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
         CHECK(BorderOffset(*number).x == doctest::Approx(gemCentre));
         CHECK(BorderSize(*number).x < 54.f);
         CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value == doctest::Approx(65.f));
+        document->Close();
+    }
+
+    SUBCASE("SD and AG take the pointer only on their ring's track, leaving its gap and corners to the world")
+    {
+        UI::RmlBridge::SetActiveThemeName("skynet");
+        auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        // The segments' rotation is applied when the document is drawn.
+        fixture.context->Render();
+        const auto within = [](Rml::Element* element, const Rml::Element* ancestor)
+        {
+            for (; element != nullptr; element = element->GetParentNode())
+            {
+                if (element == ancestor)
+                    return true;
+            }
+            return false;
+        };
+        for (const auto& [orb, bar, gem] : {std::array<const char*, 3>{"#orb_left", "#bar_sd", "#bar_hp"},
+                                            std::array<const char*, 3>{"#orb_right", "#bar_ag", "#bar_mp"}})
+        {
+            CAPTURE(bar);
+            Rml::Element* ring = Fixture::First(document, orb);
+            Rml::Element* gauge = Fixture::First(document, bar);
+            Rml::Element* gemRect = Fixture::First(document, gem);
+            // The gauge is the ring's box and takes nothing itself.
+            CHECK(BorderOffset(*gauge).x == doctest::Approx(BorderOffset(*ring).x));
+            CHECK(BorderOffset(*gauge).y == doctest::Approx(BorderOffset(*ring).y));
+            CHECK(BorderSize(*gauge).x == doctest::Approx(62.f));
+            CHECK(BorderSize(*gauge).y == doctest::Approx(62.f));
+            CHECK(gauge->GetComputedValues().pointer_events() == Rml::Style::PointerEvents::None);
+            CHECK(display(document, (std::string(bar) + " .arc-hits").c_str()) != Display::None);
+
+            // The ring's centre is the gem's (1 px per dp here).
+            const Rml::Vector2f centre = BorderOffset(*ring) + Rml::Vector2f(31.f, 31.f);
+            const auto at = [&](float degrees, float radius)
+            {
+                const float radians = degrees * 0.017453292f;
+                const Rml::Vector2f point = centre + Rml::Vector2f(std::cos(radians), std::sin(radians)) * radius;
+                return fixture.context->GetElementAtPoint(point);
+            };
+            // All along the drawn value band (28..30.5dp from 140 degrees over 260), and neither inside the track
+            // nor 2dp past it.
+            for (float degrees = 141.f; degrees <= 399.f; degrees += 2.f)
+            {
+                CAPTURE(degrees);
+                CHECK(within(at(degrees, 28.f), gauge));
+                CHECK(within(at(degrees, 29.25f), gauge));
+                CHECK(within(at(degrees, 30.5f), gauge));
+                CHECK_FALSE(within(at(degrees, 26.f), gauge));
+                CHECK_FALSE(within(at(degrees, 33.f), gauge));
+            }
+            // The gap at the bottom.
+            for (float degrees = 45.f; degrees <= 135.f; degrees += 5.f)
+            {
+                CAPTURE(degrees);
+                CHECK_FALSE(within(at(degrees, 29.25f), gauge));
+            }
+            // The ring box's top corners, where the old 62x9 target stood, and the room between the gem and the
+            // ring's top.
+            CHECK_FALSE(
+                within(fixture.context->GetElementAtPoint(BorderOffset(*ring) + Rml::Vector2f(2.f, 2.f)), gauge));
+            CHECK_FALSE(
+                within(fixture.context->GetElementAtPoint(BorderOffset(*ring) + Rml::Vector2f(60.f, 2.f)), gauge));
+            CHECK_FALSE(within(at(270.f, 25.5f), gauge));
+            // The gem's rect keeps the life or mana hint, also just past the ring's ends.
+            CHECK(within(at(0.f, 0.f), gemRect));
+            CHECK(within(at(135.f, 29.25f), gemRect));
+            CHECK(within(at(45.f, 29.25f), gemRect));
+        }
+        // The SD number keeps its place, small in the gem's upper part.
+        Rml::Element* number = Fixture::First(document, "#bar_sd .gauge-num.value-current");
+        CHECK(BorderOffset(*number).y - BorderOffset(*Fixture::First(document, "#orb_left")).y ==
+              doctest::Approx(16.4f));
         document->Close();
     }
 

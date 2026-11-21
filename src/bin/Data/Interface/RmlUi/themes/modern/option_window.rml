@@ -810,6 +810,10 @@
 						<span class="opt-label">{{title_effects_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="title_effects"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<div class="opt-row opt-toggle-row" data-if="hud_effects_shown" data-event-click="option_toggle_hud_effects">
+						<span class="opt-label">{{hud_effects_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="hud_effects"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_show_fps_counter">
 						<span class="opt-label">{{show_fps_counter_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="show_fps_counter"><div class="opt-toggle-knob"></div></div></div>

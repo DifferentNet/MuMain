@@ -104,4 +104,58 @@ struct RimColours
 // `outer` at its outside shading to `inner` at the gem's edge. `out` is cleared first.
 void BuildOrbUnder(const Box& box, std::span<const OutlinePoint> outline, float width, const RimColours& colours,
                    std::vector<Vertex>& out);
+
+// The SD or AG ring round a gem: a band `inner`..`outer` pixels from (centreX, centreY), over `sweepDegrees` from
+// `startDegrees` (screen angles: clockwise from 3 o'clock, y down).
+struct Ring
+{
+    float centreX = 0.f;
+    float centreY = 0.f;
+    float inner = 0.f;
+    float outer = 0.f;
+    float startDegrees = 0.f;
+    float sweepDegrees = 0.f;
+};
+
+// The quads a whole sweep is cut into. A part of it keeps the same cuts and ends inside its last quad, so a moving
+// end never makes the arc wobble.
+inline constexpr int ArcSegments = 40;
+
+// The ring's empty track, drawn plain (SetPlainMesh, blended): `colours.outer` (the bronze) at both of the band's
+// edges, shading to `colours.inner` midway. Appended to `out`; nothing for a band with no width.
+void AppendArcTrack(const Ring& ring, const RimColours& colours, std::vector<Vertex>& out);
+
+// What a value arc shows: `level` of the sweep, and the damage ghost from there up to `ghost` at `ghostShade`
+// (none when `ghost` is not above `level`).
+struct ArcInputs
+{
+    float level = 0.f;
+    float ghost = 0.f;
+    float ghostShade = 0.60f;
+};
+
+// The value arc, drawn as an image (SetMesh, additive off) of the SD or AG bar's art: u across the band, 0.15 at its
+// outer edge to 0.85 at its inner one (inside the art's dark side columns), v along the whole sweep. `out` is cleared
+// first; nothing at level 0 without a ghost.
+void BuildArc(const Ring& ring, const ArcInputs& inputs, std::vector<Vertex>& out);
+
+// The bright cap at the value's end: its last `length` pixels (measured along the band's middle), the same art added
+// at `tint` (SetMesh, additive), so the cap shows 1 + `tint` as bright. `out` is cleared first; nothing at level 0.
+void BuildArcCap(const Ring& ring, float level, float length, float tint, std::vector<Vertex>& out);
+
+// Where a gem's halo reaches: `radius` pixels from (centreX, centreY), and never below `bottom` (the gem group's
+// lower edge, so nothing under the group lights up).
+struct HaloShape
+{
+    float centreX = 0.f;
+    float centreY = 0.f;
+    float radius = 0.f;
+    float bottom = 0.f;
+};
+
+// The glow round a gem, drawn plain and added (SetPlainMesh, additive): a fan of quads from the gem's outline
+// (`outline` in `box`), `colour` times `strength` there, out to the shape's edge, where it adds nothing. `out` is
+// cleared first; nothing at strength 0.
+void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const HaloShape& shape, std::uint32_t colour,
+               float strength, std::vector<Vertex>& out);
 } // namespace UI::HUD::LiveGauge

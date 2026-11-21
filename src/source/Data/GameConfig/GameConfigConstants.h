@@ -61,6 +61,9 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyOverheadTitles[] = L"OverheadTitles";
     // MU Moldova: the title plates' light, sparkles and glow (UI::TitlePlates::Effects).
     inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
+    // MU Skynet: the live HUD's animation under a theme with LiveHud=1 (UI::HUD::LiveHud): the liquid's wave, the
+    // sheen and the low-life pulse.
+    inline constexpr wchar_t CfgKeyHudEffects[] = L"HudEffects";
     // MU Moldova: titles only over players in towns (safe zones), UI::TitlePlates::ShownHere().
     inline constexpr wchar_t CfgKeyTitlesTownsOnly[] = L"TitlesTownsOnly";
     // MU Moldova: party, trade and duel invitations are declined by themselves (UI::Chat::InviteAutoDecline).
@@ -310,6 +313,8 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultOverheadTitles = true;
     // On by default (ghinzuro, 2026-11-03).
     inline constexpr bool CfgDefaultTitleEffects = true;
+    // On by default, a switch in Options > Interface.
+    inline constexpr bool CfgDefaultHudEffects = true;
     // On by default, a switch in Options (ghinzuro, 2026-11-03).
     inline constexpr bool CfgDefaultTitlesTownsOnly = true;
     // Off by default (round 14).

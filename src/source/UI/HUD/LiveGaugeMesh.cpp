@@ -28,11 +28,37 @@ constexpr float LightEpsilon = 1.f / 255.f;
 constexpr float ChannelMax = 255.f;
 constexpr std::uint32_t OpaqueAlpha = 0xFF000000u;
 
+constexpr float DegreesToRadians = 0.017453292519943295f;
+// Angles closer than this are one angle.
+constexpr float AngleEpsilon = 1.0e-4f;
+// The value arc's art (the SD and AG bars, 16x39 tubes): u across the band, inside the tube's dark side columns;
+// v along the sweep, inside its dark first and last rows.
+constexpr float ArcOuterU = 0.15f;
+constexpr float ArcInnerU = 0.85f;
+constexpr float ArcFirstV = 0.05f;
+constexpr float ArcLastV = 0.95f;
+// The halo's even cuts round the gem; the outline's corners are cuts too.
+constexpr int HaloSegments = 48;
+constexpr float FullTurnDegrees = 360.f;
+
 // A grey at `shade` (0..1), opaque.
 std::uint32_t Grey(float shade)
 {
     const auto channel = static_cast<std::uint32_t>(std::lround(std::clamp(shade, 0.f, 1.f) * ChannelMax));
     return OpaqueAlpha | (channel << 16) | (channel << 8) | channel;
+}
+
+// Every channel of `abgr`, alpha too, times `strength` (0..1).
+std::uint32_t Scaled(std::uint32_t abgr, float strength)
+{
+    const float share = std::clamp(strength, 0.f, 1.f);
+    std::uint32_t scaled = 0u;
+    for (const int shift : {0, 8, 16, 24})
+    {
+        const auto channel = static_cast<float>((abgr >> shift) & 0xFFu);
+        scaled |= static_cast<std::uint32_t>(std::lround(channel * share)) << shift;
+    }
+    return scaled;
 }
 
 // One column part from (x0, upper0..lower0) to (x1, upper1..lower1), u and v from the shape; left out when it has no
@@ -145,6 +171,84 @@ Point Outward(Point from, Point to, float orientation)
     if (length <= 0.f)
         return {};
     return {orientation * dy / length, -orientation * dx / length};
+}
+
+float Cross(Point a, Point b)
+{
+    return a.x * b.y - a.y * b.x;
+}
+
+Point Direction(float degrees)
+{
+    const float radians = degrees * DegreesToRadians;
+    return {std::cos(radians), std::sin(radians)};
+}
+
+// The quads of `ring` from `from` to `to` degrees, `innerRadius`..`outerRadius` from its centre, cut where the
+// whole sweep's ArcSegments cut it. Each quad runs outer and inner at its first angle, then inner and outer at its
+// last; `innerColour` and `outerColour` are the colours at the two radii. A textured band takes the art's u across
+// it and its v along the sweep.
+void PushArcBand(const Ring& ring, float innerRadius, float outerRadius, float from, float to,
+                 std::uint32_t innerColour, std::uint32_t outerColour, bool textured, std::vector<Vertex>& out)
+{
+    if (ring.sweepDegrees <= 0.f || outerRadius - innerRadius <= PixelEpsilon || to - from <= AngleEpsilon)
+        return;
+    const float step = ring.sweepDegrees / ArcSegments;
+    const float innerU = textured ? ArcInnerU : 0.f;
+    const float outerU = textured ? ArcOuterU : 0.f;
+    const auto vAt = [&](float degrees)
+    {
+        if (!textured)
+            return 0.f;
+        const float share = std::clamp((degrees - ring.startDegrees) / ring.sweepDegrees, 0.f, 1.f);
+        return ArcFirstV + share * (ArcLastV - ArcFirstV);
+    };
+    const auto push = [&](float degrees, float radius, float u, std::uint32_t colour)
+    {
+        const Point direction = Direction(degrees);
+        out.push_back(
+            {ring.centreX + radius * direction.x, ring.centreY + radius * direction.y, u, vAt(degrees), colour});
+    };
+
+    const int first = std::clamp(static_cast<int>(std::floor((from - ring.startDegrees) / step)), 0, ArcSegments - 1);
+    for (int segment = first; segment < ArcSegments; ++segment)
+    {
+        const float cutStart = ring.startDegrees + step * static_cast<float>(segment);
+        const float cutEnd = ring.startDegrees + step * static_cast<float>(segment + 1);
+        const float a0 = std::max(from, cutStart);
+        const float a1 = std::min(to, cutEnd);
+        if (a1 - a0 > AngleEpsilon)
+        {
+            push(a0, outerRadius, outerU, outerColour);
+            push(a0, innerRadius, innerU, innerColour);
+            push(a1, innerRadius, innerU, innerColour);
+            push(a1, outerRadius, outerU, outerColour);
+        }
+        if (cutEnd >= to)
+            break;
+    }
+}
+
+// How far the ray from `centre` along `direction` runs before it leaves the convex polygon `points`; 0 when it
+// never crosses it.
+float ReachInside(Point centre, Point direction, std::span<const Point> points)
+{
+    float reach = 0.f;
+    for (std::size_t i = 0; i < points.size(); ++i)
+    {
+        const Point a = points[i];
+        const Point b = points[(i + 1) % points.size()];
+        const Point edge{b.x - a.x, b.y - a.y};
+        const float denominator = Cross(direction, edge);
+        if (std::fabs(denominator) <= std::numeric_limits<float>::epsilon())
+            continue;
+        const Point relative{a.x - centre.x, a.y - centre.y};
+        const float along = Cross(relative, edge) / denominator;
+        const float share = Cross(relative, direction) / denominator;
+        if (along >= 0.f && share >= -PixelEpsilon && share <= 1.f + PixelEpsilon)
+            reach = std::max(reach, along);
+    }
+    return reach;
 }
 } // namespace
 
@@ -301,6 +405,107 @@ void BuildOrbUnder(const Box& box, std::span<const OutlinePoint> outline, float 
         out.push_back({inner0.x, inner0.y, 0.f, 0.f, colours.inner});
         out.push_back({inner1.x, inner1.y, 0.f, 0.f, colours.inner});
         out.push_back({outer1.x, outer1.y, 0.f, 0.f, colours.outer});
+    }
+}
+
+void AppendArcTrack(const Ring& ring, const RimColours& colours, std::vector<Vertex>& out)
+{
+    const float middle = 0.5f * (ring.inner + ring.outer);
+    const float end = ring.startDegrees + ring.sweepDegrees;
+    PushArcBand(ring, ring.inner, middle, ring.startDegrees, end, colours.outer, colours.inner, false, out);
+    PushArcBand(ring, middle, ring.outer, ring.startDegrees, end, colours.inner, colours.outer, false, out);
+}
+
+void BuildArc(const Ring& ring, const ArcInputs& inputs, std::vector<Vertex>& out)
+{
+    out.clear();
+    const ArcRange value = ArcSpan(inputs.level, ring.startDegrees, ring.sweepDegrees);
+    const ArcRange ghost = ArcSpan(inputs.ghost, ring.startDegrees, ring.sweepDegrees);
+    const std::uint32_t full = Grey(1.f);
+    PushArcBand(ring, ring.inner, ring.outer, value.startDegrees, value.endDegrees, full, full, true, out);
+    if (ghost.endDegrees > value.endDegrees)
+    {
+        const std::uint32_t shade = Grey(inputs.ghostShade);
+        PushArcBand(ring, ring.inner, ring.outer, value.endDegrees, ghost.endDegrees, shade, shade, true, out);
+    }
+}
+
+void BuildArcCap(const Ring& ring, float level, float length, float tint, std::vector<Vertex>& out)
+{
+    out.clear();
+    const float middle = 0.5f * (ring.inner + ring.outer);
+    if (level <= 0.f || length <= 0.f || tint <= 0.f || middle <= 0.f)
+        return;
+    const ArcRange value = ArcSpan(level, ring.startDegrees, ring.sweepDegrees);
+    const float capDegrees = length / middle / DegreesToRadians;
+    const float from = std::max(value.startDegrees, value.endDegrees - capDegrees);
+    const std::uint32_t colour = Grey(tint);
+    PushArcBand(ring, ring.inner, ring.outer, from, value.endDegrees, colour, colour, true, out);
+}
+
+void BuildHalo(const Box& box, std::span<const OutlinePoint> outline, const HaloShape& shape, std::uint32_t colour,
+               float strength, std::vector<Vertex>& out)
+{
+    out.clear();
+    if (outline.size() < 3 || strength <= 0.f || shape.radius <= 0.f || box.width <= 0.f || box.height <= 0.f)
+        return;
+
+    const Point centre{shape.centreX, shape.centreY};
+    std::vector<Point> points;
+    std::vector<float> angles;
+    points.reserve(outline.size());
+    angles.reserve(HaloSegments + outline.size() + 1);
+    for (const OutlinePoint& point : outline)
+    {
+        const Point corner{box.left + point.x * box.width, box.top + point.y * box.height};
+        points.push_back(corner);
+        float degrees = std::atan2(corner.y - centre.y, corner.x - centre.x) / DegreesToRadians;
+        if (degrees < 0.f)
+            degrees += FullTurnDegrees;
+        angles.push_back(degrees);
+    }
+    for (int segment = 0; segment < HaloSegments; ++segment)
+        angles.push_back(FullTurnDegrees * static_cast<float>(segment) / HaloSegments);
+    std::sort(angles.begin(), angles.end());
+    angles.erase(std::unique(angles.begin(), angles.end(), [](float a, float b) { return b - a <= AngleEpsilon; }),
+                 angles.end());
+    if (FullTurnDegrees + angles.front() - angles.back() <= AngleEpsilon)
+        angles.pop_back();
+    angles.push_back(angles.front() + FullTurnDegrees);
+
+    const std::uint32_t lit = Scaled(colour, strength);
+    // The fan's inner edge on the outline and its outer one at the radius, or higher where the group ends.
+    const auto edgesAt = [&](float degrees, Point& inner, Point& outer)
+    {
+        const Point direction = Direction(degrees);
+        const float from = ReachInside(centre, direction, points);
+        float to = shape.radius;
+        if (direction.y > std::numeric_limits<float>::epsilon())
+            to = std::min(to, (shape.bottom - centre.y) / direction.y);
+        to = std::max(to, from);
+        inner = {centre.x + from * direction.x, centre.y + from * direction.y};
+        outer = {centre.x + to * direction.x, centre.y + to * direction.y};
+    };
+
+    Point inner0;
+    Point outer0;
+    edgesAt(angles.front(), inner0, outer0);
+    for (std::size_t i = 1; i < angles.size(); ++i)
+    {
+        Point inner1;
+        Point outer1;
+        edgesAt(angles[i], inner1, outer1);
+        const bool open0 = std::hypot(outer0.x - inner0.x, outer0.y - inner0.y) > PixelEpsilon;
+        const bool open1 = std::hypot(outer1.x - inner1.x, outer1.y - inner1.y) > PixelEpsilon;
+        if (open0 || open1)
+        {
+            out.push_back({outer0.x, outer0.y, 0.f, 0.f, 0u});
+            out.push_back({inner0.x, inner0.y, 0.f, 0.f, lit});
+            out.push_back({inner1.x, inner1.y, 0.f, 0.f, lit});
+            out.push_back({outer1.x, outer1.y, 0.f, 0.f, 0u});
+        }
+        inner0 = inner1;
+        outer0 = outer1;
     }
 }
 } // namespace UI::HUD::LiveGauge

@@ -25,6 +25,7 @@
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
 #include "UI/HUD/LiveHudTest.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/ExperiencePaceText.h"
 #include "UI/Text/GroupedNumberText.h"
@@ -589,11 +590,16 @@ void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* documen
     UI::HUD::LiveHud::Inputs inputs;
     inputs.life = UI::HUD::HeroGauges::Life().Fraction();
     inputs.mana = UI::HUD::HeroGauges::Mana().Fraction();
+    inputs.shield = UI::HUD::HeroGauges::Shield().Fraction();
+    inputs.skillMana = UI::HUD::HeroGauges::SkillMana().Fraction();
     inputs.poisoned = g_isCharacterBuff((&Hero->Object), eDeBuff_Poison);
     const UI::HUD::LiveHudTest::Overrides& overrides = UI::HUD::LiveHudTest::Current();
     inputs.life = overrides.life.value_or(inputs.life);
     inputs.mana = overrides.mana.value_or(inputs.mana);
+    inputs.shield = overrides.shield.value_or(inputs.shield);
+    inputs.skillMana = overrides.skillMana.value_or(inputs.skillMana);
     inputs.poisoned = overrides.poisoned.value_or(inputs.poisoned);
+    inputs.effects = GameConfig::GetInstance().GetHudEffects();
     m_LiveHud.Sync(document, inputs, Rml::GetSystemInterface()->GetElapsedTime());
 }
 

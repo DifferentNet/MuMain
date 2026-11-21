@@ -43,13 +43,14 @@
 	<div id="gauges_left" class="hud-part">
 		<!-- The live gems (theme capability LiveHud, the skynet theme): every other theme's
 		     main_frame_live.rcss hides .live-only. UI::HUD::LiveHud fills the meshes; they share the
-		     ring's box (.orb), and #orb_*_box is the gem's rect in it. The halo and the SD/AG arc stay
-		     empty for now. -->
+		     ring's box (.orb), and #orb_*_box is the gem's rect in it. The SD and AG gauges' .arc-hits
+		     segments are their hints' targets along the drawn ring. -->
 		<div id="orb_left" class="orb live-only">
 			<div class="orb-plate"></div>
 			<additive-mesh id="orb_hp_under" class="orb-layer"/>
 			<additive-mesh id="orb_hp_halo" class="orb-layer"/>
 			<additive-mesh id="orb_sd_arc" class="orb-layer" data-src="/Data/Interface/newui_menu_sd.jpg"/>
+			<additive-mesh id="orb_sd_cap" class="orb-layer"/>
 			<div id="orb_hp_box" class="orb-gem-box"></div>
 			<additive-mesh id="orb_hp_body" class="orb-layer" data-src="/Data/Interface/newui_menu_red.jpg" data-src-alt="/Data/Interface/newui_menu_green.jpg"/>
 			<additive-mesh id="orb_hp_shine" class="orb-layer"/>
@@ -65,6 +66,7 @@
 			<div class="gauge-fill gauge-fill-sd gauge-fill-horizontal" data-style-width="sd_fraction * 100 + '%'"></div>
 			<span class="gauge-num value-current">{{sd_current_text}}</span>
 			<span class="gauge-num value-full">{{sd_text}}</span>
+			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>
 	</div>
 	<div id="gauges_right" class="hud-part">
@@ -73,6 +75,7 @@
 			<additive-mesh id="orb_mp_under" class="orb-layer"/>
 			<additive-mesh id="orb_mp_halo" class="orb-layer"/>
 			<additive-mesh id="orb_ag_arc" class="orb-layer" data-src="/Data/Interface/newui_menu_ag.jpg"/>
+			<additive-mesh id="orb_ag_cap" class="orb-layer"/>
 			<div id="orb_mp_box" class="orb-gem-box"></div>
 			<additive-mesh id="orb_mp_body" class="orb-layer" data-src="/Data/Interface/newui_menu_blue.jpg"/>
 			<additive-mesh id="orb_mp_shine" class="orb-layer"/>
@@ -82,6 +85,7 @@
 			<div class="gauge-fill gauge-fill-ag gauge-fill-horizontal" data-style-width="ag_fraction * 100 + '%'"></div>
 			<span class="gauge-num value-current">{{ag_current_text}}</span>
 			<span class="gauge-num value-full">{{ag_text}}</span>
+			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>
 		<div id="bar_mp" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="mp_tooltip">
 			<div class="gauge-fill gauge-fill-mp gauge-fill-vertical" data-style-height="mp_fraction * 100 + '%'"></div>
