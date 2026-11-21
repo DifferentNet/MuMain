@@ -322,10 +322,11 @@ int ChannelOf(const mu::ui::window::CChatInputBox& chat)
 }
 
 // The left stick's click on the chat's message line: the next channel the hero is in (All, Party, Guild,
-// Gens), as the chat bar's buttons choose one, which light up with it.
+// Gens), as the chat bar's buttons choose one, which light up with it. Nothing while the line goes out as a
+// whisper: the channel would not change where it goes.
 void NextChannel(const Rml::Element* field)
 {
-    if (!IsChatMessageLine(field) || g_pChatInputBox == nullptr || Hero == nullptr)
+    if (!IsChatMessageLine(field) || g_pChatInputBox == nullptr || Hero == nullptr || g_pChatInputBox->SendsWhisper())
         return;
     const bool inParty = PartyNumber > 0;
     const bool inGuild = Hero->GuildStatus != G_NONE;
@@ -668,8 +669,9 @@ void SyncLabels(KeyboardModel& model)
     SyncString(model.typeLabel, StringUtils::WideToNarrow(I18N::Game::PadKeyboardType), "type_label");
     SyncString(model.caretLabel, StringUtils::WideToNarrow(I18N::Game::PadKeyboardCaret), "caret_label");
     SyncString(model.closeLabel, StringUtils::WideToNarrow(I18N::Game::PadClose), "close_label");
-    // On the chat's message line only: not on the whisper name.
-    const bool channel = g_state.phrases && g_pChatInputBox != nullptr;
+    // On the chat's message line only: not on the whisper name, nor while the line goes out as a whisper (a
+    // name in the whisper field), where the channel would not say where it goes.
+    const bool channel = g_state.phrases && g_pChatInputBox != nullptr && !g_pChatInputBox->SendsWhisper();
     SyncBool(model.channelShown, channel, "channel_shown");
     if (channel)
         SyncString(model.channelLabel, StringUtils::WideToNarrow(ChannelName(ChannelOf(*g_pChatInputBox))),

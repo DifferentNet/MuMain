@@ -554,7 +554,7 @@ The phone's own keyboard stays down while the pad types and comes back if a fing
 | View | English letters, Russian ones, then (the chat line only) the quick chat phrases |
 | LB, RB | Move the cursor (held, it repeats) |
 | Menu | Enter: send the chat line, log in |
-| Left stick click | On the chat's message line, the chat bar's next channel: All, Party, Guild, Gens, passing by the ones the hero is in none of (pad round 8, `UI/Chat/ChatChannelCycle`, tested in `tests/ui/test_chat_channel_cycle.cpp`); the keyboard names the channel a line goes to |
+| Left stick click | On the chat's message line, the chat bar's next channel: All, Party, Guild, Gens, passing by the ones the hero is in none of (pad round 8, `UI/Chat/ChatChannelCycle`, tested in `tests/ui/test_chat_channel_cycle.cpp`); the keyboard names the channel a line goes to; with a name in the whisper field the line goes out as a whisper, so the keyboard names no channel and the click does nothing |
 
 A key a pad button also presses carries that button's glyph. A password field gets English letters
 only; a field that takes digits (`text-field--numeric`) gets a number pad. The guild's new name takes the pad's
