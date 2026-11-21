@@ -2068,6 +2068,29 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // reads a failed part's files one by one.
     const deferredEntries = ((releaseIndex && releaseIndex.parts) || []).filter((part) => part.deferred);
     const deferredSettled = [];
+    // A part whose sounds or music are off when the page starts (volume 0 in config.ini) waits until the
+    // game turns them up (Module.muWantDeferred, MiniAudioBackend.cpp; the full download asks for it too):
+    // a game played silent downloads nothing for them (round 30). One kept on this device reads at once.
+    const DEFERRED_VOLUMES = { "Data/Sound/": "SoundVolume", "Data/Music/": "MusicVolume" };
+    const deferredWanted = {};
+    function deferredWant(folder) {
+      if (!deferredWanted[folder]) {
+        let resolve;
+        deferredWanted[folder] = new Promise((done) => { resolve = done; });
+        deferredWanted[folder].resolve = resolve;
+      }
+      return deferredWanted[folder];
+    }
+    function wantDeferred(folder) {
+      deferredWant(folder).resolve();
+    }
+    // The folder (a key of DEFERRED_VOLUMES) of a part whose volume is 0 now; null for any other part.
+    function silentDeferredFolder(entry) {
+      const config = gameConfig();
+      const folder = Object.keys(DEFERRED_VOLUMES)
+        .find((prefix) => entry.files.length && entry.files.every(([path]) => path.startsWith(prefix)));
+      return folder && new RegExp(`^${DEFERRED_VOLUMES[folder]}=0\\s*$`, "m").test(config) ? folder : null;
+    }
     (async () => {
       if (!deferredEntries.length) return;
       const store = await openStore(STARTUP_STORE);
@@ -2077,6 +2100,12 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         try {
           const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
           if (!kept) {
+            const silent = silentDeferredFolder(entry);
+            if (silent) {
+              appendLog(`${label}: waits, the game's ${silent === "Data/Music/" ? "music" : "sound"} is off`);
+              await deferredWant(silent);
+              appendLog(`${label}: the game turned it up, downloading`);
+            }
             await startupPackSettled;
             while (mapPacksLoading) await new Promise((resolve) => setTimeout(resolve, 500));
           }
@@ -2357,6 +2386,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     let downloadJob = null;
     function startDownload(full) {
       const job = { full, stopped: false };
+      if (full) Object.keys(DEFERRED_VOLUMES).forEach(wantDeferred);
       job.done = downloadRestInBackground(job)
         .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true))
         .finally(() => { if (downloadJob === job) downloadJob = null; downloadButton.update(); });
@@ -2637,6 +2667,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       // The deferred parts' files (paths), and the next part that came or failed, handed over once; else null.
       muDeferredFiles: () => deferredEntries.flatMap((entry) => entry.files.map(([path]) => path)),
       muDeferredPart: () => deferredSettled.shift() || null,
+      // The game's sound or music volume is up: the deferred part of that folder held back comes now.
+      muWantDeferred: wantDeferred,
       // startup.json as this page read it (releaseIndexLoad), handed over once; null where it didn't come.
       muReleaseIndexText: () => { const text = releaseIndexText; releaseIndexText = null; return text; },
       muFilesOnPageThread: filesOnPageThread,

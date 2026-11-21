@@ -12948,10 +12948,10 @@
     <value>皇冠開關%d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>（%s 果實）統計 %d 積分已為 創造。</value>
+    <value>（%ls 果實）統計 %d 積分已為 創造。</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>（%s 果實）統計 %d 積分已為 減少。</value>
+    <value>（%ls 果實）統計 %d 積分已為 減少。</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>該統計數據不能再是 創造。</value>

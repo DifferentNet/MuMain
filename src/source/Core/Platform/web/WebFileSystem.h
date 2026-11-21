@@ -75,6 +75,12 @@ bool WaitsForDeferredPart(const std::string& path);
 // How many files of the deferred parts haven't come or failed yet: 0 once they all did.
 std::size_t DeferredFilesWaiting();
 
+// The page holds back a deferred part whose sounds or music are off (volume 0 in config.ini) when it starts,
+// so a game played silent downloads nothing for them; its files wait meanwhile (WaitsForDeferredPart). The
+// audio asks for it once their volume is up: `folder` is "Data/Sound/" or "Data/Music/". Asking again, or
+// for a part the page didn't hold back, does nothing.
+void WantDeferredPart(const char* folder);
+
 // Where the page's thread downloads the game's files (Safari), reads the file at `path` whole now, the
 // game waiting for it the way it waits for a frame, through the service worker, which keeps it on the
 // device; the next fopen of it, on any thread, gets it from memory. For a file another thread opens:

@@ -43,3 +43,21 @@
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #serial_field { width: calc(200px * var(--root-scale)); height: calc(14px * var(--root-scale)); line-height: calc(14px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"), over event_item_entry.rcss's 300-unit window: the
+   newui_item_back04 top with its ends kept and its plain middle repeated, and the number field a finger's
+   height (32 units), its back drawn from the edit box's stretch-safe middle and the field over the whole of
+   it. Places on the 190-unit window, as the rows; event_item_entry.rcss moves them right. */
+@spritesheet gb-phone-top-a-sheet { src: "../../../newui_item_back04.tga"; gb-phone-top-a-l: 0px 0px 60px 64px; gb-phone-top-a-c: 90px 0px 10px 64px; gb-phone-top-a-r: 130px 0px 60px 64px; }
+@spritesheet gb-phone-serial-back-sheet { src: "../../../newui_guildmakeeditbox.tga"; gb-phone-serial-back: 0px 0px 108px 23px; gb-phone-serial-back-inner: 5px 5px 98px 13px; }
+@media (theme: mobile) {
+	.frame-top { decorator: tiled-horizontal(gb-phone-top-a-l, gb-phone-top-a-c, gb-phone-top-a-r); }
+	#serial_back { left: 25px; top: 245px; width: 140px; height: 32px; decorator: ninepatch(gb-phone-serial-back, gb-phone-serial-back-inner); }
+	#serial_field {
+		left: 31px;
+		top: 245px;
+		width: calc(128px * var(--root-scale));
+		height: calc(32px * var(--root-scale));
+		line-height: calc(32px * var(--root-scale));
+	}
+}

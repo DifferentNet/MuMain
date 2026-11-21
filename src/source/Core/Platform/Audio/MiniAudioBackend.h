@@ -83,6 +83,14 @@ private:
     void ApplyMusicSilence();
     void UnloadSlot(int buf);
     void ReleaseDecodedSound(int buf);
+    // Loads the sound LoadSound() put off at effect volume 0 into `buf` once the volume is up (PlaySound);
+    // at volume 0 it only remembers a looped play asked for. True where the slot is loaded now.
+    bool LoadPutOffSound(int buf, bool looped);
+    // Starts the looped sounds asked for while they were put off at effect volume 0 (SetSFXVolume, when the
+    // volume rises from 0).
+    void StartPutOffLoops();
+    // The counters below in the page (Module.muSoundFilesLoaded, Module.muSoundLoadsPutOff); nothing on PC.
+    void NoteSoundLoads() const;
 #ifdef __EMSCRIPTEN__
     bool WaitForSoundFile(int bufIdx, const wchar_t* filename, const std::string& utf8Path, int channels, bool enable3D);
     bool WaitForMusicFile(const char* name, bool enforce);
@@ -134,6 +142,22 @@ private:
     float m_bgmVolume = 1.0f; // BGM volume: 0.0 (mute) to 1.0 (full) — Story 5.4.1
     float m_sfxVolume = 1.0f; // SFX volume: 0.0 (mute) to 1.0 (full) — Story 5.4.1
 
+    // A sound LoadSound() was asked for at effect volume 0: only remembered, neither read nor decoded (on the
+    // web not downloaded either), and loaded when it is first played with the volume up. `loop`: a looped play
+    // was asked for meanwhile (the Blood Castle ambience, say), started when the volume rises; a stop forgets
+    // it. An empty file where the slot has none.
+    struct PutOffSound
+    {
+        std::wstring file;
+        int channels = 0;
+        bool enable3D = false;
+        bool loop = false;
+    };
+    std::array<PutOffSound, MAX_BUFFER> m_putOffSounds{};
+    // Loads that read and decoded their file, and loads put off at effect volume 0, since the start.
+    std::size_t m_soundFilesLoaded = 0;
+    std::size_t m_soundLoadsPutOff = 0;
+
     ma_sound m_musicSound{};
     bool m_musicLoaded = false;
     // The loaded stream is paused by ApplyMusicSilence() (music volume 0); IsEndMusic() still reports it
@@ -158,6 +182,8 @@ private:
     std::string m_waitingMusicName;
     std::string m_waitingMusicPath;
     bool m_waitingMusicEnforced = false;
+    // Set when the effect volume rose from 0: the next sound loaded at its first play says so in the page's log.
+    bool m_notePutOffLoad = false;
 #endif
 };
 

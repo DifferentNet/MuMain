@@ -13,7 +13,7 @@ constexpr int Anvil = 9;
 
 mu::WaitingSoundLoad Load(int slot, const char* path)
 {
-    return {slot, L"Data\\Sound\\x.wav", path, 1, false};
+    return {slot, L"Data\\Sound\\x.wav", path, 1, false, false};
 }
 } // namespace
 
@@ -74,4 +74,33 @@ TEST_CASE("WaitingSoundLoads: a released slot waits no more")
     CHECK(loads.First()->slot == Anvil);
     loads.Clear();
     CHECK(loads.Empty());
+}
+
+TEST_CASE("WaitingSoundLoads: a looped play is kept while the load waits, a stop or a new load forgets it")
+{
+    mu::WaitingSoundLoads loads;
+    loads.Add(Load(Wind, "Data/Sound/aWind.wav"));
+    loads.Add(Load(Rain, "Data/Sound/aRain.wav"));
+    loads.Add(Load(Anvil, "Data/Sound/nBlackSmith.wav"));
+    CHECK(loads.SetLoop(Wind, true));
+    CHECK(loads.SetLoop(Rain, true));
+    CHECK(loads.SetLoop(Anvil, true));
+    CHECK_FALSE(loads.SetLoop(42, true)); // nothing waits for it
+    CHECK(loads.SetLoop(Rain, false));    // StopSound
+    loads.Add(Load(Anvil, "Data/Sound/nBlackSmith2.wav")); // loaded again: waits without the loop
+
+    const auto wind = loads.TakeFirst();
+    REQUIRE(wind.has_value());
+    CHECK(wind->loop);
+    const auto rain = loads.TakeFirst();
+    REQUIRE(rain.has_value());
+    CHECK_FALSE(rain->loop);
+    const auto anvil = loads.TakeFirst();
+    REQUIRE(anvil.has_value());
+    CHECK_FALSE(anvil->loop);
+
+    loads.Add(Load(Wind, "Data/Sound/aWind.wav"));
+    CHECK(loads.SetLoop(Wind, true));
+    loads.ClearLoops(); // AllStopSound
+    CHECK_FALSE(loads.TakeFirst()->loop);
 }

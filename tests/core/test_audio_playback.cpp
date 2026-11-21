@@ -385,6 +385,83 @@ TEST_CASE("at effect volume 0 a sound played once does not start and a looped on
     ma_audio_buffer_uninit(&audioBuffer);
 }
 
+TEST_CASE("at effect volume 0 a sound is not read until it is played with the volume up [audio][volume]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+    const std::filesystem::path testDirectory = CreateMusicAsset();
+    const std::wstring file = (testDirectory / "Data" / "Music" / "track.wav").wstring();
+    constexpr ESound soundId = SOUND_CLICK01;
+    const int soundIndex = static_cast<int>(soundId);
+
+    backend->SetSFXVolume(0.0f);
+    backend->LoadSound(soundId, file.c_str(), 1, false);
+    CHECK_FALSE(backend->m_soundLoaded[soundIndex]);
+    CHECK(backend->m_soundFilesLoaded == 0);
+    CHECK(backend->m_soundLoadsPutOff == 1);
+
+    CHECK_FALSE(backend->PlaySound(soundId, nullptr, false));
+    CHECK_FALSE(backend->m_soundLoaded[soundIndex]);
+
+    backend->SetSFXVolume(0.5f);
+    CHECK_FALSE(backend->m_soundLoaded[soundIndex]);
+    CHECK(backend->PlaySound(soundId, nullptr, false));
+    CHECK(backend->m_soundLoaded[soundIndex]);
+    CHECK(backend->m_soundFilesLoaded == 1);
+    CHECK(ma_sound_is_playing(&backend->m_sounds[soundIndex][0]));
+
+    backend->Shutdown();
+    std::filesystem::remove_all(testDirectory);
+}
+
+TEST_CASE("a looped sound asked for at effect volume 0 starts when the volume rises, unless stopped "
+          "[audio][volume]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+    const std::filesystem::path testDirectory = CreateMusicAsset();
+    const std::wstring file = (testDirectory / "Data" / "Music" / "track.wav").wstring();
+    constexpr ESound loopedId = SOUND_CLICK01;
+    constexpr ESound stoppedId = SOUND_WIND01;
+
+    backend->SetSFXVolume(0.0f);
+    backend->LoadSound(loopedId, file.c_str(), 1, false);
+    backend->LoadSound(stoppedId, file.c_str(), 1, false);
+    CHECK_FALSE(backend->PlaySound(loopedId, nullptr, true));
+    CHECK_FALSE(backend->PlaySound(stoppedId, nullptr, true));
+    backend->StopSound(stoppedId, true);
+
+    backend->SetSFXVolume(1.0f);
+    REQUIRE(backend->m_soundLoaded[static_cast<int>(loopedId)]);
+    CHECK(ma_sound_is_playing(&backend->m_sounds[static_cast<int>(loopedId)][0]));
+    CHECK(ma_sound_is_looping(&backend->m_sounds[static_cast<int>(loopedId)][0]));
+    CHECK_FALSE(backend->m_soundLoaded[static_cast<int>(stoppedId)]);
+
+    backend->Shutdown();
+    std::filesystem::remove_all(testDirectory);
+}
+
+TEST_CASE("a sound put off at effect volume 0 and released is not loaded later [audio][volume]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+    const std::filesystem::path testDirectory = CreateMusicAsset();
+    const std::wstring file = (testDirectory / "Data" / "Music" / "track.wav").wstring();
+    constexpr ESound soundId = SOUND_CLICK01;
+
+    backend->SetSFXVolume(0.0f);
+    backend->LoadSound(soundId, file.c_str(), 1, false);
+    backend->ReleaseSound(soundId);
+
+    backend->SetSFXVolume(1.0f);
+    CHECK_FALSE(backend->PlaySound(soundId, nullptr, false));
+    CHECK_FALSE(backend->m_soundLoaded[static_cast<int>(soundId)]);
+    CHECK(backend->m_soundFilesLoaded == 0);
+
+    backend->Shutdown();
+    std::filesystem::remove_all(testDirectory);
+}
+
 #ifdef _EDITOR
 namespace
 {

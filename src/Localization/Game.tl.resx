@@ -12948,10 +12948,10 @@
     <value>switch ng korona %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(%s fruit) stat %d puntos ay Lumikha.</value>
+    <value>(%ls fruit) stat %d puntos ay Lumikha.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(%s fruit) stat %d puntos ay Bawasan.</value>
+    <value>(%ls fruit) stat %d puntos ay Bawasan.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Hindi na maaaring Lumikha ang stat na ito.</value>

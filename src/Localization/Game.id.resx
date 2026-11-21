@@ -12948,10 +12948,10 @@
     <value>Saklar mahkota %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(%s buah) stat Poin %d telah menjadi Membuat.</value>
+    <value>(%ls buah) stat Poin %d telah menjadi Membuat.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(%s buah) stat Poin %d telah menjadi Mengurangi.</value>
+    <value>(%ls buah) stat Poin %d telah menjadi Mengurangi.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Stat ini tidak bisa lagi menjadi Membuat.</value>

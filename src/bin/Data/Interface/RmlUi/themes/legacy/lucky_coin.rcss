@@ -25,3 +25,10 @@
 
 /* The docked frame's newui_item_back04 top, as their RenderFrame() drew. */
 .frame-top { decorator: image(docked-bg-top-a); }
+
+/* MU Moldova: the phone view (theme flag "mobile"), over event_item_entry.rcss's 300-unit window: the
+   newui_item_back04 top with its ends kept and its plain middle repeated. */
+@spritesheet coin-phone-top-a-sheet { src: "../../../newui_item_back04.tga"; coin-phone-top-a-l: 0px 0px 60px 64px; coin-phone-top-a-c: 90px 0px 10px 64px; coin-phone-top-a-r: 130px 0px 60px 64px; }
+@media (theme: mobile) {
+	.frame-top { decorator: tiled-horizontal(coin-phone-top-a-l, coin-phone-top-a-c, coin-phone-top-a-r); }
+}

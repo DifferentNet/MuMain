@@ -82,3 +82,35 @@
 #title { width: calc(72px * var(--root-scale)); }
 .cmd-label { width: calc(108px * var(--root-scale)); }
 #target_name { width: calc(128px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide and the twelve buttons
+   stand in two columns of six, each 126 x 42 for a finger and 8 apart, from under the title to above the
+   exit; their art is drawn from newui_btn_empty's stretch-safe middle, so it is not stretched out of shape.
+   The frame's ends keep their art while its plain middle repeats (docked_panel_frame.rcss), and the
+   parchment repeats. */
+@spritesheet cmd-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty.tga";
+	cmd-phone-btn-up: 0px 0px 108px 29px; cmd-phone-btn-up-inner: 10px 7px 88px 15px;
+	cmd-phone-btn-over: 0px 29px 108px 29px; cmd-phone-btn-over-inner: 10px 36px 88px 15px;
+	cmd-phone-btn-down: 0px 58px 108px 29px; cmd-phone-btn-down-inner: 10px 65px 88px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#title { left: 0; width: calc(300px * var(--root-scale)); }
+
+	#buttons { left: 20px; top: 44px; width: 262px; }
+	.cmd-btn {
+		float: left;
+		width: 126px;
+		height: 42px;
+		margin: 0 0 8px 0;
+		decorator: ninepatch(cmd-phone-btn-up, cmd-phone-btn-up-inner);
+	}
+	.cmd-btn:nth-child(even) { margin-left: 8px; }
+	.cmd-btn:hover { decorator: ninepatch(cmd-phone-btn-over, cmd-phone-btn-over-inner); }
+	.cmd-btn:active, .cmd-btn.selected { decorator: ninepatch(cmd-phone-btn-down, cmd-phone-btn-down-inner); }
+	.cmd-label { width: calc(126px * var(--root-scale)); }
+}

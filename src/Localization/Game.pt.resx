@@ -12948,10 +12948,10 @@
     <value>Interruptor de coroa %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(fruta %s) pontos estatísticos %d foram Criar.</value>
+    <value>(fruta %ls) pontos estatísticos %d foram Criar.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(fruta %s) pontos estatísticos %d foram Diminuir.</value>
+    <value>(fruta %ls) pontos estatísticos %d foram Diminuir.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
     <value>Esta estatística não pode mais ser Criar.</value>

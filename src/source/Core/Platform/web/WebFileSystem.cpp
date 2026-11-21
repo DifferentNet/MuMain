@@ -969,6 +969,13 @@ void InstallDeferredPartsWithin(double budgetMs)
     }
 }
 
+// Index.html's Module.muWantDeferred: downloads the deferred part of `folder` it held back, if any.
+EM_JS(void, MuWeb_WantDeferredPart, (const char* folder), {
+    if (Module["muWantDeferred"]) {
+        Module["muWantDeferred"](UTF8ToString(folder));
+    }
+});
+
 // Fills g_waitingDeferredFiles from the page.
 void NoteDeferredFiles()
 {
@@ -1241,6 +1248,11 @@ bool mu::web::WaitsForDeferredPart(const std::string& path)
 std::size_t mu::web::DeferredFilesWaiting()
 {
     return g_waitingDeferredFiles.size();
+}
+
+void mu::web::WantDeferredPart(const char* folder)
+{
+    MuWeb_WantDeferredPart(folder);
 }
 
 void mu::web::LoadWorldFiles(int world)
