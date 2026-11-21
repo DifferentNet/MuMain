@@ -10,6 +10,7 @@
 
 #include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/BundledFonts.h"
+#include "Core/Platform/FirstVisitLocale.h"
 
 #ifdef MU_WEB_FILE_TRACE
 #include "stdafx.h"
@@ -40,6 +41,7 @@
 #include <unistd.h>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace
 {
@@ -697,6 +699,97 @@ EM_JS(char*, MuWeb_MergeSavedConfig, (const char* serverText), {
                            : saved + (saved.endsWith("\n") ? "" : "\n") + section;
     return stringToNewUTF8(merged);
 });
+
+// The language picked on the site, then the browser's languages, one a line. The site's is /play/?lang=
+// when the page takes it (en, ru, ro: index.html pickPageLang), else the one the page kept from an earlier
+// ?lang= (mu-page-lang); an empty line when none.
+EM_JS(char*, MuWeb_PageLanguages, (), {
+    let site = "";
+    try {
+        const asked = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
+        site = ["en", "ru", "ro"].indexOf(asked) >= 0 ? asked : (localStorage.getItem("mu-page-lang") || "");
+    } catch (e) {
+    }
+    const browser = navigator.languages && navigator.languages.length ? Array.from(navigator.languages)
+                                                                      : [navigator.language || ""];
+    return stringToNewUTF8([site].concat(browser).join("\n"));
+});
+
+// The site's language the game saw on the last visit; empty before the first time.
+EM_JS(char*, MuWeb_LastSiteLanguage, (), {
+    let last = "";
+    try {
+        last = localStorage.getItem("mu-web/game-site-lang") || "";
+    } catch (e) {
+    }
+    return stringToNewUTF8(last);
+});
+
+// Keeps site (when not empty) as the language the game has seen, after the config.ini that holds the
+// language picked for it (configText; null when the language stayed): index.html's saveConfig keeps
+// config.ini only every 3 s, and a game that crashed before would come back with the old language and
+// the new site language marked as seen. No storage room for the config: the site's isn't marked either.
+EM_JS(void, MuWeb_KeepSiteLanguage, (const char* site, const char* configText), {
+    try {
+        if (configText) {
+            localStorage.setItem("mu-web/config.ini", UTF8ToString(configText));
+        }
+        const now = UTF8ToString(site);
+        if (now) {
+            localStorage.setItem("mu-web/game-site-lang", now);
+        }
+    } catch (e) {
+    }
+});
+
+// The game's language for this visit (Core/Platform/FirstVisitLocale.h), into config's [UI] Locale. A
+// browser's first visit (no config.ini kept) plays in the site's or the browser's language when the game
+// has it, the template's English otherwise. A later visit keeps the player's language, unless the language
+// picked on the site changed since the last visit: then the game picks again as on a first visit, so the
+// page and the game speak the same language (ghinzuro 2026-11-21). The changed config.ini is kept at once
+// (MuWeb_KeepSiteLanguage), so the next visit starts with it.
+void PickGameLocale(std::string& config, bool firstVisit)
+{
+    char* text = MuWeb_PageLanguages();
+    std::vector<std::string> lines;
+    std::string_view rest(text);
+    for (;;)
+    {
+        const auto end = rest.find('\n');
+        lines.emplace_back(rest.substr(0, end));
+        if (end == std::string_view::npos)
+        {
+            break;
+        }
+        rest.remove_prefix(end + 1);
+    }
+    std::free(text);
+    const std::string site = lines.front();
+    lines.erase(lines.begin());
+    char* last = MuWeb_LastSiteLanguage();
+    const bool siteChanged = Core::Platform::SiteLanguageChanged(site, last);
+    std::free(last);
+    if (!firstVisit && !siteChanged)
+    {
+        return;
+    }
+    const std::string why = firstVisit ? std::string("first visit in this browser")
+                                       : "the site's language changed (" + site + ")";
+    // Japanese and traditional Chinese wait for Options: their font comes after the first map here.
+    const Core::Platform::FirstVisitLocale pick = Core::Platform::PickFirstVisitLocale(site, lines, false);
+    if (!pick.code.empty() && Core::Platform::SetConfigLocale(config, pick.code))
+    {
+        MuWeb_KeepSiteLanguage(site.c_str(), config.c_str());
+        std::printf("Web file system: %s, the game's language %s (from %s)\n", why.c_str(), pick.code.c_str(),
+                    pick.fromSite ? "the site" : "the browser");
+    }
+    else
+    {
+        MuWeb_KeepSiteLanguage(site.c_str(), nullptr);
+        std::printf("Web file system: %s, the game's language stays %s\n", why.c_str(),
+                    firstVisit ? "English" : "as it was");
+    }
+}
 } // namespace
 
 extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
@@ -1044,9 +1137,16 @@ bool mu::web::MountGameFiles()
     {
         if (char* merged = MuWeb_MergeSavedConfig(config.c_str()))
         {
-            WriteWholeFile(configPath, merged);
+            std::string saved(merged);
             std::free(merged);
             std::printf("Web file system: config.ini from this browser's earlier visits\n");
+            PickGameLocale(saved, false);
+            WriteWholeFile(configPath, saved);
+        }
+        else
+        {
+            PickGameLocale(config, true);
+            WriteWholeFile(configPath, config);
         }
     }
     NoteDeferredFiles();
