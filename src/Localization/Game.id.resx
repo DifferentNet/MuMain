@@ -13309,7 +13309,7 @@
     <value>{MENU}: pusat hero (inventaris, karakter, skill, misi, guild, pengaturan), {LB} dan {RB} mengganti tab-nya. Lagi: semua jendela. Tahan {MENU}: obrolan</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Layar login dan karakter: stik menggerakkan penunjuk</value>
+    <value>Layar login dan karakter: D-pad atau stik kiri menggerakkan bingkai, stik kanan menggerakkan penunjuk</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Di sana {A} mengklik, {B} adalah Esc, {MENU} adalah Enter</value>
@@ -13408,7 +13408,7 @@
     <value>D-pad atau stik: tombol. {A}: tekan, {X}: hapus, {Y}: spasi, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: simbol, {VIEW}: Inggris, Rusia, frasa, {LB}/{RB}: kursor, {B}: tutup</value>
+    <value>{LT}: shift, {RT}: simbol, {VIEW}: Inggris, Rusia, frasa, {LB}/{RB}: kursor, {B}: tutup. Di chat, klik {WALKSTICK_OBJ}: semua, party, guild, gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Mana tidak cukup</value>
@@ -14332,6 +14332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frasa</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Semua</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Berdagang dengan pemain: /trade Nama jika ia terlihat; jika tidak, dengan pemain yang dipilih dari jarak berapa pun, atau yang menghadap Anda.</value>
@@ -14530,6 +14539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Tombol panah: berjalan</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + klik item: tampilkan di chat</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Item baru lebih baik: tahan D-pad kanan untuk memakainya. Di inventaris {Y} membuka kartu item (tanda sampah); di pedagang, {A} pada tombol Jual sampah menjual sampahnya. Zen di bawah kakimu terambil sendiri</value>

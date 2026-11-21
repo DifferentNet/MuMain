@@ -54,6 +54,7 @@ namespace mu::ui::window
         bool Update() override;
         bool Render() override;
         float GetLayerDepth() override;
+        float GetKeyEventOrder() override;
 
 
         void FilterByAttackSkills();

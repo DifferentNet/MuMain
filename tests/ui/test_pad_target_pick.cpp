@@ -139,3 +139,65 @@ TEST_CASE("A window starts on the target it marks, before its cells")
     answers.back().cell = true;
     CHECK(Pick::First(answers) == 1);
 }
+
+namespace
+{
+// A window's three tabs along its top (the second the one turned to), its exit at the bottom left.
+std::vector<Target> TabbedWindow(int window)
+{
+    std::vector<Target> targets;
+    for (int tab = 0; tab < 3; ++tab)
+    {
+        const float x = 10.f + tab * 40.f;
+        targets.push_back({{x, 0.f, x + 30.f, 20.f}, window});
+        targets.back().page = true;
+    }
+    targets.push_back({{0.f, 200.f, 30.f, 220.f}, window});
+    targets.back().exit = true;
+    return targets;
+}
+} // namespace
+
+TEST_CASE("A page turned starts on its first target past the tabs, not on the exit")
+{
+    std::vector<Target> targets = TabbedWindow(1);
+    targets.push_back({{20.f, 60.f, 120.f, 80.f}, 1});
+    targets.push_back({{20.f, 90.f, 120.f, 110.f}, 1});
+    // Another window's target nearer the corner is not on that page.
+    targets.push_back({{0.f, 0.f, 5.f, 5.f}, 0});
+    CHECK(Pick::FirstOnPage(targets, 1, 1) == 4);
+}
+
+TEST_CASE("A page with nothing on it starts on the tab turned to")
+{
+    const std::vector<Target> targets = TabbedWindow(1);
+    // The Alliance page with no alliance: its tab, not the first tab and not the exit.
+    CHECK(Pick::FirstOnPage(targets, 1, 1) == 1);
+    CHECK(Pick::FirstOnPage(targets, 1, 2) == 2);
+    // The tab not known (or in another window): the window's first, its first tab.
+    CHECK(Pick::FirstOnPage(targets, 1, Pick::None) == 0);
+    CHECK(Pick::FirstOnPage(targets, 1, 99) == 0);
+    std::vector<Target> twoWindows = TabbedWindow(1);
+    twoWindows.push_back({{300.f, 0.f, 330.f, 20.f}, 2});
+    CHECK(Pick::FirstOnPage(twoWindows, 1, 4) == 0);
+}
+
+TEST_CASE("A page turned in a window gone starts on the windows' first")
+{
+    const std::vector<Target> targets{{{50.f, 50.f, 70.f, 70.f}, 0}, {{10.f, 10.f, 30.f, 30.f}, 0}};
+    CHECK(Pick::FirstOnPage(targets, 3, Pick::None) == 1);
+    CHECK(Pick::FirstOnPage(std::vector<Target>{}, 0, Pick::None) == Pick::None);
+}
+
+TEST_CASE("A page shows its own targets only past the tabs and the exit")
+{
+    std::vector<Target> targets = TabbedWindow(1);
+    // Only tabs and the exit: the page has not shown yet (or is empty).
+    CHECK_FALSE(Pick::HasPageTargets(targets, 1));
+    // Another window's target is not on that page.
+    targets.push_back({{400.f, 60.f, 420.f, 80.f}, 2});
+    CHECK_FALSE(Pick::HasPageTargets(targets, 1));
+    targets.push_back({{20.f, 60.f, 120.f, 80.f}, 1});
+    CHECK(Pick::HasPageTargets(targets, 1));
+    CHECK_FALSE(Pick::HasPageTargets(std::vector<Target>{}, 1));
+}

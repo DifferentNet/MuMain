@@ -47,6 +47,8 @@ struct Target
     // A control that turns its window's page (a "pad-page" tab, a "pad-page-next" arrow): after RT turned
     // the page the frame starts past them, on the new page's first target.
     bool page = false;
+    // The window's own exit button (B closes the window already): no place to start a page on (pad round 8).
+    bool exit = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.
@@ -64,4 +66,14 @@ struct Target
 // that direction, one in line before one aside; one in the same window before one in another. None
 // when nothing lies that way.
 [[nodiscard]] int NextThatWay(std::span<const Target> targets, int from, int dx, int dy);
+
+// Where the frame starts on the page RT turned in `window`: the first of its targets past the tabs (not a
+// page control, not the window's exit), else the tab turned to (`turned`, an index in `targets`, None when
+// it is not one: a page with nothing on it, pad round 8), else the window's first target, else the
+// windows' first; None with no targets.
+[[nodiscard]] int FirstOnPage(std::span<const Target> targets, int window, int turned);
+
+// Whether `window` shows a target past its tabs (not a page control, not its exit): a page RT turned to
+// has its own targets up, the snap need not wait for them (pad round 8).
+[[nodiscard]] bool HasPageTargets(std::span<const Target> targets, int window);
 } // namespace UI::HUD::PadTargetPick

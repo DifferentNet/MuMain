@@ -13330,7 +13330,7 @@
     <value>{MENU}: centrum bohatera (ekwipunek, postać, umiejętności, zadania, gildia, ustawienia), {LB} i {RB} zmieniają jego karty. Ponownie: wszystkie okna. Przytrzymaj {MENU}: czat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Ekrany logowania i postaci: gałki przesuwają wskaźnik</value>
+    <value>Ekrany logowania i postaci: D-pad lub lewa gałka przesuwa ramkę, prawa gałka wskaźnik</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Tam {A} klika, {B} to Esc, {MENU} to Enter</value>
@@ -13429,7 +13429,7 @@
     <value>D-pad lub gałka: klawisze. {A}: naciśnij, {X}: usuń, {Y}: spacja, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: symbole, {VIEW}: angielski, rosyjski, zwroty, {LB}/{RB}: kursor, {B}: zamknij</value>
+    <value>{LT}: shift, {RT}: symbole, {VIEW}: angielski, rosyjski, zwroty, {LB}/{RB}: kursor, {B}: zamknij. Na czacie wciśnij {WALKSTICK_OBJ}: wszyscy, grupa, gildia, gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Za mało many</value>
@@ -14353,6 +14353,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Zwroty</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Wszyscy</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Gildia</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Handel z graczem: /trade Imię, gdy jest w zasięgu wzroku; inaczej z wybranym graczem z dowolnej odległości lub z tym, kto stoi naprzeciw.</value>
@@ -14551,6 +14560,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Strzałki: chodzenie</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + kliknięcie przedmiotu: pokaż go na czacie</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Nowy przedmiot jest lepszy: przytrzymaj D-pad w prawo, by go założyć. W ekwipunku {Y} otwiera kartę przedmiotu (znacznik złomu); u kupca {A} na przycisku Sprzedaj złom sprzedaje złom. Zen pod stopami podnosi się sam</value>

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 namespace UI::HUD::PadTargetPick
 {
@@ -149,5 +150,39 @@ int NextThatWay(std::span<const Target> targets, int from, int dx, int dy)
         return None;
     const int inWindow = BestThatWay(targets, from, dx, dy, true);
     return inWindow != None ? inWindow : BestThatWay(targets, from, dx, dy, false);
+}
+
+int FirstOnPage(std::span<const Target> targets, int window, int turned)
+{
+    const int count = static_cast<int>(targets.size());
+    std::vector<Target> inWindow;
+    std::vector<int> indexes;
+    // The page's own targets first, then any of the window's (its tabs, its exit) after the tab turned to.
+    for (const bool pageOnly : {true, false})
+    {
+        inWindow.clear();
+        indexes.clear();
+        for (int i = 0; i < count; ++i)
+        {
+            const Target& target = targets[i];
+            if (target.window == window && !(pageOnly && (target.page || target.exit)))
+            {
+                inWindow.push_back(target);
+                indexes.push_back(i);
+            }
+        }
+        const int pick = First(inWindow);
+        if (pick != None)
+            return indexes[static_cast<std::size_t>(pick)];
+        if (pageOnly && turned >= 0 && turned < count && targets[turned].window == window)
+            return turned;
+    }
+    return First(targets);
+}
+
+bool HasPageTargets(std::span<const Target> targets, int window)
+{
+    return std::any_of(targets.begin(), targets.end(), [window](const Target& target)
+                       { return target.window == window && !target.page && !target.exit; });
 }
 } // namespace UI::HUD::PadTargetPick

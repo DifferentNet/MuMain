@@ -68,6 +68,11 @@ namespace mu::ui::window
         bool UpdateMouseEvent();
         bool UpdateKeyEvent();
         bool Update();
+        // Escape while the guild's name is typed in (pad round 8, C1): the window closes, as with no field.
+        bool TakesTypingFrom(const Rml::ElementDocument* document) const override
+        {
+            return document != nullptr && document == m_RmlView.Document();
+        }
 
     private:
         void UpdateGMInfo(GUILDMAKE_BUTTON button);

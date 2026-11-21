@@ -22,6 +22,7 @@
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
+#include "Network/Reconnect/ReconnectManager.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Character/CharMakeWin.h"
@@ -280,6 +281,8 @@ struct State
     bool frameOpen = false;
     // The character screen with nothing over it: the face buttons choose and start the character.
     bool onCharacters = false;
+    // The reconnect dialog was up over the screens last frame (PlayScreens).
+    bool screensReconnect = false;
     // The drop d-pad down would pick up, prompted under it; -1 for none.
     int promptDrop = -1;
     // Menu held (a hold opens the chat line, then its release opens no menu), d-pad up and left.
@@ -619,6 +622,7 @@ void ReleaseForWorldChange(SDL_Window* window)
     g_state.frameOpen = false;
     g_state.windowOpen = false;
     g_state.onCharacters = false;
+    g_state.screensReconnect = false;
 }
 
 // The controls card shows once by itself ([UI] GamepadCardSeen), at the first press of the pad in a
@@ -1522,7 +1526,9 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         return;
     }
     g_state.menuStepper.Reset();
-    const bool frameOpen = gameWindowOpen;
+    // The reconnect dialog over the world (the server is probed): the frame rests on its Cancel, A presses
+    // it, B (Esc) cancels too (pad round 8, A4).
+    const bool frameOpen = gameWindowOpen || ReconnectManager::Instance().IsActive();
     const bool windowOpen = frameOpen || UI::Dialogs::Modal::IsOpen();
     if (windowOpen != g_state.windowOpen || frameOpen != g_state.frameOpen)
         SwitchWindowMode(window, windowOpen, frameOpen);
@@ -1668,6 +1674,12 @@ void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time
         Pointer::Release(window);
         WaitForRelease();
     }
+    // The reconnect dialog gone from the screens (its Cancel, B or Esc): the frame starts on the screen's
+    // first control, not stays where the Cancel was (pad round 8, A4).
+    const bool reconnecting = ReconnectManager::Instance().IsActive();
+    if (g_state.screensReconnect && !reconnecting && frameOpen)
+        UI::HUD::PadFrame::SnapSoon();
+    g_state.screensReconnect = reconnecting;
     if (onCharacters)
     {
         PlayCharacters(presses);
@@ -1909,6 +1921,7 @@ void SayPadNews(bool inWorld)
 UI::HUD::PadOverlay::View OverlayView(bool playing)
 {
     UI::HUD::PadOverlay::View view;
+    view.overReconnect = ReconnectManager::Instance().IsActive();
     if (!playing)
         return view;
     // Out of the world: the frame over the screens' controls, the character screen's keys.
@@ -1947,12 +1960,22 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legendPages = UI::HUD::PadTargets::HasPages(UI::HUD::PadFrame::CurrentWindow());
     }
     using Legend = UI::HUD::PadOverlay::View::Legend;
+    // In repair mode A on an item repairs it (the bag's L button at a merchant): not on the shop's goods,
+    // the crafting box's items or an empty place.
+    const bool repairs = view.frame && g_pMyInventory->GetRepairMode() == SEASON3B::REPAIR_MODE_ON
+                         && UI::HUD::PadFrame::OnItemPlace() && !UI::HUD::PadFrame::OnEmptyCell()
+                         && !UI::HUD::PadFrame::OnGoods() && !UI::HUD::PadFrame::OnMixItem();
     if (UI::Inventory::HasPickedItem())
         view.legendSays = Legend::Holding;
-    else if (view.frame && UI::HUD::PadFrame::OnGauge())
+    // The pointer off every target (the right stick, a window with none): no item there to say.
+    else if (!view.frame)
+        view.legendSays = Legend::Pointer;
+    else if (UI::HUD::PadFrame::OnGauge())
         view.legendSays = Legend::Slider;
-    else if (view.frame && !UI::HUD::PadFrame::OnItemPlace())
+    else if (!UI::HUD::PadFrame::OnItemPlace())
         view.legendSays = Legend::Button;
+    else if (repairs)
+        view.legendSays = Legend::Repair;
     else if (view.frame && UI::HUD::PadFrame::OnEmptyCell())
         view.legendSays = Legend::Empty;
     else if (view.frame && UI::HUD::PadFrame::OnWornPlace())

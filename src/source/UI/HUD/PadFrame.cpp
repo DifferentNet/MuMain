@@ -36,6 +36,11 @@ constexpr int MinWaitFrames = 2;
 // How long the frame waits before it snaps (a window opened), moves on from a target gone, or goes
 // back after a dialog.
 constexpr auto SnapDelay = std::chrono::milliseconds(30);
+// A page RT turned shows a frame or more after the press, and some windows take their turn later still
+// (the guild's, the battle pass's: the old page's targets stayed up, or the new one's were not laid out
+// yet). The frame waits for it to show (PadTargets::TurnShown) and lay out, at most this long after the
+// press (pad round 8).
+constexpr auto PageShowWait = std::chrono::milliseconds(300);
 // A window that opens this long after the one the frame started in (the NPC shop after the
 // inventory, its goods come from the server) takes the frame there, while it has not moved yet.
 constexpr auto SettleTime = std::chrono::milliseconds(750);
@@ -63,6 +68,8 @@ struct State
     Clock::time_point snapSince{};
     // The window whose page RT turned (SnapToPage): the snap starts on that page, -1 for the windows' first.
     int snapWindow = -1;
+    // Frames since that page showed, -1 before.
+    int pageShownFrames = -1;
     // The right stick moved the pointer last frame.
     bool stickPushed = false;
     // Where the frame put the pointer, in context pixels: the pointer's own place catches up a frame
@@ -126,7 +133,6 @@ State g_state;
 // Reused each frame, not built anew.
 std::vector<int> g_windowScratch;
 std::vector<Pick::Target> g_newTargets;
-std::vector<int> g_pageIndexes;
 
 // A wait of at least two frames and of `time`, begun `since`, `frames` frames counted.
 bool Waited(int frames, Clock::time_point since, Clock::time_point now, Clock::duration time)
@@ -227,29 +233,6 @@ void JumpToNextWindow(SDL_Window* window, std::span<const Pick::Target> targets,
         MoveOnto(window, inNext[pick], scale);
 }
 
-// The page RT turned in `window`: its first target past the tabs (the tab just pressed is no place to
-// start a page on), else its first; the windows' first with none there.
-int FirstOnPage(std::span<const Pick::Target> targets, int window)
-{
-    for (const bool pastTabs : {true, false})
-    {
-        g_newTargets.clear();
-        g_pageIndexes.clear();
-        for (int i = 0; i < static_cast<int>(targets.size()); ++i)
-        {
-            if (targets[i].window == window && !(pastTabs && targets[i].page))
-            {
-                g_newTargets.push_back(targets[i]);
-                g_pageIndexes.push_back(i);
-            }
-        }
-        const int pick = Pick::First(g_newTargets);
-        if (pick != Pick::None)
-            return g_pageIndexes[pick];
-    }
-    return Pick::First(targets);
-}
-
 // The d-pad or the stick moves the frame that way; false when it stayed (no target that way).
 bool Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pad::Step step, float scale)
 {
@@ -280,6 +263,7 @@ void PendSnap(Clock::time_point since)
     g_state.snapFrames = 0;
     g_state.snapSince = since;
     g_state.snapWindow = -1;
+    g_state.pageShownFrames = -1;
 }
 
 void Tick(Clock::time_point now, bool repeated)
@@ -368,7 +352,10 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     else
         g_state.lostFrames = 0;
     const bool buttonUp = !Pad::Pointer::IsButtonHeld(SDL_BUTTON_LEFT);
-    const bool lost = Waited(g_state.lostFrames, g_state.lostSince, now, SnapDelay) && buttonUp;
+    // While a page RT turned is on its way the old page's target the frame was on goes: the page's own
+    // snap takes the frame on, not the nearest target (a tab) first.
+    const bool pageTurning = g_state.snapPending && g_state.snapWindow >= 0;
+    const bool lost = Waited(g_state.lostFrames, g_state.lostSince, now, SnapDelay) && buttonUp && !pageTurning;
     if (dialogClosed)
     {
         // Back to where the frame was; the dialog's own snap and settle (it counted one window) are over.
@@ -386,7 +373,20 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
         g_state.goBack && Waited(g_state.goBackFrames, g_state.goBackSince, now, SnapDelay) && buttonUp;
     if (g_state.snapPending)
         ++g_state.snapFrames;
-    const bool snapNow = g_state.snapPending && Waited(g_state.snapFrames, g_state.snapSince, now, SnapDelay);
+    bool snapNow = g_state.snapPending && Waited(g_state.snapFrames, g_state.snapSince, now, SnapDelay);
+    if (g_state.snapPending && g_state.snapWindow >= 0)
+    {
+        if (g_state.pageShownFrames < 0 && PadTargets::TurnShown())
+            g_state.pageShownFrames = 0;
+        if (g_state.pageShownFrames >= 0)
+            ++g_state.pageShownFrames;
+        // Shown, laid out over the frames after, and with something past the tabs (a list the server
+        // fills in later); at the cap the frame takes what is there (an empty page: the tab turned to).
+        const bool laidOut = g_state.pageShownFrames > MinWaitFrames;
+        const bool ready = laidOut && Pick::HasPageTargets(targets, g_state.snapWindow);
+        if (!ready && now - g_state.snapSince < PageShowWait)
+            snapNow = false;
+    }
     if ((snapNow || lost || backNow) && !targets.empty())
     {
         g_state.lostFrames = 0;
@@ -400,7 +400,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
             const Point from = g_state.goBack ? g_state.backPlace : PointerPlace(scale);
             int pick = Pick::None;
             if (opened && g_state.snapWindow >= 0)
-                pick = FirstOnPage(targets, g_state.snapWindow);
+                pick = Pick::FirstOnPage(targets, g_state.snapWindow, PadTargets::TurnedControl());
             else if (opened || (backNow && g_state.goFirst))
                 pick = Pick::First(targets);
             else
@@ -414,6 +414,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
         {
             g_state.snapPending = false;
             g_state.snapWindow = -1;
+            g_state.pageShownFrames = -1;
         }
         g_state.settleFrames = opened ? 0 : -1;
         g_state.settleSince = now;
@@ -485,6 +486,14 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
             SnapSoon();
     }
     FollowStick(window, targets, current, scale, *context);
+    // The player moved the frame (the d-pad, the right stick) while a page RT turned was on its way: it
+    // stays where they took it, the page's snap is off (pad round 8).
+    if (g_state.snapPending && g_state.snapWindow >= 0 && (step.dx != 0 || step.dy != 0 || g_state.stickPushed))
+    {
+        g_state.snapPending = false;
+        g_state.snapWindow = -1;
+        g_state.pageShownFrames = -1;
+    }
 
     here = PointerPlace(scale);
     current = Pick::At(targets, here.x, here.y);

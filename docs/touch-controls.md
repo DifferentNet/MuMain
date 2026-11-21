@@ -452,7 +452,9 @@ sound: the first hop of a press always, a repeat while the d-pad or the stick is
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
 button). After RT turns a page or tab, the frame starts on that window's first target past its page
 controls (the new page's first cell or button, not a tab: `PadFrame::SnapToPage`), never on another
-window; a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
+window. It waits for the new page to show and lay out, at most 300 ms (pad round 8: `PadTargets::TurnShown`,
+`PadTargetPick::HasPageTargets`); a page with nothing past its tabs (the guild's empty Alliance page) leaves it
+on the turned-to tab, and a d-pad or stick move during the wait keeps the frame where the player took it; a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
 sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
@@ -461,7 +463,8 @@ says what the buttons do there (on an item: Take, Equip, Card, Close, with X nam
 there: Use on a potion or a scroll, none on a jewel or anything else X does nothing to, Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
 machine takes it; on an item in the chaos machine's box: Take, Move, Close; on a shop's goods: Buy,
 Close; on an empty cell or a worn slot with nothing in it: Close alone; with an item on the cursor: Put down, Drop, Put back;
-on a button: Press, Close); both keep left of the windows, wrapping when the room is
+on a button: Press, Close; with the right stick's pointer on no target, no X or Y: A Press, B Close, or A
+Repair in the bag's repair mode); both keep left of the windows, wrapping when the room is
 short. On the Skills tab the legend gives way to the skill picker's own, and the picker sits under the
 tabs:
 
@@ -481,6 +484,15 @@ tabs:
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
 that scrolls turn the wheel. The other buttons act as in the world.
 
+**More windows** (pad round 8, `UI/HUD/PadWindowNames`, tested in `tests/ui/test_pad_window_names.cpp`). The
+windows that place themselves take the frame too: the MU Helper's skill picker (A on a skill slot opens it; while
+it is open the frame rests only on it, A picks a skill, B closes the list, and the frame goes back to the slot), the
+friend list (RT turns its tabs), its letters (the name, the text and Send; the pad's keyboard types the text) and
+chat rooms (since /play round 33 a friend's Chat opens a whisper, so a room shows only when a friend opens one).
+Places only to look at carry the markup class `pad-look`: the frame rests on them as on a control, and the pointer
+on their middle shows what a mouse over them shows (the battle pass's reward icons with their cards, its three day
+chests and the week chest with their hints). The guild window's three tabs carry `pad-page`, so RT turns them.
+
 On the login, server and character screens the gold frame rests on their controls as on the windows:
 the d-pad and the left stick hop it, A presses there (a text field brings up the pad's keyboard), B
 is Esc and Menu Enter; a screen's message box takes the frame alone. On the bare character screen a
@@ -497,6 +509,16 @@ the start and those the Options switch opens say nothing, and in a browser a pad
 its first press. Help lists
 every button on a page of its own while the pad is in use (after the touch page with touch on too),
 and LB and RB turn the pages.
+
+**A lost connection** (pad round 8). The reconnect dialog (`UI/Dialogs/ReconnectDialog`) takes the frame on its
+Cancel in every scene, the world too (`PadWindowNames::IsWorldDialog`); the pad's overlay is drawn over it then
+(depth 50.5 over the dialog's 50: `RmlStackingOrder::PadOverlayOverReconnectDepth`). A presses Cancel, and B and
+Esc cancel too. On the login, character and loading screens any Esc does: the system menu no longer opens over the
+dialog (`CSceneUICoordinator::Update`) and the login window stays off (`CLoginWin`) while
+`ReconnectManager::IsActive`. In the world only an Esc no window took cancels: the hot keys pass it on
+(`UI::Reconnect::TakeEscape`), so an Esc that closes the bag or the chat line leaves the reconnect on; in the few
+world frames where the windows don't update (a map loading) the mouse or A on Cancel does it. In a browser Esc
+acts a few seconds late, as each connect attempt holds the page.
 
 | Piece | File | Role |
 |---|---|---|
@@ -532,9 +554,11 @@ The phone's own keyboard stays down while the pad types and comes back if a fing
 | View | English letters, Russian ones, then (the chat line only) the quick chat phrases |
 | LB, RB | Move the cursor (held, it repeats) |
 | Menu | Enter: send the chat line, log in |
+| Left stick click | On the chat's message line, the chat bar's next channel: All, Party, Guild, Gens, passing by the ones the hero is in none of (pad round 8, `UI/Chat/ChatChannelCycle`, tested in `tests/ui/test_chat_channel_cycle.cpp`); the keyboard names the channel a line goes to |
 
 A key a pad button also presses carries that button's glyph. A password field gets English letters
-only; a field that takes digits (`text-field--numeric`) gets a number pad. Buttons still held when
+only; a field that takes digits (`text-field--numeric`) gets a number pad. The guild's new name takes the pad's
+keyboard too, and Esc while it is typed closes the window as with no field (pad round 8, `CGuildMakeWindow::TakesTypingFrom`). Buttons still held when
 the keyboard closes act only once released, so the B that closed it does not also press Back.
 
 **Quick chat phrases** (pad round 6). Twelve phrases: Hello! / Thanks! / Invite me to the party / Wait for me /

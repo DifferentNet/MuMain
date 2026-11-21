@@ -2,6 +2,7 @@
 #include "UI/HUD/PadTargets.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/HUD/PadWindowNames.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/Placement/WindowPlacement.h"
 #include "UI/Inventory/InventoryContents.h"
@@ -25,10 +26,8 @@ namespace
 using PadTargetPick::Box;
 using PadTargetPick::Target;
 
-// The documents over the windows that are not windows themselves: the HUD's bar, the pad's own frame,
-// the tooltips.
-constexpr std::array<std::string_view, 5> NotWindows = {"main_frame.rml", "pad_overlay.rml", "tooltip.rml",
-                                                        "cursor_item.rml", "item_explanation.rml"};
+// The documents taken or left by their name (the HUD's bar, the floating windows, the reconnect dialog):
+// UI/HUD/PadWindowNames.
 // The menu on a player (trade, party, follow, duel): drawn low, yet a menu over the world the pad
 // answers as a dialog: the frame rests only on its rows, B closes it.
 constexpr std::string_view PlayerMenu = "quick_command.rml";
@@ -51,6 +50,10 @@ constexpr const char* GaugeClass = "level-gauge-hit";
 constexpr const char* SlotClass = "equip-slot";
 // The control a window marks for the frame to start on (PadTargetPick::Target::start).
 constexpr const char* StartClass = "pad-start";
+// A place only to look at (pad round 8, A2): it takes no click of its own, yet its hover tooltip or its
+// hint is worth reading (the battle pass's reward icons and chests). The frame rests on it as on a
+// control; the pointer on its middle shows what a mouse over it shows.
+constexpr const char* LookClass = "pad-look";
 // A window's tabs and its next-page control (TurnPage).
 constexpr const char* PageClass = "pad-page";
 constexpr const char* PageNextClass = "pad-page-next";
@@ -70,12 +73,17 @@ constexpr float CentredShare = 0.03f;
 constexpr std::array<const char*, 2> ClickAttributes = {"data-event-click", "onclick"};
 // The cross in a window's corner: B closes the window already, the frame does not stop on it.
 constexpr const char* CornerCloseId = "frame_corner_close";
+// A docked window's exit button: a target, yet no place to start a page on (PadTargetPick::FirstOnPage).
+constexpr const char* ExitId = "btn_exit";
 // A box this much of the screen or more is a panel, not a control.
 constexpr float LargestShare = 0.25f;
 // A target in a list less than this share on view is left out: the list scrolls to it first.
 constexpr float LeastShown = 0.5f;
 // An open dropdown's list (the settings window's): while one is open, the frame rests only on it.
 constexpr const char* PopupClass = "option-dropdown-list";
+// A popup window's root (the MU Helper's skill picker, PadWindowNames::IsPopupWindow): as a dropdown's
+// list, while it is open the frame rests only on it.
+constexpr const char* PopupWindowRoot = "panel";
 // How much of what a list shows one d-pad step past its end scrolls it by.
 constexpr float ListStepShare = 1.f / 3.f;
 // A window's lists the d-pad can scroll; more are left as they are.
@@ -120,14 +128,15 @@ bool IsWindow(Rml::ElementDocument& document)
     if (!document.IsVisible())
         return false;
     const std::string_view name = FileName(document.GetSourceURL());
-    for (const std::string_view excluded : NotWindows)
-    {
-        if (name == excluded)
-            return false;
-    }
+    if (PadWindowNames::IsNotWindow(name))
+        return false;
     if (g_screens)
         return name != CharacterBar;
     if (IsPlaced(document) || UI::Placement::IsWindowDocument(name) || name == PlayerMenu)
+        return true;
+    // The windows that place themselves under the workspace's depths (the skill picker, the friend list,
+    // letters, chat rooms), and the reconnect dialog over everything (pad round 8, A1 and A4).
+    if (PadWindowNames::IsFloatingWindow(name) || PadWindowNames::IsWorldDialog(name))
         return true;
     const std::optional<float> depth = UI::RmlBridge::StackingDepthForDocument(name);
     return depth && *depth >= FloatingDepth && *depth <= MessageBoxDepth;
@@ -140,10 +149,11 @@ bool IsTarget(Rml::Element& element)
     // A greyed control does nothing: the frame passes it by.
     if (element.HasAttribute("disabled") || element.IsClassSet("disabled"))
         return false;
-    if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass) || element.IsClassSet(GaugeClass))
+    if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass) || element.IsClassSet(GaugeClass)
+        || element.IsClassSet(LookClass))
         return true;
     const Rml::String& tag = element.GetTagName();
-    if (tag == "button" || tag == "input" || tag == "select")
+    if (tag == "button" || tag == "input" || tag == "select" || tag == "textarea")
         return true;
     // Many windows make their buttons from divs that only bind a click (the stat "+", the window buttons).
     for (const char* click : ClickAttributes)
@@ -212,6 +222,13 @@ public:
     void AddDocument(Rml::ElementDocument& document, int window)
     {
         m_Window = window;
+        // The skill picker hangs off the MU Helper's settings: its entries only, as a dropdown's options,
+        // and the frame goes back to the slot as it closes (PadFrame).
+        if (PadWindowNames::IsPopupWindow(FileName(document.GetSourceURL())))
+        {
+            if (Rml::Element* root = document.GetElementById(PopupWindowRoot))
+                m_Popup = root;
+        }
         Walk(document);
     }
 
@@ -305,6 +322,7 @@ private:
         target.start = element.IsClassSet(StartClass);
         target.gauge = element.IsClassSet(GaugeClass);
         target.page = element.IsClassSet(PageClass) || element.IsClassSet(PageNextClass);
+        target.exit = element.GetId() == ExitId;
         // A cell's classes are read once: its tint and its item.
         const Rml::String names = target.cell ? element.GetClassNames() : Rml::String{};
         target.empty = (target.cell && names.find(TintPrefix) == Rml::String::npos)
@@ -603,7 +621,19 @@ bool Usable(Rml::Element& element)
            && !element.IsClassSet("disabled") && !element.HasAttribute("disabled");
 }
 
-// The control TurnPage clicks in a document, null for none.
+// The tab whose page shows: the windows mark it one of these ways.
+bool IsActiveTab(const Rml::Element& element)
+{
+    return element.IsClassSet("active") || element.IsClassSet("selected") || element.IsClassSet("on")
+           || element.IsClassSet("active-tab");
+}
+
+// The control TurnPage pressed last, and whether it is a tab (its page shows once it is the active one)
+// rather than a next-page arrow (pad round 8).
+Rml::ObserverPtr<Rml::Element> g_turnedControl;
+bool g_turnedTab = false;
+
+// The control TurnPage presses in a document, null for none.
 Rml::Element* NextPageControl(Rml::ElementDocument& document)
 {
     Rml::ElementList found;
@@ -621,8 +651,7 @@ Rml::Element* NextPageControl(Rml::ElementDocument& document)
     {
         if (element == nullptr || !element->IsVisible(true))
             continue;
-        if (element->IsClassSet("active") || element->IsClassSet("selected") || element->IsClassSet("on")
-            || element->IsClassSet("active-tab"))
+        if (IsActiveTab(*element))
             active = static_cast<int>(tabs.size());
         tabs.push_back(element);
     }
@@ -683,11 +712,45 @@ int TurnPage(int window)
         control = PageControlFor(-1, turned);
     if (control == nullptr)
         return -1;
-    control->Click();
+    g_turnedControl = control->GetObserverPtr();
+    g_turnedTab = control->IsClassSet(PageClass) && !control->IsClassSet(PageNextClass);
+    // Most tabs take a click; some act on the press alone (the guild window's, pad round 8, A3), which a
+    // click does not send.
+    if (control->HasAttribute("data-event-mousedown") && !control->HasAttribute("data-event-click"))
+    {
+        Rml::Dictionary parameters;
+        parameters["button"] = 0;
+        control->DispatchEvent(Rml::EventId::Mousedown, parameters);
+    }
+    else
+        control->Click();
     g_pagesSeen.known = false;
     Refresh();
 
     return turned;
+}
+
+bool TurnShown()
+{
+    if (!g_turnedTab)
+        return true;
+    // A tab made again (the window's tabs drawn anew) went with its page's change.
+    const Rml::Element* control = g_turnedControl.get();
+    return control == nullptr || IsActiveTab(*control);
+}
+
+int TurnedControl()
+{
+    const Rml::Element* control = g_turnedControl.get();
+    if (control == nullptr)
+        return PadTargetPick::None;
+    const int count = static_cast<int>(g_collector.Targets().size());
+    for (int i = 0; i < count; ++i)
+    {
+        if (g_collector.Element(i) == control)
+            return i;
+    }
+    return PadTargetPick::None;
 }
 
 bool HasPages(int window)

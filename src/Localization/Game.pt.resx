@@ -13309,7 +13309,7 @@
     <value>{MENU}: o painel do herói (inventário, personagem, habilidades, missões, guilda, ajustes), {LB} e {RB} trocam suas abas. De novo: todas as janelas. Segure {MENU}: o chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Telas de login e de personagens: os analógicos movem o ponteiro</value>
+    <value>Telas de login e de personagens: o D-pad ou o analógico esquerdo movem a moldura, o analógico direito, o ponteiro</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Ali {A} clica, {B} é Esc, {MENU} é Enter</value>
@@ -13408,7 +13408,7 @@
     <value>D-pad ou analógico: teclas. {A}: apertar, {X}: apagar, {Y}: espaço, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: maiúsc., {RT}: símbolos, {VIEW}: inglês, russo, frases, {LB}/{RB}: cursor, {B}: fechar</value>
+    <value>{LT}: maiúsc., {RT}: símbolos, {VIEW}: inglês, russo, frases, {LB}/{RB}: cursor, {B}: fechar. No chat, aperte o {WALKSTICK_OBJ}: todos, grupo, guilda, gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Mana insuficiente</value>
@@ -14332,6 +14332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frases</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Guilda</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Negociar com um jogador: /trade Nome se ele estiver à vista; senão, com o jogador selecionado a qualquer distância ou com quem está à sua frente.</value>
@@ -14530,6 +14539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Setas: andar</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + clique em um item: mostrá-lo no chat</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Um item novo é melhor: segure D-pad direita para equipá-lo. No inventário {Y} abre a ficha do item (marca de lixo); num mercador, {A} no botão Vender lixo vende o lixo. O zen sob os seus pés é pego sozinho</value>

@@ -71,8 +71,8 @@ TEST_CASE("help key page: heading, F1-F4, engine hotkeys, the shipped keys, then
     const auto lines = UI::Help::BuildPage(0, {});
 
     // Spacer, heading, spacer, 4 + 6 + 15 key rows (the original's TextList), then spacer, MU Skynet
-    // heading, 6 key rows (the arrow keys' row last), spacer, the F1 hint, spacer.
-    REQUIRE(lines.size() == 39);
+    // heading, 7 key rows (the arrow keys' row, then the item link's last), spacer, the F1 hint, spacer.
+    REQUIRE(lines.size() == 40);
     CHECK(lines.front().halfSpacer);
     CHECK(lines[2].halfSpacer);
     CHECK(lines.back().halfSpacer);
@@ -94,9 +94,10 @@ TEST_CASE("help key page: heading, F1-F4, engine hotkeys, the shipped keys, then
     CHECK(lines[30].text == I18N::Game::HelpSkynetKeysEvents);
     CHECK(lines[34].text == I18N::Game::HelpSkynetKeysCommand);
     CHECK(lines[35].text == I18N::Game::HelpArrowKeys);
-    CHECK(lines[36].halfSpacer);
-    CHECK(lines[37].hint);
-    CHECK(lines[37].text == I18N::Game::HelpNextPageHint);
+    CHECK(lines[36].text == I18N::Game::HelpItemLink);
+    CHECK(lines[37].halfSpacer);
+    CHECK(lines[38].hint);
+    CHECK(lines[38].text == I18N::Game::HelpNextPageHint);
 }
 
 TEST_CASE("help chat page: heading, the sixteen chat rows, then MU Skynet's commands [ui][help]")

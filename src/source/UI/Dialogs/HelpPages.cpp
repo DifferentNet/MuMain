@@ -39,7 +39,7 @@ void AddHint(std::vector<UI::Help::PageLine>& lines, const wchar_t* text)
 }
 
 // MU Skynet's windows and the keys the original list left out. Two or three keys a row: the key
-// page has to stay above the bottom bar on a 1024x768 screen.
+// page has to stay above the bottom bar on a 1024x768 screen. Shift + click (an item into the chat) last.
 void AddSkynetKeyLines(std::vector<UI::Help::PageLine>& lines)
 {
     AddHalfSpacer(lines);
@@ -48,6 +48,7 @@ void AddSkynetKeyLines(std::vector<UI::Help::PageLine>& lines)
     const wchar_t* const keyLines[] = {
         I18N::Game::HelpSkynetKeysEvents, I18N::Game::HelpSkynetKeysPass,    I18N::Game::HelpSkynetKeysMap,
         I18N::Game::HelpSkynetKeysHelper, I18N::Game::HelpSkynetKeysCommand, I18N::Game::HelpArrowKeys,
+        I18N::Game::HelpItemLink,
     };
     for (const wchar_t* line : keyLines)
         AddText(lines, line);

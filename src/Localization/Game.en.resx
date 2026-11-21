@@ -15706,7 +15706,7 @@
     <value>{MENU}: the hero hub (inventory, character, skills, quests, guild, settings), {LB} and {RB} turn its tabs. Again: every window. Hold {MENU}: the chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Login and character screens: the sticks move the pointer</value>
+    <value>Login and character screens: the D-pad or the left stick moves the frame, the right stick the pointer</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>There {A} clicks, {B} is Esc, {MENU} is Enter</value>
@@ -15805,7 +15805,7 @@
     <value>D-pad or stick: keys. {A}: press, {X}: erase, {Y}: space, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: symbols, {VIEW}: English, Russian, phrases, {LB}/{RB}: cursor, {B}: close</value>
+    <value>{LT}: shift, {RT}: symbols, {VIEW}: English, Russian, phrases, {LB}/{RB}: cursor, {B}: close. In chat, click the {WALKSTICK_OBJ}: All, Party, Guild, Gens</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
@@ -16129,7 +16129,7 @@
     <value>O : Event timer  ·  N : Daily rewards</value>
   </data>
   <data name="HelpSkynetKeysPass" xml:space="preserve">
-    <value>X : Battle pass  ·  I + K : Jewel bank</value>
+    <value>X : Battle pass  ·  K : Jewel bank</value>
   </data>
   <data name="HelpSkynetKeysMap" xml:space="preserve">
     <value>M : Warp map  ·  Tab : Mini map  ·  T : Quests</value>
@@ -17332,6 +17332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Phrases</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Trade with a player: /trade Name when they are in sight, else the player you selected at any distance, or the one who faces you.</value>
@@ -17530,6 +17539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Arrow keys: walk</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + click an item: show it in chat</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>A new item that is better: hold D-pad right to put it on. In the bag {Y} opens the item card (junk mark); at a merchant {A} on the Sell junk button sells the junk. Zen under your feet is picked up by itself</value>

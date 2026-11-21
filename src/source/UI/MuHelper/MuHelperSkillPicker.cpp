@@ -87,6 +87,13 @@ float CMuHelperSkillPicker::GetLayerDepth()
     return 5.45f;
 }
 
+// Before the config window's (3.4), which closes both on Esc: Esc, and the pad's B that taps it, closes
+// the flyout first and leaves the config window open (pad round 8, A1).
+float CMuHelperSkillPicker::GetKeyEventOrder()
+{
+    return 3.45f;
+}
+
 void CMuHelperSkillPicker::FilterByAttackSkills()
 {
     m_bFilterByAttackSkills = true;

@@ -13309,7 +13309,7 @@
     <value>{MENU}: ang hero hub (inventory, karakter, skill, quest, guild, settings), ang {LB} at {RB} ang nagpapalit ng tab nito. Ulit: lahat ng window. Hawakan ang {MENU}: ang chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Login at screen ng karakter: ang mga stick ang nagpapagalaw ng pointer</value>
+    <value>Login at screen ng karakter: ang D-pad o kaliwang stick ang nagpapagalaw ng frame, ang kanang stick ang sa pointer</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Doon, ang {A} ay click, ang {B} ay Esc, ang {MENU} ay Enter</value>
@@ -13408,7 +13408,7 @@
     <value>D-pad o stick: mga key. {A}: pindutin, {X}: burahin, {Y}: espasyo, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: mga simbolo, {VIEW}: Ingles, Ruso, parirala, {LB}/{RB}: cursor, {B}: isara</value>
+    <value>{LT}: shift, {RT}: mga simbolo, {VIEW}: Ingles, Ruso, parirala, {LB}/{RB}: cursor, {B}: isara. Sa chat, pindutin ang {WALKSTICK_OBJ}: lahat, party, guild, gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Kulang ang mana</value>
@@ -14332,6 +14332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Parirala</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Lahat</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Makipagpalitan sa player: /trade Pangalan kung nakikita siya; kung hindi, sa player na pinili mo kahit gaano kalayo, o sa nakaharap sa iyo.</value>
@@ -14530,6 +14539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Arrow keys: lakad</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + click sa item: ipakita ito sa chat</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Mas maganda ang bagong item: hawakan ang D-pad pakanan para isuot ito. Sa inventory, {Y} ang nagbubukas ng card ng item (marka ng basura); sa merchant, {A} sa button na Ibenta ang basura ang nagbebenta ng basura. Kusang napupulot ang zen sa ilalim ng paa mo</value>

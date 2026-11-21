@@ -414,6 +414,10 @@ void SetEnabled(bool enabled)
             if (pad.handle != nullptr)
                 ClosePad(pad);
         }
+        // With the pads closed no pad's fine battery or unplugging takes a low battery's line back: the
+        // line goes with them, else it would show on the next pad turned on (pad round 8, D1).
+        g_batteryNews = -1;
+        g_batteryNewsPad = 0;
     }
     mu::log::Get("input")->info("Gamepad {}", enabled ? "on" : "off");
 }

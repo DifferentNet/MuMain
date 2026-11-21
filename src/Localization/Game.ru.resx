@@ -15283,7 +15283,7 @@
     <value>{MENU}: центр героя (инвентарь, персонаж, навыки, квесты, гильдия, настройки), {LB} и {RB} листают вкладки. Ещё раз: все окна. Держите {MENU} — чат</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Экраны входа и выбора персонажа: стики двигают курсор</value>
+    <value>Экраны входа и выбора персонажа: крестовина или левый стик двигают рамку, правый стик — курсор</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Там {A} кликает, {B} = Esc, {MENU} = Enter</value>
@@ -15382,7 +15382,7 @@
     <value>Крестовина или стик: клавиши. {A}: нажать, {X}: стереть, {Y}: пробел, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: заглавные, {RT}: символы, {VIEW}: английский, русский, фразы, {LB}/{RB}: курсор, {B}: закрыть</value>
+    <value>{LT}: заглавные, {RT}: символы, {VIEW}: английский, русский, фразы, {LB}/{RB}: курсор, {B}: закрыть. В чате нажмите {WALKSTICK_OBJ}: все, группа, гильдия, генс</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Чтобы очистить ячейку навыка, удерживайте её (R3 на геймпаде)</value>
@@ -15706,7 +15706,7 @@
     <value>O : Расписание ивентов  ·  N : Ежедневные награды</value>
   </data>
   <data name="HelpSkynetKeysPass" xml:space="preserve">
-    <value>X : Боевой пропуск  ·  I + K : Банк камней</value>
+    <value>X : Боевой пропуск  ·  K : Банк камней</value>
   </data>
   <data name="HelpSkynetKeysMap" xml:space="preserve">
     <value>M : Перемещение  ·  Tab : Мини-карта  ·  T : Квесты</value>
@@ -17332,6 +17332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Фразы</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Гильдия</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Генс</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Обмен с игроком: /trade Имя, если он рядом; иначе с выбранным игроком на любом расстоянии или с тем, кто стоит напротив.</value>
@@ -17530,6 +17539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Стрелки: ходьба</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + клик по предмету: показать его в чате</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Новый предмет лучше надетого: удерживайте крестовину вправо, чтобы надеть. В сумке {Y} открывает карточку предмета (метка «хлам»); у торговца {A} на кнопке «Продать хлам» продаёт хлам. Зен под ногами подбирается сам</value>

@@ -116,9 +116,6 @@ namespace mu::ui::window
 
         void Init();
 
-        void SetInputMsgType(int iInputMsgType);
-        int GetInputMsgType() const;
-
         void BuildRmlUi();
         void SyncRmlModel();
         // Focus/value access for the two <input>s, so the key handler below never has to know they
@@ -243,6 +240,10 @@ namespace mu::ui::window
         // sends a line; the pad keyboard's phrase page and a phone's chips. The bar must be open. False when nothing
         // went: an unknown id, or the pause shared with the macros (TakeQuickPhrasePause).
         bool SendPhrase(int id);
+        // The channel a line goes to (INPUT_MESSAGE_TYPE): the bar's buttons, the pad keyboard's left stick
+        // click (pad round 8, B1).
+        void SetInputMsgType(int iInputMsgType);
+        int GetInputMsgType() const;
 
         bool IsBlockWhisper();
         void SetBlockWhisper(bool bBlockWhisper);

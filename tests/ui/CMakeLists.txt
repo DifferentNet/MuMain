@@ -651,6 +651,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadTargetPick.cpp
 )
 
+# Pad round 8, A1: the documents the pad's frame takes for windows by their file name.
+mu_add_test(
+    NAME pad_window_names_tests
+    SOURCES
+        test_pad_window_names.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadWindowNames.cpp
+)
+
 # mu_swprintf into an array cuts a long text instead of writing past the array (round 10, B1).
 mu_add_test(
     NAME bounded_wide_format_tests
@@ -722,6 +730,14 @@ mu_add_test(
     SOURCES
         test_chat_phrases.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatPhrases.cpp
+)
+
+# Pad round 8, B1: the pad keyboard's chat channel, All and the hero's Party, Guild, Gens in turn.
+mu_add_test(
+    NAME chat_channel_cycle_tests
+    SOURCES
+        test_chat_channel_cycle.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatChannelCycle.cpp
 )
 
 # Round 13: trade offer change, pet life, new skill, warp unlocks, character preselect, short of mana gate.

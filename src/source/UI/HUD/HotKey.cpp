@@ -11,6 +11,7 @@
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h" // g_pGenericConfirmDialog
 #include "UI/Dialogs/GenericMenuDialog.h" // g_pGenericMenuDialog
+#include "UI/Dialogs/ReconnectDialog.h" // TakeEscape
 #include "Audio/DSPlaySound.h"
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "GameLogic/Events/w_CursedTemple.h"
@@ -27,6 +28,7 @@
 #endif // KJH_ADD_INGAMESHOP_UI_SYSTEM
 
 #include "MUHelper/MuHelper.h"
+#include "Network/Reconnect/ReconnectManager.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Core/Input/UiInputRouter.h"
 #include "UI/HUD/MainFrameWindow.h"
@@ -182,6 +184,13 @@ bool mu::ui::window::CHotKey::UpdateMouseEvent()
 
 bool mu::ui::window::CHotKey::UpdateKeyEvent()
 {
+    // A reconnect under way: an Esc no window took is its Cancel (UI/Dialogs/ReconnectDialog), not the
+    // system menu over it.
+    if (mu::ui::window::IsPress(VK_ESCAPE) && ReconnectManager::Instance().IsActive())
+    {
+        UI::Reconnect::TakeEscape();
+        return false;
+    }
     if (mu::ui::window::IsPress(VK_ESCAPE) == true)
     {
         // g_MessageBox->IsEmpty() only sees native CMessageBoxBase-family boxes -- the
