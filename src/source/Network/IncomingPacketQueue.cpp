@@ -16,7 +16,8 @@ namespace
 
     int GetActionEntityKey(const PacketInfo& packet)
     {
-        if (packet.Size < static_cast<int32_t>(sizeof(PRECEIVE_ACTION)))
+        // A friend chat room's packet is never a game server action, whatever its bytes.
+        if (packet.ChatRoom || packet.Size < static_cast<int32_t>(sizeof(PRECEIVE_ACTION)))
         {
             return -1;
         }

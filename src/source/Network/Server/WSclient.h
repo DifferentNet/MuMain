@@ -3610,6 +3610,8 @@ struct PacketInfo
     std::chrono::steady_clock::time_point EnqueuedAt;
     bool Superseded = false;
     bool SuppressOptionalPresentation = false;
+    // A friend chat room's packet (CUIChatWindow); every other packet is the game server's.
+    bool ChatRoom = false;
 };
 void ProcessPacketCallback(const PacketInfo* Packet);
 
