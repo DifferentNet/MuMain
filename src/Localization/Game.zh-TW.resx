@@ -14540,11 +14540,11 @@
   </data>
   <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
   <data name="TooltipShiftForDetails" xml:space="preserve">
-    <value>Hold Shift for details</value>
+    <value>按住 Shift 查看詳情</value>
   </data>
   <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
   <data name="HudEffects" xml:space="preserve">
-    <value>HUD animation</value>
+    <value>介面動畫</value>
   </data>
   <data name="No network" xml:space="preserve">
     <value>沒有網路</value>

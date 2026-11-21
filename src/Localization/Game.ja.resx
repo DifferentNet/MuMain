@@ -12630,11 +12630,11 @@
   </data>
   <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
   <data name="TooltipShiftForDetails" xml:space="preserve">
-    <value>Hold Shift for details</value>
+    <value>Shiftで詳細表示</value>
   </data>
   <!-- Live HUD (Skynet theme): Options > Interface, the gems' and rings' animation -->
   <data name="HudEffects" xml:space="preserve">
-    <value>HUD animation</value>
+    <value>HUDアニメーション</value>
   </data>
   <data name="No network" xml:space="preserve">
     <value>ネットワーク未接続</value>
