@@ -66,15 +66,19 @@ std::string GameLocaleForTag(std::string_view tag)
     return {};
 }
 
-FirstVisitLocale PickFirstVisitLocale(std::string_view siteLanguage, const std::vector<std::string>& browserLanguages)
+FirstVisitLocale PickFirstVisitLocale(std::string_view siteLanguage, const std::vector<std::string>& browserLanguages,
+                                      bool withHanFonts)
 {
-    if (std::string code = GameLocaleForTag(siteLanguage); !code.empty())
+    // Japanese and traditional Chinese are the game's languages written with the Han font.
+    const auto usable = [withHanFonts](const std::string& code)
+    { return !code.empty() && (withHanFonts || (code != "ja" && code != "zh-TW")); };
+    if (std::string code = GameLocaleForTag(siteLanguage); usable(code))
     {
         return {std::move(code), true};
     }
     for (const std::string& tag : browserLanguages)
     {
-        if (std::string code = GameLocaleForTag(tag); !code.empty())
+        if (std::string code = GameLocaleForTag(tag); usable(code))
         {
             return {std::move(code), false};
         }

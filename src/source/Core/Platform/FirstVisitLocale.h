@@ -25,9 +25,12 @@ struct FirstVisitLocale
 
 // siteLanguage: the language picked on the site (/play/?lang=, kept by the page), empty when none;
 // browserLanguages: navigator.languages, most wanted first. An English site choice wins over the
-// browser too: the code is then "en".
+// browser too: the code is then "en". withHanFonts false (the browser build) passes over Japanese and
+// traditional Chinese: their font comes only after the first map there (BundledFonts.h
+// IsLateFallbackFont), so the login would show boxes; Options still offers them.
 [[nodiscard]] FirstVisitLocale PickFirstVisitLocale(std::string_view siteLanguage,
-                                                    const std::vector<std::string>& browserLanguages);
+                                                    const std::vector<std::string>& browserLanguages,
+                                                    bool withHanFonts = true);
 
 // True when the language picked on the site (siteLanguage, as for PickFirstVisitLocale) is not the one the
 // game saw on the last visit (lastSiteLanguage, kept by the page; empty before the first time). The game

@@ -50,6 +50,12 @@ TEST_CASE("PickFirstVisitLocale: the site's choice, then the browser, then none"
     CHECK(PickFirstVisitLocale("", {"de-DE", "ru"}).code == "de");
     CHECK(PickFirstVisitLocale("", {"ro", "fr-FR"}).code.empty());
     CHECK(PickFirstVisitLocale("", {}).code.empty());
+
+    // The browser build passes over the languages whose font comes late, to the next one.
+    CHECK(PickFirstVisitLocale("", {"ja-JP", "en-US"}).code == "ja");
+    CHECK(PickFirstVisitLocale("", {"ja-JP", "en-US"}, false).code == "en");
+    CHECK(PickFirstVisitLocale("", {"zh-TW", "zh"}, false).code.empty());
+    CHECK(PickFirstVisitLocale("", {"uk-UA", "ja"}, false).code == "uk");
 }
 
 TEST_CASE("SiteLanguageChanged: a new choice on the site, not a missing one")

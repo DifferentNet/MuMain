@@ -715,27 +715,39 @@ EM_JS(char*, MuWeb_PageLanguages, (), {
     return stringToNewUTF8([site].concat(browser).join("\n"));
 });
 
-// The site's language the game saw on the last visit (empty before the first time); keeps site (when not
-// empty) for the next one.
-EM_JS(char*, MuWeb_SwapSiteLanguage, (const char* site), {
+// The site's language the game saw on the last visit; empty before the first time.
+EM_JS(char*, MuWeb_LastSiteLanguage, (), {
     let last = "";
     try {
         last = localStorage.getItem("mu-web/game-site-lang") || "";
+    } catch (e) {
+    }
+    return stringToNewUTF8(last);
+});
+
+// Keeps site (when not empty) as the language the game has seen, after the config.ini that holds the
+// language picked for it (configText; null when the language stayed): index.html's saveConfig keeps
+// config.ini only every 3 s, and a game that crashed before would come back with the old language and
+// the new site language marked as seen. No storage room for the config: the site's isn't marked either.
+EM_JS(void, MuWeb_KeepSiteLanguage, (const char* site, const char* configText), {
+    try {
+        if (configText) {
+            localStorage.setItem("mu-web/config.ini", UTF8ToString(configText));
+        }
         const now = UTF8ToString(site);
         if (now) {
             localStorage.setItem("mu-web/game-site-lang", now);
         }
     } catch (e) {
     }
-    return stringToNewUTF8(last);
 });
 
 // The game's language for this visit (Core/Platform/FirstVisitLocale.h), into config's [UI] Locale. A
 // browser's first visit (no config.ini kept) plays in the site's or the browser's language when the game
 // has it, the template's English otherwise. A later visit keeps the player's language, unless the language
 // picked on the site changed since the last visit: then the game picks again as on a first visit, so the
-// page and the game speak the same language (ghinzuro 2026-11-21). index.html keeps the changed config.ini
-// (saveConfig, every 3 s), so the next visit starts with it.
+// page and the game speak the same language (ghinzuro 2026-11-21). The changed config.ini is kept at once
+// (MuWeb_KeepSiteLanguage), so the next visit starts with it.
 void PickGameLocale(std::string& config, bool firstVisit)
 {
     char* text = MuWeb_PageLanguages();
@@ -754,7 +766,7 @@ void PickGameLocale(std::string& config, bool firstVisit)
     std::free(text);
     const std::string site = lines.front();
     lines.erase(lines.begin());
-    char* last = MuWeb_SwapSiteLanguage(site.c_str());
+    char* last = MuWeb_LastSiteLanguage();
     const bool siteChanged = Core::Platform::SiteLanguageChanged(site, last);
     std::free(last);
     if (!firstVisit && !siteChanged)
@@ -763,14 +775,17 @@ void PickGameLocale(std::string& config, bool firstVisit)
     }
     const std::string why = firstVisit ? std::string("first visit in this browser")
                                        : "the site's language changed (" + site + ")";
-    const Core::Platform::FirstVisitLocale pick = Core::Platform::PickFirstVisitLocale(site, lines);
+    // Japanese and traditional Chinese wait for Options: their font comes after the first map here.
+    const Core::Platform::FirstVisitLocale pick = Core::Platform::PickFirstVisitLocale(site, lines, false);
     if (!pick.code.empty() && Core::Platform::SetConfigLocale(config, pick.code))
     {
+        MuWeb_KeepSiteLanguage(site.c_str(), config.c_str());
         std::printf("Web file system: %s, the game's language %s (from %s)\n", why.c_str(), pick.code.c_str(),
                     pick.fromSite ? "the site" : "the browser");
     }
     else
     {
+        MuWeb_KeepSiteLanguage(site.c_str(), nullptr);
         std::printf("Web file system: %s, the game's language stays %s\n", why.c_str(),
                     firstVisit ? "English" : "as it was");
     }
