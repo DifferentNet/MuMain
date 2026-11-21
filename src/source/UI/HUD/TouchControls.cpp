@@ -1271,6 +1271,15 @@ struct BoxesMeasure
     float screenWidth = 0.f;
     float screenHeight = 0.f;
     int skillSlots = 0;
+    // The pieces the party's cards, the chat and the system messages keep clear of that show and hide on
+    // their own: the quick equip chip and its text (another offer sizes it anew), the potion buttons (a bit
+    // each, Q W E R) and the hero frame's width in whole pixels (a sub-pixel change is no change). And
+    // fingers or the pad playing: the pad's layout puts the controls elsewhere (body.no-touch).
+    bool offerShown = false;
+    Rml::String offerText;
+    unsigned potionsShown = 0;
+    int heroWidth = 0;
+    bool fingers = false;
     // Frames still measured at once after such a change: the new layout may only show on the next.
     int eagerFrames = 0;
 };
@@ -2901,21 +2910,73 @@ void SyncUnderWindow(Rml::ElementDocument* document, bool panelOpen, bool pickin
     MarkControlsUnderWindows(document, picking);
 }
 
+// Whether a control is laid out as the last frame left it, by its element's own flags: no box is read.
+bool IsControlLaidOut(Rml::ElementDocument* document, int control)
+{
+    Rml::Element* element = FindElement(document, ControlElement(control));
+    return element != nullptr && IsLaidOut(element);
+}
+
+constexpr std::array<int, 4> PotionControls{KeyButtonControl("tc_potion_q"), KeyButtonControl("tc_potion_w"),
+                                            KeyButtonControl("tc_potion_e"), KeyButtonControl("tc_potion_r")};
+constexpr int HeroFrameControl = KeyButtonControl("tc_hero");
+static_assert(std::ranges::none_of(PotionControls, [](int control) { return control < 0; }) && HeroFrameControl >= 0);
+
+// The potion buttons laid out, a bit each in PotionControls' order.
+unsigned PotionsShown(Rml::ElementDocument* document)
+{
+    unsigned shown = 0;
+    for (size_t potion = 0; potion < PotionControls.size(); ++potion)
+    {
+        if (IsControlLaidOut(document, PotionControls[potion]))
+            shown |= 1u << potion;
+    }
+    return shown;
+}
+
+// The hero frame's width in whole pixels, 0 while it is not laid out: its box as the last frame laid it
+// out (no layout is asked for).
+int HeroWidth(Rml::ElementDocument* document)
+{
+    Rml::Element* element = FindElement(document, ControlElement(HeroFrameControl));
+    if (element == nullptr || !IsLaidOut(element))
+        return 0;
+    return static_cast<int>(std::lround(element->GetBox().GetSize(Rml::BoxArea::Border).x));
+}
+
 // Whether this frame measures the boxes (MeasureBoxesNow): every frame while a panel of the controls is
 // open, on the frames after a change of the layout or the windows, else four times a second; between
-// those a finger or the pad's A reads them fresh (EnsureBoxes).
+// those a finger or the pad's A reads them fresh (EnsureBoxes). The quick equip chip showing, hiding or
+// taking another offer, a potion button showing or hiding, the hero frame's width and a switch between
+// fingers and the pad count as a change of the layout: the party's cards, the chat and the system messages
+// move off them on the same frame (FollowNeighbours).
 bool IsMeasureDue(Rml::ElementDocument* document, const ControlsModel& model)
 {
     g_measure.lazy = !model.menuOpen && !model.pickerOpen && !model.socialOpen;
     const Rml::Vector2f screen = document->GetBox().GetSize(Rml::BoxArea::Border);
     const int skillSlots = ActiveSlots();
+    // The chip's own element: besides offer_shown, the bind hint, the picker, the map and the pad's
+    // layout hide it (touch_controls.rcss).
+    const bool offerShown = IsControlLaidOut(document, OfferControl);
+    // Another offer while the chip stays shown; the text is copied only when it changed.
+    const bool offerTextChanged = model.offerText != g_measure.offerText;
+    if (offerTextChanged)
+        g_measure.offerText = model.offerText;
+    const unsigned potionsShown = PotionsShown(document);
+    const int heroWidth = HeroWidth(document);
     const bool layoutChanged = model.quickOpen != g_measure.quickOpen || screen.x != g_measure.screenWidth ||
                                screen.y != g_measure.screenHeight || skillSlots != g_measure.skillSlots ||
-                               g_windowsChanged;
+                               offerShown != g_measure.offerShown || (offerShown && offerTextChanged) ||
+                               potionsShown != g_measure.potionsShown || heroWidth != g_measure.heroWidth ||
+                               model.fingers != g_measure.fingers || g_windowsChanged;
     g_measure.quickOpen = model.quickOpen;
     g_measure.screenWidth = screen.x;
     g_measure.screenHeight = screen.y;
     g_measure.skillSlots = skillSlots;
+    g_measure.offerShown = offerShown;
+    g_measure.potionsShown = potionsShown;
+    g_measure.heroWidth = heroWidth;
+    g_measure.fingers = model.fingers;
     if (layoutChanged)
         g_measure.eagerFrames = EagerFramesAfterChange;
     const bool eager = g_measure.eagerFrames > 0;
