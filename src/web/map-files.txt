@@ -1910,6 +1910,9 @@
 3 Data/Sound/Doppelganger/Lugard.wav
 3 Data/NPC/skin_barbarian_01.OZJ
 3 Data/NPC/ju01_R.OZJ
+# Added 2026-11-21 (round 32): Lahap's second texture (npc_mulyak.bmd names it; the trace saw it first under
+# NpcClerk.bmd), read one by one in Devias when the monster preload makes him on a computer
+3 Data/NPC/receiptnpc_2.OZT
 4 Data/Object1/Butterfly01.bmd
 4 Data/Object1/Butterfly.OZT
 4 Data/NPC/warp01.bmd
@@ -2021,6 +2024,9 @@
 52 Data/Sound/w52/SE_Obj_watersmall01.wav
 52 Data/Sound/w52/SE_Amb_ravine01.wav
 52 Data/Sound/w52/SE_Amb_enteratlance01.wav
+# Added 2026-11-21 (round 32): Lahap's second texture (npc_mulyak.bmd names it; the trace saw it first under
+# NpcClerk.bmd); Lahap also stands in Elbeland, where the monster preload makes him on a computer too
+52 Data/NPC/receiptnpc_2.OZT
 57 Data/Effect/MAP_SMOKE1.OZJ
 57 Data/Effect/MAP_SMOKE2.OZT
 57 Data/Monster/red_shadows.OZJ

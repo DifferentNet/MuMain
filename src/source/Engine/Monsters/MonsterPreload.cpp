@@ -11,6 +11,10 @@
 #include "Render/Sprites/GlobalBitmap.h"
 #include "World/MapInfra/MapManager.h"
 
+#ifdef __EMSCRIPTEN__
+#include "UI/Mobile/InterfaceMode.h"
+#endif
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -32,11 +36,19 @@ namespace Engine::Monsters
         static_assert(DryRunKey < 0 && DryRunKey != -1, "the dry run's key must be one the server never sends");
 
 #ifdef __EMSCRIPTEN__
-        // The browser client brings a map's monster files in its map pack (tools/web/make_map_files.py);
-        // creating the models up front would cost phones memory and a longer freeze.
-        constexpr bool PreloadOnThisPlatform = false;
+        // The browser client preloads on a computer. A phone or tablet (UI::Mobile::IsHandheld) doesn't:
+        // creating the models up front would cost it memory and a longer freeze. There the map's pack
+        // (tools/web/make_map_files.py) still brings the map's monster files, so a type's first sight
+        // reads them from memory, not the network.
+        bool PreloadOnThisDevice()
+        {
+            return !UI::Mobile::IsHandheld();
+        }
 #else
-        constexpr bool PreloadOnThisPlatform = true;
+        constexpr bool PreloadOnThisDevice()
+        {
+            return true;
+        }
 #endif
 
         // LoadingWorld after a map entry (WSclient.cpp); a gate's 9999999 only waits for the server's
@@ -245,7 +257,7 @@ namespace Engine::Monsters
 
     void PreloadMap(int map, bool countdownFollows)
     {
-        if constexpr (!PreloadOnThisPlatform)
+        if (!PreloadOnThisDevice())
         {
             return;
         }
@@ -272,7 +284,7 @@ namespace Engine::Monsters
 
     void RunPendingStep(int loadingWorld)
     {
-        if constexpr (!PreloadOnThisPlatform)
+        if (!PreloadOnThisDevice())
         {
             return;
         }

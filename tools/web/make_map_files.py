@@ -39,11 +39,12 @@ The game opens some monsters' models only on their own maps (the Kalima ones); t
 has their model's number but no file. Those are named by the number, Data/Monster/Monster<NN>.bmd, and
 get the textures the model names (model_textures.py).
 
-With --monsters-out it also writes the PC client's src/bin/Data/Local/MapMonsters.txt, "<map> <monster>"
-lines from --spawns: the monster types the client loads behind a map's loading screen
-(Engine/Monsters/MonsterPreload.cpp, config.ini [Render] PreloadMonsters). A type whose model the
-client doesn't have (a model file the trace names, or a Kalima one's by its number, missing from
---root) or that the trace doesn't know is left out: the client would open nothing for it.
+With --monsters-out it also writes src/bin/Data/Local/MapMonsters.txt, "<map> <monster>" lines from
+--spawns: the monster types the client loads behind a map's loading screen, on the PC client and on
+/play on a computer, not on a phone or tablet (Engine/Monsters/MonsterPreload.cpp, config.ini
+[Render] PreloadMonsters). A type whose model the client doesn't have (a model file the trace names,
+or a Kalima one's by its number, missing from --root) or that the trace doesn't know is left out: the
+client would open nothing for it.
 """
 import argparse
 import collections
@@ -113,8 +114,8 @@ def main():
     parser.add_argument("--out", default=os.path.join(REPO_ROOT, "src", "web", "map-files.txt"),
                         help="the map list; its block of files added by hand is kept (the module's docstring)")
     parser.add_argument("--models-out", default=os.path.join(REPO_ROOT, "src", "web", "model-files.txt"))
-    parser.add_argument("--monsters-out", help="also write the PC client's monster preload list here "
-                        "(src/bin/Data/Local/MapMonsters.txt)")
+    parser.add_argument("--monsters-out", help="also write the monster preload list of the PC client and "
+                        "of /play on a computer here (src/bin/Data/Local/MapMonsters.txt)")
     args = parser.parse_args()
 
     with open(os.path.join(args.root, "files.txt"), encoding="utf-8") as f:
