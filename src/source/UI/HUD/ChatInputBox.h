@@ -244,6 +244,9 @@ namespace mu::ui::window
         // click (pad round 8, B1).
         void SetInputMsgType(int iInputMsgType);
         int GetInputMsgType() const;
+        // A line goes out as a whisper, whatever the channel: whisper send on and a name in the whisper field
+        // (as Enter sends it). The pad keyboard then names no channel (pad round 8 review).
+        bool SendsWhisper();
 
         bool IsBlockWhisper();
         void SetBlockWhisper(bool bBlockWhisper);

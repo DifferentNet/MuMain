@@ -439,6 +439,11 @@ mu::ui::window::CChatInputBox::type_string mu::ui::window::CChatInputBox::ItemLi
     return whisperId;
 }
 
+bool mu::ui::window::CChatInputBox::SendsWhisper()
+{
+    return !ItemLinkWhisperTarget().empty();
+}
+
 void mu::ui::window::CChatInputBox::EchoWhisperWithItems(const type_string& whisperId, const type_string& text)
 {
     const type_string echo = WhisperEchoText(whisperId.c_str(), text.c_str());
