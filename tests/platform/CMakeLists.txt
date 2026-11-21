@@ -35,6 +35,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME first_visit_locale_tests
+    SOURCES
+        test_first_visit_locale.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Platform/FirstVisitLocale.cpp
+)
+
+mu_add_test(
     NAME secure_crt_tests
     SOURCES
         test_secure_crt.cpp
