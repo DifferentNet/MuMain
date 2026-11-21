@@ -78,6 +78,9 @@ namespace UI::RmlBridge
     // Whether the active theme's inventory cells show an item's rarity and upgrade band
     // (ItemRarityCells=1) -- see UI/Inventory/ItemCellRarityClass.h.
     bool ThemeHasItemRarityCells();
+    // Whether the active theme's HUD has live gauges (LiveHud=1): liquid gems driven from C++ over
+    // the shared main_frame.rml's `live-only` elements -- see UI/HUD/LiveHud.h.
+    bool ThemeHasLiveHud();
 
     // Builds the virtual source URL a themed document should be loaded against, e.g.
     // "Data/Interface/RmlUi/themes/modern/login.rml" -- this path need not exist on disk (the RML

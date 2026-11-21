@@ -11,6 +11,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/HUD/ItemHotKey.h"
+#include "UI/HUD/LiveHud.h"
 #include "UI/HUD/SkillList.h"
 
 #include <memory>
@@ -196,6 +197,8 @@ namespace mu::ui::window
         void SyncButtons();
         void SyncAlerts();
         void SyncSkillRow();
+        // The live gems under a theme with LiveHud=1 (UI/HUD/LiveHud.h), from the hero's values or $hudtest's.
+        void SyncLiveHud(Rml::ElementDocument* document);
         void SyncItemSlots();
         void SyncSkillList();
         void SyncSkillTooltip();
@@ -241,6 +244,7 @@ namespace mu::ui::window
         // sync ran under the phone's HUD.
         const Rml::ElementDocument* m_pSyncedDocument = nullptr;
         bool m_bSyncedPhoneHud = false;
+        UI::HUD::LiveHud m_LiveHud;
         // The HUD, and its top-right button row on the same model: a document of its own so it
         // stacks under the windows docked over that corner while the bars stay over them
         // (RmlStackingOrder.cpp).

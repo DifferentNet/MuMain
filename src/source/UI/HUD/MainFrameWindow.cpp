@@ -24,6 +24,7 @@
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
+#include "UI/HUD/LiveHudTest.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/ExperiencePaceText.h"
 #include "UI/Text/GroupedNumberText.h"
@@ -51,8 +52,10 @@
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "Core/Utilities/StringUtils.h"
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
+#include <RmlUi/Core/SystemInterface.h>
 #include "GameLogic/Quests/QuestMng.h"
 #include "UI/Social/FriendWindow.h"
 
@@ -303,6 +306,7 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
 void mu::ui::window::CMainFrameWindow::OnRmlReloaded()
 {
     UI::Placement::Invalidate();
+    m_LiveHud.Unbind();
 }
 
 // Not shown here: Create() runs before SceneFlag reaches MAIN_SCENE, and an eager Show() let the
@@ -539,6 +543,7 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     if (document != m_pSyncedDocument || phoneHud != m_bSyncedPhoneHud)
     {
         ResetSyncCaches();
+        m_LiveHud.Unbind();
         m_pSyncedDocument = document;
         m_bSyncedPhoneHud = phoneHud;
     }
@@ -561,12 +566,35 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         SyncExperience();
         SyncButtons();
         SyncSkillRow();
+        SyncLiveHud(document);
         SyncItemSlots();
     }
 
     SyncAlerts();
     SyncSkillList();
     SyncSkillTooltip();
+}
+
+void mu::ui::window::CMainFrameWindow::SyncLiveHud(Rml::ElementDocument* document)
+{
+    if (!UI::RmlBridge::ThemeHasLiveHud())
+    {
+        m_LiveHud.Unbind();
+        return;
+    }
+    // Hidden (scene gate, a map loading): nothing to draw, and the meshes pick up again where they were.
+    if (!document->IsVisible())
+        return;
+
+    UI::HUD::LiveHud::Inputs inputs;
+    inputs.life = UI::HUD::HeroGauges::Life().Fraction();
+    inputs.mana = UI::HUD::HeroGauges::Mana().Fraction();
+    inputs.poisoned = g_isCharacterBuff((&Hero->Object), eDeBuff_Poison);
+    const UI::HUD::LiveHudTest::Overrides& overrides = UI::HUD::LiveHudTest::Current();
+    inputs.life = overrides.life.value_or(inputs.life);
+    inputs.mana = overrides.mana.value_or(inputs.mana);
+    inputs.poisoned = overrides.poisoned.value_or(inputs.poisoned);
+    m_LiveHud.Sync(document, inputs, Rml::GetSystemInterface()->GetElapsedTime());
 }
 
 void mu::ui::window::CMainFrameWindow::SyncGauges()
@@ -1095,6 +1123,11 @@ void mu::ui::window::CMainFrameWindow::SetBtnState(int iBtnType, bool bStateDown
 
 void mu::ui::window::CMainFrameWindow::SyncDocVisibility(bool sceneAllowsShow)
 {
+    // The window lives as long as the game, so $hudtest's overrides go when the game scene does: a relog or another
+    // character starts with the real gauges.
+    if (SceneFlag != MAIN_SCENE)
+        UI::HUD::LiveHudTest::Current() = {};
+
     const bool show = IsVisible() && sceneAllowsShow;
 
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), show);

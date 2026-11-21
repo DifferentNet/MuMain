@@ -1,0 +1,58 @@
+/* Skynet's live HUD (theme.ini LiveHud=1, UI/HUD/LiveHud.h), over legacy's main_frame.rcss (linked first): each
+   gauge group's gem is 1.2x the original's, cut to an octagon, its liquid drawn by C++ into main_frame.rml's
+   .live-only meshes over a plate that covers the strip's baked sockets. Only what changes is here; potions, skills,
+   buttons and EXP stay where legacy puts them. The meshes' shapes and timings are theme.ini's [LiveHud]. */
+
+/* The ring round each gem stands 12.4dp above the strip: the HUD's unit keeps that room clear of windows. */
+#hud_layout { height: 64dp; }
+
+/* The ring's box, 62x62 round the gem, from 14.4dp above the group's box; every mesh layer fills it. */
+.orb { position: absolute; left: 0; top: -14.4dp; width: 62dp; height: 62dp; pointer-events: none; }
+.orb-layer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+/* The gem's rect, centred in the ring, its bottom on the group box's. */
+.orb-gem-box { position: absolute; left: 4dp; top: 7.6dp; width: 54dp; height: 46.8dp; pointer-events: none; }
+/* Over the group's box, hiding the strip art's sockets round the bigger gem. */
+.orb-plate {
+	position: absolute;
+	left: 0;
+	top: 14.4dp;
+	width: 62dp;
+	height: 40dp;
+	background-color: token(hud-orb-plate);
+	pointer-events: none;
+}
+
+/* Life and mana: the gem's rect is their hint's target; the meshes replace the fills. SD and AG: the ring's crown. */
+#bar_hp, #bar_mp { left: 4dp; top: -6.8dp; width: 54dp; height: 46.8dp; }
+#bar_sd, #bar_ag { left: 0; top: -15dp; width: 62dp; height: 9dp; }
+.gauge-fill { display: none; }
+
+/* The life and mana numbers centred on the gem, 3dp under legacy's height and with nothing behind them, so even a
+   low liquid shows above and round the digits; the outline keeps them readable on any colour. */
+#bar_hp .gauge-num.value-current, #bar_mp .gauge-num.value-current {
+	left: 50%;
+	top: 40.8dp;
+	width: auto;
+	transform: translateX(-50%) scaleX(0.91);
+	font-effect: outline(1px #000000);
+}
+/* SD over the life gem and AG over the mana gem, small in the gem's upper part. */
+#bar_sd .gauge-num, #bar_ag .gauge-num {
+	left: -17dp;
+	top: 17dp;
+	font-size: 9dp;
+	line-height: 10dp;
+}
+#bar_sd .gauge-num { color: token(hud-sd-num); }
+#bar_ag .gauge-num { color: token(hud-ag-num); }
+
+/* The open skill grid clears the ring. */
+#skill_list { bottom: 65dp; }
+
+/* The phone's HUD (theme flag "mobile-hud") has no bar: this sheet comes after legacy's phone rules, so it puts back
+   what it changed above and hides the gems. */
+@media (theme: mobile-hud) {
+	#hud_layout { height: 0; }
+	#skill_list { bottom: 118dp; }
+	.live-only { display: none; }
+}

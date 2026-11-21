@@ -164,6 +164,24 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/ItemCellRarityClass.cpp
 )
 
+# The live HUD's gems in a theme with LiveHud=1 (UI/HUD/LiveHud.h): their motion, [LiveHud] and $hudtest, and their
+# meshes.
+mu_add_test(
+    NAME live_gauge_math_tests
+    SOURCES
+        test_live_gauge_math.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/LiveGaugeMath.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/LiveHudTest.cpp
+)
+
+mu_add_test(
+    NAME live_gauge_mesh_tests
+    SOURCES
+        test_live_gauge_mesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/LiveGaugeMesh.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/LiveGaugeMath.cpp
+)
+
 mu_add_test(
     NAME socket_list_selection_tests
     SOURCES

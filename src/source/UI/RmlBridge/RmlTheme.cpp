@@ -81,6 +81,7 @@ namespace UI::RmlBridge
         constexpr const char* NativeTextSizeKey = "NativeTextSize";
         constexpr const char* RichItemTooltipKey = "RichItemTooltip";
         constexpr const char* ItemRarityCellsKey = "ItemRarityCells";
+        constexpr const char* LiveHudKey = "LiveHud";
 
         bool ComputeUsesNativeTextSize(const std::string& themeName)
         {
@@ -103,6 +104,12 @@ namespace UI::RmlBridge
         {
             static bool hasItemRarityCells = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
             return hasItemRarityCells;
+        }
+
+        bool& HasLiveHudStorage()
+        {
+            static bool hasLiveHud = ComputeCapability(ActiveThemeNameStorage(), LiveHudKey);
+            return hasLiveHud;
         }
     }
 
@@ -155,12 +162,18 @@ namespace UI::RmlBridge
         return HasItemRarityCellsStorage();
     }
 
+    bool ThemeHasLiveHud()
+    {
+        return HasLiveHudStorage();
+    }
+
     void SetActiveThemeName(const std::string& themeName)
     {
         ActiveThemeNameStorage() = ToLower(themeName);
         UsesNativeTextSizeStorage() = ComputeUsesNativeTextSize(ActiveThemeNameStorage());
         HasRichItemTooltipStorage() = ComputeCapability(ActiveThemeNameStorage(), RichItemTooltipKey);
         HasItemRarityCellsStorage() = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
+        HasLiveHudStorage() = ComputeCapability(ActiveThemeNameStorage(), LiveHudKey);
         InvalidateActiveReforge();
 
         // Both themes deliberately reuse the same <template name="..."> for a shared concept

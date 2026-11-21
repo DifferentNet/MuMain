@@ -1,6 +1,7 @@
 #include <doctest.h>
 
 #include "stdafx.h"
+#include "UI/HUD/LiveGaugeMath.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/ThemeFileInterface.h"
 #include "UI/RmlBridge/ThemeFonts.h"
@@ -17,6 +18,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <regex>
 #include <set>
 #include <string>
@@ -488,6 +490,50 @@ TEST_CASE("only skynet declares the rich item tooltip and the rarity cells [ui][
     CHECK_FALSE(UI::RmlBridge::ThemeHasItemRarityCells());
 }
 
+TEST_CASE("only skynet declares the live HUD, and its [LiveHud] values read whole [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+    for (const char* name : {"legacy", "modern"})
+    {
+        CAPTURE(name);
+        UI::RmlBridge::SetActiveThemeName(name);
+        CHECK_FALSE(UI::RmlBridge::ThemeHasLiveHud());
+    }
+    UI::RmlBridge::SetActiveThemeName("skynet");
+    CHECK(UI::RmlBridge::ThemeHasLiveHud());
+    UI::RmlBridge::SetActiveThemeName("legacy");
+    CHECK_FALSE(UI::RmlBridge::ThemeHasLiveHud());
+
+    // Every key is set, none with a comment after its value: ThemeInheritance keeps one, and the value is then
+    // refused for the default.
+    std::map<std::string, std::string> values;
+    for (const auto& [key, setting] : ThemeInheritance(fixture.Theme("skynet")).Section("LiveHud"))
+    {
+        CAPTURE(key);
+        CHECK(setting.value.find(';') == std::string::npos);
+        values.emplace(key, setting.value);
+    }
+    for (const char* key : {"gemoutline", "gemzoom", "emptyshade", "waveamplitude", "waveperiodlife", "waveperiodmana",
+                            "arcstart", "arcsweep", "arcwidth", "lowlife", "pulseperiod", "pulsestrength", "halolife",
+                            "halomana", "halopoison", "sweepshade", "rimouter", "riminner", "rimwidth"})
+    {
+        CAPTURE(key);
+        CHECK(values.count(key) == 1);
+    }
+    const UI::HUD::LiveGauge::LiveHudConfig config = UI::HUD::LiveGauge::ReadLiveHudConfig(values);
+    CHECK(config.gemOutline.size() == 8);
+    CHECK(config.gemZoom == doctest::Approx(1.32f));
+    CHECK(config.wavePeriodLife == doctest::Approx(2.6f));
+    CHECK(config.wavePeriodMana == doctest::Approx(3.3f));
+    CHECK(config.haloLife == 0xFF1834FFu);
+    CHECK(config.sweepShade == 0xCC030406u);
+    CHECK(config.rimOuter == 0xFF2A465Cu);
+    CHECK(config.rimInner == 0xFF07090Bu);
+    CHECK(config.rimWidth == doctest::Approx(1.5f));
+    CHECK(ThemeInheritance(fixture.Theme("legacy")).Section("LiveHud").empty());
+}
+
 TEST_CASE("legacy's rarity tokens are neutral and skynet's are its own [ui][rml-theme]")
 {
     const std::filesystem::path themes = std::filesystem::path(MU_RMLUI_DIR) / "themes";
@@ -692,4 +738,98 @@ TEST_CASE("skynet's rich tooltip lays out its header, dividers, pill, diamonds a
     CHECK(panel->GetComputedValues().border_top_color() == TooltipEdge);
     fixture.context->UnloadAllDocuments();
     fixture.context->Update();
+}
+
+TEST_CASE("the live gems show only in skynet, round its gauges, and never on the phone's HUD [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+    const auto display = [](Rml::ElementDocument* document, const char* selector)
+    { return Fixture::First(document, selector)->GetComputedValues().display(); };
+    using Rml::Style::Display;
+
+    SUBCASE("legacy and modern hide them and keep their own HUD")
+    {
+        for (const char* name : {"legacy", "modern"})
+        {
+            CAPTURE(name);
+            UI::RmlBridge::SetActiveThemeName(name);
+            auto* document = fixture.LoadThemed(name, "main_frame.rml");
+            CHECK(display(document, "#orb_left") == Display::None);
+            CHECK(display(document, "#orb_right") == Display::None);
+            if (std::string(name) == "legacy")
+            {
+                CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(51.f));
+                CHECK(display(document, "#bar_hp_fill") != Display::None);
+                CHECK(BorderSize(*Fixture::First(document, "#bar_hp")).x == doctest::Approx(45.f));
+            }
+            document->Close();
+        }
+    }
+
+    SUBCASE("skynet sets each gem's rect where its gauge's hint is, in a ring over the strip")
+    {
+        UI::RmlBridge::SetActiveThemeName("skynet");
+        auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(64.f));
+        for (const auto& [orb, gem, bar, body] :
+             {std::array<const char*, 4>{"#orb_left", "#orb_hp_box", "#bar_hp", "#orb_hp_body"},
+              std::array<const char*, 4>{"#orb_right", "#orb_mp_box", "#bar_mp", "#orb_mp_body"}})
+        {
+            CAPTURE(orb);
+            CHECK(display(document, orb) != Display::None);
+            Rml::Element* ring = Fixture::First(document, orb);
+            CHECK(BorderSize(*ring).x == doctest::Approx(62.f));
+            CHECK(BorderSize(*ring).y == doctest::Approx(62.f));
+            // The meshes fill the ring.
+            CHECK(BorderOffset(*Fixture::First(document, body)).x == doctest::Approx(BorderOffset(*ring).x));
+            CHECK(BorderSize(*Fixture::First(document, body)).x == doctest::Approx(62.f));
+            Rml::Element* rect = Fixture::First(document, gem);
+            Rml::Element* gauge = Fixture::First(document, bar);
+            CHECK(BorderSize(*rect).x == doctest::Approx(54.f));
+            CHECK(BorderSize(*rect).y == doctest::Approx(46.8f));
+            CHECK(BorderOffset(*rect).x == doctest::Approx(BorderOffset(*gauge).x));
+            CHECK(BorderOffset(*rect).y == doctest::Approx(BorderOffset(*gauge).y));
+            CHECK(BorderSize(*gauge).x == doctest::Approx(54.f));
+            CHECK(BorderSize(*gauge).y == doctest::Approx(46.8f));
+        }
+        // The meshes replace the fills.
+        CHECK(display(document, "#bar_hp_fill") == Display::None);
+        // The plate and the gem's rect never take the pointer from what is under them.
+        CHECK(Fixture::First(document, "#orb_left .orb-plate")->GetComputedValues().pointer_events() ==
+              Rml::Style::PointerEvents::None);
+        CHECK(Fixture::First(document, "#orb_hp_box")->GetComputedValues().pointer_events() ==
+              Rml::Style::PointerEvents::None);
+
+        // The number is centred on the gem (its translateX(-50%) takes half its width back), 3dp under legacy's
+        // height, outlined, with nothing behind it.
+        Rml::Element* number = Fixture::First(document, "#bar_hp .gauge-num.value-current");
+        number->SetInnerRML("1234");
+        fixture.context->Update();
+        const auto& style = number->GetComputedValues();
+        CHECK(style.background_color().alpha == 0);
+        CHECK(style.border_top_width() == doctest::Approx(0.f));
+        CHECK(style.has_font_effect());
+        Rml::Element* gauge = Fixture::First(document, "#bar_hp");
+        CHECK(BorderOffset(*number).y - gauge->GetAbsoluteOffset(Rml::BoxArea::Padding).y == doctest::Approx(40.8f));
+        const float gemCentre =
+            gauge->GetAbsoluteOffset(Rml::BoxArea::Padding).x + gauge->GetBox().GetSize(Rml::BoxArea::Padding).x / 2.f;
+        CHECK(BorderOffset(*number).x == doctest::Approx(gemCentre));
+        CHECK(BorderSize(*number).x < 54.f);
+        CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value == doctest::Approx(65.f));
+        document->Close();
+    }
+
+    SUBCASE("the phone's HUD has no gems and no room for the bar")
+    {
+        UI::RmlBridge::SetActiveThemeName("skynet");
+        fixture.context->ActivateTheme("mobile-hud", true);
+        auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
+        CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(0.f));
+        CHECK(display(document, "#orb_left") == Display::None);
+        CHECK(display(document, "#orb_right") == Display::None);
+        CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value == doctest::Approx(118.f));
+        document->Close();
+        fixture.context->ActivateTheme("mobile-hud", false);
+    }
 }

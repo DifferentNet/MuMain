@@ -44,6 +44,7 @@
 #include "UI/HUD/ChatLogWindow.h"
 #include "UI/Core/SceneUICoordinator.h"
 #include "UI/Events/EventPreview.h"
+#include "UI/HUD/LiveHudTest.h"
 #include "UI/Theme/ThemeSelection.h"
 #include "UI/Windows/RememberPasswordPrompt.h"
 #include "Core/Utilities/StringUtils.h"
@@ -387,6 +388,16 @@ bool CmuConsoleDebug::CheckCommand(const std::wstring& strCommand)
     if (strCommand.compare(0, 8, L"$preview") == 0)
     {
         UI::EventPreview::HandleCommand(strCommand.size() > 9 ? strCommand.substr(9) : std::wstring());
+        return true;
+    }
+
+    // "$hudtest <what> <value>" drives the live HUD's gems locally, for screenshots; see LiveHudTest.h.
+    if (strCommand.compare(0, 9, L"$hudtest ") == 0 || strCommand == L"$hudtest")
+    {
+        const std::wstring_view arguments =
+            std::wstring_view(strCommand).substr(std::min<std::size_t>(9, strCommand.size()));
+        if (!UI::HUD::LiveHudTest::Apply(UI::HUD::LiveHudTest::Current(), arguments))
+            g_pSystemLogBox->AddText(UI::HUD::LiveHudTest::Usage, mu::ui::window::TYPE_ERROR_MESSAGE);
         return true;
     }
 
