@@ -3549,7 +3549,7 @@
     <comment>legacy_id=953,987</comment>
   </data>
   <data name="Increase command +%d" xml:space="preserve">
-    <value>Збільшити команду +%d</value>
+    <value>Командування +%d</value>
     <comment>legacy_id=954</comment>
   </data>
   <data name="Increase min. damage +%d" xml:space="preserve">
@@ -4357,7 +4357,7 @@
     <comment>legacy_id=1169</comment>
   </data>
   <data name="CommandD1170" xml:space="preserve">
-    <value>Команда: %d</value>
+    <value>Командування: %d</value>
     <comment>legacy_id=1170</comment>
   </data>
   <data name="Only level %d above can do cloak combination." xml:space="preserve">
@@ -6497,7 +6497,7 @@
     <comment>legacy_id=1737</comment>
   </data>
   <data name="Command" xml:space="preserve">
-    <value>Команда</value>
+    <value>Командування</value>
     <comment>legacy_id=1738,1900</comment>
   </data>
   <data name="Long gmae time may be harmful to your health" xml:space="preserve">
