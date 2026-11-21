@@ -71,11 +71,20 @@ namespace UI::RmlBridge
             return name;
         }
 
-        bool ComputeUsesNativeTextSize(const std::string& themeName)
+        bool ComputeCapability(const std::string& themeName, const char* key)
         {
             const ThemeInheritance theme(std::filesystem::path("Data/Interface/RmlUi/themes") / themeName);
-            const auto setting = theme.GetSetting("Capabilities", "NativeTextSize");
+            const auto setting = theme.GetSetting("Capabilities", key);
             return setting && std::strtol(setting->value.c_str(), nullptr, 10) != 0;
+        }
+
+        constexpr const char* NativeTextSizeKey = "NativeTextSize";
+        constexpr const char* RichItemTooltipKey = "RichItemTooltip";
+        constexpr const char* ItemRarityCellsKey = "ItemRarityCells";
+
+        bool ComputeUsesNativeTextSize(const std::string& themeName)
+        {
+            return ComputeCapability(themeName, NativeTextSizeKey);
         }
 
         bool& UsesNativeTextSizeStorage()
@@ -84,6 +93,17 @@ namespace UI::RmlBridge
             return usesNativeTextSize;
         }
 
+        bool& HasRichItemTooltipStorage()
+        {
+            static bool hasRichItemTooltip = ComputeCapability(ActiveThemeNameStorage(), RichItemTooltipKey);
+            return hasRichItemTooltip;
+        }
+
+        bool& HasItemRarityCellsStorage()
+        {
+            static bool hasItemRarityCells = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
+            return hasItemRarityCells;
+        }
     }
 
     const std::string& GetActiveThemeName()
@@ -125,10 +145,22 @@ namespace UI::RmlBridge
         return UsesNativeTextSizeStorage();
     }
 
+    bool ThemeHasRichItemTooltip()
+    {
+        return HasRichItemTooltipStorage();
+    }
+
+    bool ThemeHasItemRarityCells()
+    {
+        return HasItemRarityCellsStorage();
+    }
+
     void SetActiveThemeName(const std::string& themeName)
     {
         ActiveThemeNameStorage() = ToLower(themeName);
         UsesNativeTextSizeStorage() = ComputeUsesNativeTextSize(ActiveThemeNameStorage());
+        HasRichItemTooltipStorage() = ComputeCapability(ActiveThemeNameStorage(), RichItemTooltipKey);
+        HasItemRarityCellsStorage() = ComputeCapability(ActiveThemeNameStorage(), ItemRarityCellsKey);
         InvalidateActiveReforge();
 
         // Both themes deliberately reuse the same <template name="..."> for a shared concept

@@ -17531,4 +17531,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Новый предмет лучше надетого: удерживайте крестовину вправо, чтобы надеть. В сумке {Y} открывает карточку предмета (метка «хлам»); у торговца {A} на кнопке «Продать хлам» продаёт хлам. Зен под ногами подбирается сам</value>
   </data>
+  <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
+  <data name="TooltipShiftForDetails" xml:space="preserve">
+    <value>Подробно — держи Shift</value>
+  </data>
 </root>

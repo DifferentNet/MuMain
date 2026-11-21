@@ -72,6 +72,12 @@ namespace UI::RmlBridge
     // Whether the active theme sizes opted-in documents' text like the original client's
     // (NativeTextSize=1) -- see RmlNativeText.h.
     bool ThemeUsesNativeTextSize();
+    // Whether the active theme lays item tooltips out richly (RichItemTooltip=1): a header styled by
+    // rarity, blocks with dividers, a short view -- see UI/Tooltip/ItemTooltipLayout.h.
+    bool ThemeHasRichItemTooltip();
+    // Whether the active theme's inventory cells show an item's rarity and upgrade band
+    // (ItemRarityCells=1) -- see UI/Inventory/ItemCellRarityClass.h.
+    bool ThemeHasItemRarityCells();
 
     // Builds the virtual source URL a themed document should be loaded against, e.g.
     // "Data/Interface/RmlUi/themes/modern/login.rml" -- this path need not exist on disk (the RML

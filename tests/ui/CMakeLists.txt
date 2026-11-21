@@ -148,6 +148,22 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/RmlBridge/RmlTooltipPlacement.cpp
 )
 
+# The rich item tooltip layout of a theme with RichItemTooltip=1 (UI/Tooltip/ItemTooltipLayout).
+mu_add_test(
+    NAME item_tooltip_layout_tests
+    SOURCES
+        test_item_tooltip_layout.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Tooltip/ItemTooltipLayout.cpp
+)
+
+# The rarity classes of an item's cells and worn slot in a theme with ItemRarityCells=1 (UI/Inventory/ItemCellRarityClass).
+mu_add_test(
+    NAME item_cell_classes_tests
+    SOURCES
+        test_item_cell_classes.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/ItemCellRarityClass.cpp
+)
+
 mu_add_test(
     NAME socket_list_selection_tests
     SOURCES

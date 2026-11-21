@@ -265,6 +265,15 @@ measurements. Exact options and palette belong in the header; depths belong in `
 Skill tooltip content remains domain-specific in `UI/HUD/Skills/SkillTooltip.h`; it builds lines
 for this presentation mechanism. Item help and the help window remain separate persistent views.
 
+Item tooltips come from `RenderItemInfo` through `UI::Tooltip::ShowLegacyTextList`. A theme that
+declares `RichItemTooltip=1` gets them arranged by `UI::Tooltip::ArrangeRich`
+(`UI/Tooltip/ItemTooltipLayout.h`: a rarity header, dividers, a short view with a Shift hint) and
+styles them in its own `tooltip.rml` fork; see
+[Theming & Modding](theming-and-modding.md#rich-item-tooltips-and-rarity-cells). Pet, repair and
+skill tooltips stay plain lines. A rich tooltip taller than the window shrinks its text to fit
+(down to 3/4, `UI::Tooltip::FitScale`), else gets `tt-tall` without shadow and glow; the gold cell
+frame's width is the `cell-frame-gold-width` token.
+
 ## Dragging
 
 **Component:** [`MakeDraggable()`](../../src/source/UI/RmlBridge/RmlDraggable.h) attaches a

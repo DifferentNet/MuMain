@@ -9,8 +9,11 @@
 
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/ComputedValues.h>
+#include <RmlUi/Core/ElementUtilities.h>
+#include <RmlUi/Core/StyleSheetTypes.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -402,6 +405,291 @@ TEST_CASE("a live theme switch releases only the textures whose preset changed [
     UI::RmlBridge::QueueReforgeRelease(std::move(previous));
     UI::RmlBridge::ReleaseQueuedReforgeTextures();
     CHECK(renderer.released == std::vector<Rml::TextureHandle>{cellsHandle, 3});
+    fixture.context->UnloadAllDocuments();
+    fixture.context->Update();
+}
+
+namespace
+{
+// What skynet's tooltip.rml binds for a rich item tooltip (RmlTooltip.cpp), set by hand: a 12px text (1em), 8px side
+// padding, a 1px frame, 14px and 15px rows, 200px wide (Measure()'s width).
+constexpr float TooltipTextPx = 12.f;
+constexpr float TooltipPaddingPx = 8.f;
+constexpr float TooltipBorderPx = 1.f;
+constexpr float TooltipWidthPx = 200.f;
+constexpr float TooltipBoldLinePx = 15.f;
+const Rml::Colourb TooltipEdge(0x7d, 0x64, 0x40);
+const Rml::Colourb TooltipGold(0xe6, 0xb9, 0x5a);
+
+std::string Px(float value)
+{
+    return std::to_string(value) + "px";
+}
+
+void BindRichPanel(Rml::Element& panel)
+{
+    panel.SetProperty("font-size", Px(TooltipTextPx));
+    panel.SetProperty("border-width", Px(TooltipBorderPx));
+    panel.SetProperty("padding-left", Px(TooltipPaddingPx));
+    panel.SetProperty("padding-right", Px(TooltipPaddingPx));
+    panel.SetProperty("width", Px(TooltipWidthPx));
+    panel.SetProperty("--pad-px", Px(TooltipPaddingPx));
+    panel.SetProperty("--border-px", Px(TooltipBorderPx));
+    panel.SetProperty("--line-px", "14px");
+    panel.SetProperty("--bold-line-px", Px(TooltipBoldLinePx));
+}
+
+// A line as the data-for template makes it: the line div, its text in a span.
+Rml::Element* AddTooltipLine(Rml::ElementDocument& document, Rml::Element& panel, Rml::Element* before,
+                             const std::string& classes, const std::string& text)
+{
+    Rml::Element* line = panel.InsertBefore(document.CreateElement("div"), before);
+    line->SetClassNames(classes);
+    line->SetInnerRML("<span class=\"tt-text\">" + text + "</span>");
+    return line;
+}
+
+Rml::Vector2f BorderOffset(Rml::Element& element)
+{
+    return element.GetAbsoluteOffset(Rml::BoxArea::Border);
+}
+
+Rml::Vector2f BorderSize(Rml::Element& element)
+{
+    return element.GetBox().GetSize(Rml::BoxArea::Border);
+}
+
+std::string Token(const ThemeInheritance& theme, const char* name)
+{
+    const auto setting = theme.GetSetting("Tokens", name);
+    REQUIRE(setting);
+    return setting->value;
+}
+} // namespace
+
+TEST_CASE("only skynet declares the rich item tooltip and the rarity cells [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+    for (const char* name : {"legacy", "modern"})
+    {
+        CAPTURE(name);
+        UI::RmlBridge::SetActiveThemeName(name);
+        CHECK_FALSE(UI::RmlBridge::ThemeHasRichItemTooltip());
+        CHECK_FALSE(UI::RmlBridge::ThemeHasItemRarityCells());
+    }
+    UI::RmlBridge::SetActiveThemeName("skynet");
+    CHECK(UI::RmlBridge::ThemeHasRichItemTooltip());
+    CHECK(UI::RmlBridge::ThemeHasItemRarityCells());
+    CHECK(UI::RmlBridge::ThemeUsesNativeTextSize());
+    // Back to legacy: the switch recomputes both.
+    UI::RmlBridge::SetActiveThemeName("legacy");
+    CHECK_FALSE(UI::RmlBridge::ThemeHasRichItemTooltip());
+    CHECK_FALSE(UI::RmlBridge::ThemeHasItemRarityCells());
+}
+
+TEST_CASE("legacy's rarity tokens are neutral and skynet's are its own [ui][rml-theme]")
+{
+    const std::filesystem::path themes = std::filesystem::path(MU_RMLUI_DIR) / "themes";
+    const ThemeInheritance legacy(themes / "legacy");
+    REQUIRE(legacy.IsValid());
+    const std::string normal = Token(legacy, "cell-tint-normal");
+    for (const char* tint : {"cell-tint-exc", "cell-tint-anc", "cell-tint-socket", "cell-tint-gold"})
+    {
+        CAPTURE(tint);
+        CHECK(Token(legacy, tint) == normal);
+    }
+    CHECK(Token(legacy, "cell-frame-width") == "0px");
+    CHECK(Token(legacy, "cell-frame-gold-width") == "0px");
+    for (const char* frame :
+         {"cell-frame-fine", "cell-frame-exc", "cell-frame-anc", "cell-frame-socket", "cell-frame-gold"})
+    {
+        CAPTURE(frame);
+        CHECK(Token(legacy, frame) == "#00000000");
+    }
+
+    const ThemeInheritance skynet(themes / "skynet");
+    REQUIRE(skynet.IsValid());
+    CHECK(Token(skynet, "cell-frame-width") == "1px");
+    // +13..+15's gold frame is drawn wider than the others, so it reads at a glance.
+    CHECK(Token(skynet, "cell-frame-gold-width") == "2px");
+    CHECK(Token(skynet, "cell-frame-gold") == "#e6b95a");
+    CHECK(Token(skynet, "tt-gold") == "#e6b95a");
+    CHECK(Token(skynet, "tooltip-edge") == "#7d6440");
+    // The tooltip's own document comes from skynet, with its rich sheet beside it.
+    const auto document = skynet.ResolveFile("tooltip.rml");
+    REQUIRE(document);
+    CHECK(document->parent_path().filename() == "skynet");
+    CHECK(skynet.ResolveFile("tooltip_rich.rcss"));
+    CHECK_FALSE(legacy.ResolveFile("tooltip_rich.rcss"));
+}
+
+TEST_CASE("skynet's tooltip is warm and framed in bronze, legacy's stays black [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+
+    UI::RmlBridge::SetActiveThemeName("legacy");
+    auto* legacy = fixture.LoadThemed("legacy", "tooltip.rml");
+    Rml::Element* panel = Fixture::First(legacy, "#tooltip_panel");
+    CHECK(panel->GetComputedValues().background_color() == Rml::Colourb(0, 0, 0, 204));
+    CHECK(panel->GetComputedValues().border_top_color() == Rml::Colourb(0, 0, 0));
+    CHECK(legacy->QuerySelector("#tt_gold") == nullptr);
+    fixture.context->UnloadAllDocuments();
+    fixture.context->Update();
+
+    UI::RmlBridge::SetActiveThemeName("skynet");
+    auto* skynet = fixture.LoadThemed("skynet", "tooltip.rml");
+    panel = Fixture::First(skynet, "#tooltip_panel");
+    CHECK(panel->GetComputedValues().background_color() == Rml::Colourb(12, 9, 7, 250));
+    CHECK(panel->GetComputedValues().border_top_color() == TooltipEdge);
+    // The line template stays the panel's first child; the frame and the diamonds follow it, hidden unless rich.
+    REQUIRE(panel->GetNumChildren() > 0);
+    CHECK(panel->GetChild(0)->IsClassSet("tt-line"));
+    CHECK(Fixture::First(skynet, "#tt_gold")->GetComputedValues().display() == Rml::Style::Display::None);
+    CHECK(Fixture::First(skynet, ".tt-k")->GetComputedValues().display() == Rml::Style::Display::None);
+    CHECK_FALSE(panel->GetComputedValues().has_box_shadow());
+    fixture.context->UnloadAllDocuments();
+    fixture.context->Update();
+}
+
+TEST_CASE("skynet's rich tooltip lays out its header, dividers, pill, diamonds and gold frame [ui][rml-theme]")
+{
+    Fixture fixture;
+    fixture.CopyRealInterface();
+    UI::RmlBridge::SetActiveThemeName("skynet");
+    auto* document = fixture.LoadThemed("skynet", "tooltip.rml");
+    Rml::Element* panel = Fixture::First(document, "#tooltip_panel");
+    panel->SetClassNames("tt-centered tt-rich rar-anc up-gold");
+    BindRichPanel(*panel);
+    Rml::Element* gold = Fixture::First(document, "#tt_gold");
+
+    // The template is the name line; the rest as ArrangeRich() orders them.
+    Rml::Element* name = panel->GetChild(0);
+    name->SetClassNames("tt-line bold tt-hl-greenblue tt-name tt-head");
+    name->SetInnerRML("<span class=\"tt-text\">Ancient Breastplate +15</span>");
+    name->SetProperty("font-size", Px(TooltipTextPx * 1.3f));
+    Rml::Element* kind = AddTooltipLine(*document, *panel, gold, "tt-line tt-kind tt-head", "Ancient - Armour");
+    Rml::Element* cp =
+        AddTooltipLine(*document, *panel, gold, "tt-line tt-redpurple tt-cp tt-head tt-head-last", "Combat Power 1234");
+    Rml::Element* headSpacer = AddTooltipLine(*document, *panel, gold, "tt-line tt-half-spacer", "");
+    AddTooltipLine(*document, *panel, gold, "tt-line", "Defense: 120");
+    Rml::Element* divider = AddTooltipLine(*document, *panel, gold, "tt-line tt-half-spacer", "");
+    Rml::Element* section = AddTooltipLine(*document, *panel, gold, "tt-line tt-yellow tt-section", "Set option");
+    Rml::Element* hint = AddTooltipLine(*document, *panel, gold, "tt-line tt-gray tt-hint", "Hold Shift for details");
+    fixture.context->Update();
+
+    const Rml::Vector2f panelOffset = BorderOffset(*panel);
+    const Rml::Vector2f panelSize = BorderSize(*panel);
+    REQUIRE(panelSize.x == doctest::Approx(TooltipWidthPx + 2 * (TooltipPaddingPx + TooltipBorderPx)));
+
+    SUBCASE("the header bars run across the whole box in the rarity's colour")
+    {
+        for (Rml::Element* line : {name, kind, cp})
+        {
+            CHECK(BorderSize(*line).x == doctest::Approx(TooltipWidthPx + 2 * TooltipPaddingPx));
+            CHECK(BorderOffset(*line).x == doctest::Approx(panelOffset.x + TooltipBorderPx));
+            CHECK(line->GetComputedValues().background_color() == Rml::Colourb(0x2b, 0x3d, 0xb6));
+        }
+        // The ancient name keeps its green; the bar replaces its blue highlight.
+        CHECK(name->GetComputedValues().color() == Rml::Colourb(0x00, 0xff, 0x00));
+        CHECK(BorderSize(*name).y == doctest::Approx(TooltipBoldLinePx * 1.6f));
+        CHECK(kind->GetComputedValues().color() == Rml::Colourb(0xcb, 0xbf, 0xa9));
+        CHECK(cp->GetComputedValues().border_bottom_width() == doctest::Approx(TooltipBorderPx));
+        CHECK(cp->GetComputedValues().border_bottom_color() == TooltipEdge);
+    }
+
+    SUBCASE("a divider is a one-pixel gradient, none under the header")
+    {
+        CHECK(BorderSize(*headSpacer).y == doctest::Approx(0.f));
+        CHECK_FALSE(headSpacer->GetComputedValues().has_decorator());
+        CHECK(BorderSize(*divider).y == doctest::Approx(1.f));
+        CHECK(BorderSize(*divider).x == doctest::Approx(TooltipWidthPx - 2 * 1.2f * TooltipTextPx));
+        REQUIRE(divider->GetComputedValues().has_decorator());
+        const Rml::Property* decorator = divider->GetProperty("decorator");
+        REQUIRE(decorator != nullptr);
+        const auto declarations = decorator->Get<Rml::DecoratorsPtr>();
+        REQUIRE(declarations);
+        REQUIRE(declarations->list.size() == 1);
+        CHECK(declarations->list.front().type == "linear-gradient");
+        CHECK(section->GetComputedValues().font_weight() == Rml::Style::FontWeight::Bold);
+        CHECK(hint->GetComputedValues().color() == Rml::Colourb(0x8d, 0x8d, 0x8d));
+    }
+
+    SUBCASE("the Combat Power pill holds its text and its own padding")
+    {
+        Rml::Element* pill = cp->GetFirstChild();
+        REQUIRE(pill != nullptr);
+        CHECK(pill->GetComputedValues().display() == Rml::Style::Display::InlineBlock);
+        const Rml::Box& box = pill->GetBox();
+        CHECK(box.GetEdge(Rml::BoxArea::Padding, Rml::BoxEdge::Left) == doctest::Approx(0.8f * TooltipTextPx));
+        CHECK(box.GetEdge(Rml::BoxArea::Border, Rml::BoxEdge::Right) == doctest::Approx(1.f));
+        const float text = static_cast<float>(Rml::ElementUtilities::GetStringWidth(pill, "Combat Power 1234"));
+        CHECK(box.GetSize(Rml::BoxArea::Content).x >= text - 1.f);
+        // One row: the pill does not wrap its text.
+        CHECK(box.GetSize(Rml::BoxArea::Content).y < 2 * TooltipBoldLinePx);
+    }
+
+    SUBCASE("the diamonds sit on the frame's corners")
+    {
+        const float half = 0.25f * TooltipTextPx;
+        const std::array<Rml::Element*, 2> diamonds = {Fixture::First(document, ".tt-k1"),
+                                                       Fixture::First(document, ".tt-k4")};
+        for (Rml::Element* diamond : diamonds)
+        {
+            CHECK(diamond->GetComputedValues().display() == Rml::Style::Display::Block);
+            CHECK(BorderSize(*diamond).x == doctest::Approx(2 * half));
+            CHECK(diamond->GetComputedValues().background_color() == TooltipGold);
+        }
+        // Centred on the middle of the 1px frame line.
+        const Rml::Vector2f first = BorderOffset(*diamonds[0]);
+        CHECK(first.x + half == doctest::Approx(panelOffset.x + TooltipBorderPx * 0.5f));
+        CHECK(first.y + half == doctest::Approx(panelOffset.y + TooltipBorderPx * 0.5f));
+        const Rml::Vector2f last = BorderOffset(*diamonds[1]);
+        CHECK(last.x + half == doctest::Approx(panelOffset.x + panelSize.x - TooltipBorderPx * 0.5f));
+        CHECK(last.y + half == doctest::Approx(panelOffset.y + panelSize.y - TooltipBorderPx * 0.5f));
+    }
+
+    SUBCASE("+13..+15 frames the box in gold just outside, and only the frame's opacity moves")
+    {
+        CHECK(panel->GetComputedValues().border_top_color() == TooltipGold);
+        CHECK(panel->GetComputedValues().has_box_shadow());
+        REQUIRE(gold->GetComputedValues().display() == Rml::Style::Display::Block);
+        const float outside = 0.25f * TooltipTextPx;
+        CHECK(BorderOffset(*gold).x == doctest::Approx(panelOffset.x - outside));
+        CHECK(BorderOffset(*gold).y == doctest::Approx(panelOffset.y - outside));
+        CHECK(BorderSize(*gold).x == doctest::Approx(panelSize.x + 2 * outside));
+        CHECK(BorderSize(*gold).y == doctest::Approx(panelSize.y + 2 * outside));
+        CHECK(gold->GetComputedValues().has_box_shadow());
+        CHECK(gold->GetComputedValues().animation() == nullptr);
+
+        Rml::Element* pulse = Fixture::First(document, "#tt_gold_pulse");
+        CHECK(BorderSize(*pulse).x == doctest::Approx(BorderSize(*gold).x));
+        CHECK(pulse->GetComputedValues().border_top_width() > 0.f);
+        CHECK_FALSE(pulse->GetComputedValues().has_box_shadow());
+        const Rml::AnimationList* animation = pulse->GetComputedValues().animation();
+        REQUIRE(animation != nullptr);
+        CHECK(animation->size() == 1);
+        // The pulse starts at its dimmest.
+        CHECK(pulse->GetComputedValues().opacity() < 0.9f);
+    }
+
+    SUBCASE("too tall for the window even fitted: the frame stays, the shadow and the glow go")
+    {
+        panel->SetClassNames("tt-centered tt-rich rar-anc up-gold tt-tall");
+        fixture.context->Update();
+        CHECK_FALSE(panel->GetComputedValues().has_box_shadow());
+        CHECK(panel->GetComputedValues().border_top_color() == TooltipGold);
+        REQUIRE(gold->GetComputedValues().display() == Rml::Style::Display::Block);
+        CHECK_FALSE(gold->GetComputedValues().has_box_shadow());
+        CHECK(Fixture::First(document, "#tt_gold_pulse")->GetComputedValues().border_top_width() > 0.f);
+    }
+
+    // Without the band: no gold frame, the bronze frame again.
+    panel->SetClassNames("tt-centered tt-rich rar-anc");
+    fixture.context->Update();
+    CHECK(gold->GetComputedValues().display() == Rml::Style::Display::None);
+    CHECK(panel->GetComputedValues().border_top_color() == TooltipEdge);
     fixture.context->UnloadAllDocuments();
     fixture.context->Update();
 }

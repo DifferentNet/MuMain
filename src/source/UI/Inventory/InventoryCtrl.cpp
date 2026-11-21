@@ -3,6 +3,7 @@
 #include "UI/Core/UIManager.h"
 #include "UI/Inventory/InventoryCtrl.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/ItemCellRarityClass.h"
 #include "UI/Inventory/JunkSale.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
@@ -17,12 +18,16 @@
 #include "World/MapInfra/MapManager.h"
 #include "GameLogic/Items/MixMgr.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 
 #include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <array>
+#include <charconv>
+#include <string_view>
 #include <utility>
 
 using namespace SEASON3B;
@@ -1089,6 +1094,14 @@ const char* TintClass(BYTE colorState)
     }
 }
 
+// pad-item-<its top-left cell>: the pad's frame takes the item's cells as one (UI/HUD/PadTargets).
+constexpr std::string_view PadItemPrefix = " pad-item-";
+// Room for a cell's classes: the longest tint, the pad-item class, the rarity and all four edges come to about 75
+// characters. The cell's string keeps its buffer from frame to frame, so it never grows past this.
+constexpr std::size_t CellClassesCapacity = 96;
+// The digits of a cell index.
+constexpr std::size_t CellIndexDigits = 12;
+
 } // namespace
 
 // Whether dropping `pPickItem` on `pTargetItem` acts on it (Render()'s green cell).
@@ -1147,6 +1160,53 @@ void mu::ui::window::CInventoryCtrl::MarkJunkCells()
     }
 }
 
+// The item's tint and pad-item class, written over the cell's old text in place: a frame with the same items
+// allocates nothing.
+void mu::ui::window::CInventoryCtrl::WriteTintClasses(std::string& classes, const ITEM& item) const
+{
+    std::array<char, CellIndexDigits> digits{};
+    const auto written = std::to_chars(digits.data(), digits.data() + digits.size(), item.y * m_nColumn + item.x);
+    classes.reserve(CellClassesCapacity);
+    classes.assign(TintClass(item.byColorState));
+    classes.append(PadItemPrefix);
+    classes.append(digits.data(), written.ptr);
+}
+
+// The rarity classes (UI/Inventory/ItemCellRarityClass.h) on each item's cells, each item classified once.
+void mu::ui::window::CInventoryCtrl::MarkRarityCells()
+{
+    for (const ITEM* pItem : m_vecItem)
+    {
+        const GameLogic::Items::Rarity::CellLook look = ItemCellLookOf(pItem);
+        const char* rarity = UI::Inventory::RarityCellClasses(look.tier, look.band);
+        if (*rarity != '\0')
+            AppendRarityClasses(*pItem, rarity);
+    }
+}
+
+// `rarity` on each cell the item holds (the cells UpdateCells() found it in), with the item's outer edges the cell
+// lies on.
+void mu::ui::window::CInventoryCtrl::AppendRarityClasses(const ITEM& item, const char* rarity)
+{
+    const ITEM_ATTRIBUTE& attribute = ItemAttribute[item.Type];
+    for (int y = 0; y < attribute.Height; ++y)
+    {
+        const int row = item.y + y;
+        for (int x = 0; x < attribute.Width; ++x)
+        {
+            const int column = item.x + x;
+            if (row < 0 || row >= m_nRow || column < 0 || column >= m_nColumn)
+                continue;
+            const int cell = row * m_nColumn + column;
+            std::string& classes = m_Cells[static_cast<std::size_t>(cell)].tint;
+            if (m_pdwItemCheckBox[cell] != item.Key || classes.empty())
+                continue;
+            classes.append(rarity).append(
+                UI::Inventory::EdgeClasses(y == 0, y == attribute.Height - 1, x == 0, x == attribute.Width - 1));
+        }
+    }
+}
+
 void mu::ui::window::CInventoryCtrl::UpdateCells()
 {
     m_Cells.assign(static_cast<std::size_t>(m_nColumn * m_nRow), UI::Items::ItemGridCell{});
@@ -1165,11 +1225,11 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
         }
         if (CanChangeItemColorState(pItem) == true)
             SetItemColorState(pItem);
-        // pad-item-<its top-left cell>: the pad's frame takes the item's cells as one (UI/HUD/PadTargets).
-        m_Cells[iCurSquareIndex].tint = std::string(TintClass(pItem->byColorState)) + " pad-item-"
-                                        + std::to_string(pItem->y * m_nColumn + pItem->x);
+        WriteTintClasses(m_Cells[iCurSquareIndex].tint, *pItem);
     }
 
+    if (UI::RmlBridge::ThemeHasItemRarityCells())
+        MarkRarityCells();
     MarkJunkCells();
 
     for (const ITEM* pItem : m_vecItem)

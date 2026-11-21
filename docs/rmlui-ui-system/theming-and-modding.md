@@ -296,6 +296,53 @@ Tests: `tests/render/test_sprite_reforge.cpp` (`sprite_reforge_tests`) and
 every `skynet` key names a sprite that exists. `sprite_reforge_preview` (built with the tests)
 forges one raw RGBA image, to look at a preset on real art without starting the game.
 
+## Rich item tooltips and rarity cells
+
+Two `theme.ini` capabilities change how items look, with no image of their own. `skynet` declares
+both; legacy and modern declare neither, so their documents, classes and pixels stay as they were.
+C++ reads the capability, never the theme's name.
+
+```ini
+[Capabilities]
+RichItemTooltip=1
+ItemRarityCells=1
+```
+
+- **`RichItemTooltip=1`**: the item tooltip (`RenderItemInfo` → `UI::Tooltip::ShowLegacyTextList`)
+  keeps writing the same lines, a few with a role (`TextListRole`: name, Combat Power, section,
+  inactive detail, set piece). With the capability on and outside the phone view,
+  `UI::Tooltip::ArrangeRich` (`UI/Tooltip/ItemTooltipLayout.h`) reorders them: a header of the
+  name, the item's kind ("Ancient · Armour", the loot filter's words) and its Combat Power; each
+  run of blank lines as one divider; a divider before each section; ✓ / – before the set pieces.
+  While Shift is not held, three or more inactive set lines (grey Power of the Ancients and full
+  set bonus lines) give way to a "Hold Shift for details" line; touch and the pad always show
+  everything. `Tooltip::Config` then carries `rich`, the rarity tier and the upgrade band, and the
+  model offers `rich`, `name_px`, `rar_*`, `up_gold` and per line `role_*`, `head`, `head_last`.
+  The theme forks `tooltip.rml` to bind them and styles them in its own sheet
+  (`themes/skynet/tooltip_rich.rcss`). The line divs must stay `#tooltip_panel`'s first children;
+  extra elements (skynet's gold frame and corner diamonds) go after them. The rarity is the name
+  colour's (`GameLogic/Items/ItemRarity.h`): ancient, excellent, socket, +7, options, special,
+  divine; the band is +7..+12 or +13..+15, for weapons, shields, armour and wings only.
+- **`ItemRarityCells=1`**: every native item grid's cells and the worn slots also carry
+  `rar-exc` / `rar-anc` / `rar-socket`, `rf` (has a frame), `up-fine` / `up-gold` and, on a grid,
+  the item's outer edges `re-t` / `re-b` / `re-l` / `re-r` (`UI/Inventory/ItemCellRarityClass.h`).
+  Only gear and jewellery get them. `themes/legacy/item_grid.rcss` and `my_inventory.rcss` style
+  them with the `cell-tint-*` and `cell-frame-*` tokens, which are neutral in
+  `legacy/tokens.ini` (no frame, the normal tint); a theme sets its own values. The rarity tint
+  replaces only `tint-normal`, so wear and untradeable tints still show, and the frame is the
+  drop preview element's border, so the drop colours are untouched.
+
+A rich tooltip taller than the window is laid out again with smaller text (`text_px`, `name_px`,
+the line heights and the padding, down to 3/4) until it and its shadow and glow fit, in the same
+frame; still too tall, `#tooltip_panel` gets `tt-tall` (model `tall`), which skynet uses to drop
+the shadow and the gold glow. The +13..+15 cell and slot frame is `cell-frame-gold-width` wide
+(skynet 2px, neutral 0px), the other frames `cell-frame-width`.
+
+Tests: `tests/gamelogic/test_item_rarity.cpp`, `tests/ui/test_item_tooltip_layout.cpp`,
+`tests/ui/test_item_cell_classes.cpp`, and in `tests/ui/test_theme_reforge.cpp` the capabilities,
+the neutral tokens and the layout of skynet's rich tooltip (header bars, dividers, the Combat
+Power pill, the diamonds and the gold frame).
+
 ## Design tokens: `themes/<theme>/tokens.ini`
 
 Both built-in themes have a `tokens.ini` file (`[Tokens]` section, plain `name=value` lines) that a theme's own `.rcss`

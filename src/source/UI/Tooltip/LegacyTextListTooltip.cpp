@@ -4,6 +4,8 @@
 
 #include "Core/Utilities/StringUtils.h"
 #include "Engine/Object/ZzzInventory.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/RmlTooltip.h"
 
 #include <utility>
@@ -35,11 +37,38 @@ UI::RmlBridge::Tooltip::LineColor ConvertColor(int color)
     }
 }
 
-std::vector<UI::RmlBridge::Tooltip::Line> BuildLines(int lineCount)
+UI::RmlBridge::Tooltip::LineRole ConvertRole(int role)
+{
+    using LineRole = UI::RmlBridge::Tooltip::LineRole;
+    switch (role)
+    {
+    case TR_NAME:
+        return LineRole::Name;
+    case TR_COMBAT_POWER:
+        return LineRole::CombatPower;
+    case TR_SECTION:
+        return LineRole::Section;
+    case TR_DETAIL:
+        return LineRole::Detail;
+    case TR_PIECE_OWNED:
+        return LineRole::PieceOwned;
+    case TR_PIECE_MISSING:
+        return LineRole::PieceMissing;
+    case TR_NONE:
+    default:
+        return LineRole::None;
+    }
+}
+
+// With `withRoles`, each text line also takes its role from TextListRole (item information only).
+std::vector<UI::RmlBridge::Tooltip::Line> BuildLines(int lineCount, bool withRoles)
 {
     using Line = UI::RmlBridge::Tooltip::Line;
+    // The rich layout adds the kind and hint lines and a spacer under the header and before each section header (an
+    // ancient with its set has up to five), so arranging it never grows the vector.
+    constexpr size_t RichLayoutSpareLines = 8;
     std::vector<Line> lines;
-    lines.reserve(static_cast<size_t>(lineCount));
+    lines.reserve(static_cast<size_t>(lineCount) + (withRoles ? RichLayoutSpareLines : 0));
 
     for (int i = 0; i < lineCount; ++i)
     {
@@ -56,6 +85,8 @@ std::vector<UI::RmlBridge::Tooltip::Line> BuildLines(int lineCount)
             line.text = StringUtils::WideToNarrow(TextList[i]);
             line.bold = TextBold[i] != 0;
             line.color = ConvertColor(TextListColor[i]);
+            if (withRoles)
+                line.role = ConvertRole(TextListRole[i]);
         }
         lines.push_back(std::move(line));
     }
@@ -69,13 +100,32 @@ const void* ItemInfoOwner()
     return &token;
 }
 
+bool UsesRichItemLayout()
+{
+    return UI::RmlBridge::ThemeHasRichItemTooltip() && !UI::Mobile::IsPhoneView();
+}
+
 namespace
 {
-UI::RmlBridge::Tooltip::Config TextListConfig(int lineCount, float anchorX, float anchorY, Placement placement,
-                                              const void* owner)
+// The rich layout of an item information tooltip; the lines stay as they are when it has no name line.
+void ApplyRichLayout(UI::RmlBridge::Tooltip::Config& config, const ItemPresentation& presentation)
 {
+    if (!ArrangeRich(config.lines, presentation.layout))
+        return;
+
+    config.rich = true;
+    config.rarity = presentation.rarity;
+    config.band = presentation.band;
+}
+
+UI::RmlBridge::Tooltip::Config TextListConfig(int lineCount, float anchorX, float anchorY, Placement placement,
+                                              const void* owner, const ItemPresentation* presentation)
+{
+    const bool rich = presentation != nullptr && UsesRichItemLayout();
     UI::RmlBridge::Tooltip::Config config;
-    config.lines = BuildLines(lineCount);
+    config.lines = BuildLines(lineCount, rich);
+    if (rich)
+        ApplyRichLayout(config, *presentation);
     config.anchorX = anchorX;
     config.anchorY = anchorY;
     config.centerHorizontally = true;
@@ -88,14 +138,17 @@ UI::RmlBridge::Tooltip::Config TextListConfig(int lineCount, float anchorX, floa
 }
 } // namespace
 
-void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement placement, const void* owner)
+void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement placement, const void* owner,
+                        const ItemPresentation* presentation)
 {
-    UI::RmlBridge::Tooltip::Show(TextListConfig(lineCount, anchorX, anchorY, placement, owner), owner);
+    UI::RmlBridge::Tooltip::Show(TextListConfig(lineCount, anchorX, anchorY, placement, owner, presentation), owner);
 }
 
-void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner)
+void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner,
+                                const ItemPresentation* presentation)
 {
-    UI::RmlBridge::Tooltip::Config config = TextListConfig(lineCount, spot.x, spot.bottomY, Placement::Above, owner);
+    UI::RmlBridge::Tooltip::Config config =
+        TextListConfig(lineCount, spot.x, spot.bottomY, Placement::Above, owner, presentation);
     config.besideX = spot.besideX;
     UI::RmlBridge::Tooltip::Show(config, owner);
 }

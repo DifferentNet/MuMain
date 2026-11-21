@@ -1,0 +1,128 @@
+/* Skynet's tooltip, over legacy's tooltip.rcss (linked first): every tooltip gets a warm dark box in a bronze frame;
+   an item tooltip in the rich layout (#tooltip_panel.tt-rich, theme.ini RichItemTooltip=1) gets a header bar coloured
+   by the item's rarity, dividers between its blocks, corner diamonds and, at +13..+15, a pulsing gold frame.
+   Line colours are legacy's: only the structure changes. Sizes are in em of the tooltip's text size (bound on
+   #tooltip_panel); --pad-px and --border-px are the panel's side padding and frame width, bound with them. No image:
+   borders, gradients and one opacity animation. */
+
+#tooltip_panel {
+	background-color: token(tooltip-bg);
+	border-color: token(tooltip-edge);
+}
+/* A button's hover text keeps legacy's look: no frame, black at 180/255. */
+#tooltip_panel.tt-button-hint { background-color: rgba(0, 0, 0, 180); }
+
+#tooltip_panel.tt-rich {
+	padding-bottom: 0.5em;
+	box-shadow: token(tooltip-shadow);
+}
+
+/* The header: the name, the item's kind and its Combat Power, one bar across the whole box (the panel's side padding
+   taken back by negative margins), closed by a line in the frame's colour. */
+#tooltip_panel.tt-rich .tt-line.tt-head {
+	margin-left: calc(var(--pad-px, 0px) * -1);
+	margin-right: calc(var(--pad-px, 0px) * -1);
+	padding-left: var(--pad-px, 0px);
+	padding-right: var(--pad-px, 0px);
+	margin-bottom: 0px;
+	background-color: token(tt-head-normal);
+}
+#tooltip_panel.rar-magic .tt-line.tt-head { background-color: token(tt-head-magic); }
+#tooltip_panel.rar-fine .tt-line.tt-head { background-color: token(tt-head-fine); }
+#tooltip_panel.rar-exc .tt-line.tt-head { background-color: token(tt-head-exc); }
+#tooltip_panel.rar-anc .tt-line.tt-head { background-color: token(tt-head-anc); }
+#tooltip_panel.rar-socket .tt-line.tt-head { background-color: token(tt-head-socket); }
+#tooltip_panel.rar-special .tt-line.tt-head { background-color: token(tt-head-special); }
+#tooltip_panel.rar-divine .tt-line.tt-head { background-color: token(tt-head-divine); }
+#tooltip_panel.tt-rich .tt-line.tt-head-last {
+	border-bottom-width: var(--border-px, 1px);
+	border-bottom-color: token(tooltip-edge);
+	margin-bottom: 0.4em;
+	padding-bottom: 0.2em;
+}
+/* The header's own line is the divider under it. */
+#tooltip_panel.tt-rich .tt-line.tt-head-last + .tt-line.tt-half-spacer {
+	height: 0px;
+	margin: 0px;
+	decorator: none;
+}
+
+/* The name a size larger (name_px), in a taller row. */
+#tooltip_panel.tt-rich .tt-line.tt-name {
+	height: calc(var(--bold-line-px, 0px) * 1.6);
+	line-height: calc(var(--bold-line-px, 0px) * 1.6);
+	font-weight: bold;
+}
+#tooltip_panel.tt-rich .tt-line.tt-kind { color: token(tt-kind-color); }
+
+/* The Combat Power as a pill in its line's colour (RmlTooltip.cpp measures the pill's padding and border too). */
+#tooltip_panel.tt-rich .tt-line.tt-cp { margin-top: 0.15em; margin-bottom: 0.15em; }
+#tooltip_panel.tt-rich .tt-cp .tt-text {
+	display: inline-block;
+	padding: 0px 0.8em;
+	border: 1px #cc80cc8c;
+	border-radius: 1em;
+	background-color: #cc80cc1f;
+}
+
+/* A run of blank lines is one divider: a line in the frame's colour, fading out to both sides. */
+#tooltip_panel.tt-rich .tt-line.tt-half-spacer {
+	height: 1px;
+	margin: 0.45em 1.2em;
+	decorator: linear-gradient(90deg, #7d644000, token(tooltip-edge), #7d644000);
+}
+
+#tooltip_panel.tt-rich .tt-line.tt-section { font-weight: bold; }
+/* "Hold Shift for details", under a short view. */
+#tooltip_panel.tt-rich .tt-line.tt-hint { color: #8d8d8d; margin-top: 0.4em; }
+
+/* The corner diamonds, centred on the frame's corners. */
+.tt-k { display: none; }
+#tooltip_panel.tt-rich .tt-k {
+	display: block;
+	position: absolute;
+	width: 0.5em;
+	height: 0.5em;
+	background-color: token(tooltip-edge);
+	transform: rotate(45deg);
+}
+#tooltip_panel.tt-rich .tt-k1 { left: calc(-0.25em - var(--border-px, 1px) * 0.5); top: calc(-0.25em - var(--border-px, 1px) * 0.5); }
+#tooltip_panel.tt-rich .tt-k2 { right: calc(-0.25em - var(--border-px, 1px) * 0.5); top: calc(-0.25em - var(--border-px, 1px) * 0.5); }
+#tooltip_panel.tt-rich .tt-k3 { left: calc(-0.25em - var(--border-px, 1px) * 0.5); bottom: calc(-0.25em - var(--border-px, 1px) * 0.5); }
+#tooltip_panel.tt-rich .tt-k4 { right: calc(-0.25em - var(--border-px, 1px) * 0.5); bottom: calc(-0.25em - var(--border-px, 1px) * 0.5); }
+
+/* +13..+15: the frame and the diamonds turn gold, and a gold frame pulses just outside. The glow sits on #tt_gold and
+   never changes; only #tt_gold_pulse's opacity is animated, since animating a box-shadow or a border would
+   regenerate its texture or geometry every frame. The animation exists only while the frame shows, and a hidden
+   tooltip's document is not updated at all. */
+#tt_gold { display: none; }
+#tooltip_panel.up-gold { border-color: token(tt-gold); }
+#tooltip_panel.tt-rich.up-gold .tt-k { background-color: token(tt-gold); }
+#tooltip_panel.tt-rich.up-gold #tt_gold {
+	display: block;
+	position: absolute;
+	left: calc(-0.25em - var(--border-px, 1px));
+	top: calc(-0.25em - var(--border-px, 1px));
+	right: calc(-0.25em - var(--border-px, 1px));
+	bottom: calc(-0.25em - var(--border-px, 1px));
+	box-shadow: 0px 0px 1.2em token(tt-gold-glow);
+}
+#tooltip_panel.tt-rich.up-gold #tt_gold_pulse {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	bottom: 0px;
+	border: 0.25em token(tt-gold);
+	animation: 1.2s cubic-in-out infinite alternate tt-gold-pulse;
+}
+
+/* A rich tooltip taller than the window even at its smallest text (RmlTooltip.cpp fits it to the height first, then
+   sets tt-tall): no shadow and no gold glow, so their textures never outgrow the window. */
+#tooltip_panel.tt-rich.tt-tall { box-shadow: none; }
+#tooltip_panel.tt-rich.up-gold.tt-tall #tt_gold { box-shadow: none; }
+
+@keyframes tt-gold-pulse {
+	from { opacity: 0.55; }
+	to { opacity: 1; }
+}

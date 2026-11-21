@@ -14559,4 +14559,8 @@
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>Rzemiosło</value>
   </data>
+  <!-- Rich item tooltip (Skynet theme): the last line of the short view -->
+  <data name="TooltipShiftForDetails" xml:space="preserve">
+    <value>Hold Shift for details</value>
+  </data>
 </root>

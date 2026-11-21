@@ -1,6 +1,8 @@
 #ifndef __ZZZINVENTORY_H__
 #define __ZZZINVENTORY_H__
 
+#include "GameLogic/Items/ItemRarity.h"
+
 enum _COLUMN_TYPE
 {
     _COLUMN_TYPE_LEVEL = 0,
@@ -87,7 +89,20 @@ constexpr int MAX_TEXT_LIST_LINES = 80;
 extern wchar_t TextList[MAX_TEXT_LIST_LINES][100];
 extern int TextListColor[MAX_TEXT_LIST_LINES];
 extern int TextBold[MAX_TEXT_LIST_LINES];
+// What an item tooltip line is (TextRole), for a theme that lays item tooltips out richly; TR_NONE for the rest.
+extern int TextListRole[MAX_TEXT_LIST_LINES];
 extern SIZE Size[MAX_TEXT_LIST_LINES];
+
+enum TextRole
+{
+    TR_NONE = 0,
+    TR_NAME,
+    TR_COMBAT_POWER,
+    TR_SECTION,
+    TR_DETAIL, // a line the short view may hide: an inactive set or Power of the Ancients bonus
+    TR_PIECE_OWNED,
+    TR_PIECE_MISSING,
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // party
@@ -223,6 +238,14 @@ void RenderSkillInfo(int sx, int sy, int Type, int SkillNum = 0, int iRenderPoin
 void RequireClass(ITEM_ATTRIBUTE* p);
 bool IsRequireClassRenderItem(const short sType);
 unsigned int getGoldColor(DWORD Gold);
+
+// The facts of the tooltip name colour, and the rarity tier they give before the name's own overrides.
+GameLogic::Items::Rarity::Facts DescribeForRarity(const ITEM* ip);
+GameLogic::Items::Rarity::Tier ItemRarityOf(const ITEM* ip);
+// What an item's inventory cells and worn slot show, classified once: the tier of gear and jewellery only (so the Horn
+// of Fenrir, options in the excellent bits and a blue name, shows none), the +7 and +13 bands of gear only (weapons,
+// shields, armour, wings).
+GameLogic::Items::Rarity::CellLook ItemCellLookOf(const ITEM* ip);
 
 bool IsExcellentItem(ITEM* pItem);
 bool IsAncientItem(ITEM* pItem);
