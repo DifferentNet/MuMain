@@ -2949,7 +2949,7 @@ int HeroWidth(Rml::ElementDocument* document)
 // those a finger or the pad's A reads them fresh (EnsureBoxes). The quick equip chip showing, hiding or
 // taking another offer, a potion button showing or hiding, the hero frame's width and a switch between
 // fingers and the pad count as a change of the layout: the party's cards, the chat and the system messages
-// move off them on the same frame (FollowNeighbours).
+// move off them on the same frame (FollowNeighbours, which with fingers runs every frame anyway).
 bool IsMeasureDue(Rml::ElementDocument* document, const ControlsModel& model)
 {
     g_measure.lazy = !model.menuOpen && !model.pickerOpen && !model.socialOpen;
@@ -3158,7 +3158,11 @@ void Update()
         MeasurePickerPage(document);
     if (model.socialOpen)
         FitSocialPlayers(document);
-    if (due)
+    // With fingers the phone's HUD pieces follow every frame, as before round 29: the party's cards, the
+    // buffs' lane, the notice board and the chat input change size on their own (a buff wrapping to a
+    // second row, a member joining, a wider notice) and must not overlap the buffs or the controls for a
+    // quarter second. The controls' own boxes stay lazy: they move only on a change IsMeasureDue sees.
+    if (due || model.fingers)
         FollowNeighbours(document);
 }
 
