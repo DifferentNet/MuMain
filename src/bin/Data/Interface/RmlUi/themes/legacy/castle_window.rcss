@@ -249,3 +249,111 @@
 #tax_footer_1 { width: calc(160px * var(--root-scale)); }
 #tax_footer_2 { width: calc(160px * var(--root-scale)); }
 #tax_footer_3 { width: calc(160px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide. The four tabs are
+   66 x 34 (newui_guild_tab04's stretch-safe middle, so the art is not stretched out of shape) and a long
+   name takes two lines inside its tab. The gate and statue pages move 55 units right to stay centred and
+   8 down under the taller tabs; a gate or statue on the map answers a finger 5 units round its picture.
+   Buy and Repair are 90 / 84 x 38; the improvement table moves right of the exit button, its Improve
+   buttons 84 wide on their rows. On the tax page the table, the rates and their arrows (32 x 30, side by
+   side) widen, Apply stands right of the notes and Withdraw right of the castle's zen. The buttons are
+   drawn from newui_btn_empty_small's stretch-safe middle; a locked one keeps its tint. The frame's ends
+   keep their art while its plain middle repeats (docked_panel_frame.rcss), and the parchment repeats. */
+@spritesheet cw-phone-tab-sheet
+{
+	src: "../../../newui_guild_tab04.tga";
+	cw-phone-tab-up: 0px 0px 56px 22px; cw-phone-tab-up-inner: 8px 4px 40px 14px;
+	cw-phone-tab-on: 0px 22px 56px 22px; cw-phone-tab-on-inner: 8px 26px 40px 14px;
+}
+@spritesheet cw-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	cw-phone-btn-up: 0px 0px 64px 29px; cw-phone-btn-up-inner: 10px 7px 44px 15px;
+	cw-phone-btn-over: 0px 29px 64px 29px; cw-phone-btn-over-inner: 10px 36px 44px 15px;
+	cw-phone-btn-down: 0px 58px 64px 29px; cw-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#heading { left: 0; width: calc(300px * var(--root-scale)); }
+
+	.cw-tab { top: 30px; width: 66px; height: 34px; decorator: ninepatch(cw-phone-tab-up, cw-phone-tab-up-inner); }
+	.cw-tab:nth-child(1) { left: 12px; }
+	.cw-tab:nth-child(2) { left: 81px; }
+	.cw-tab:nth-child(3) { left: 150px; }
+	.cw-tab:nth-child(4) { left: 219px; }
+	.cw-tab.selected { decorator: ninepatch(cw-phone-tab-on, cw-phone-tab-on-inner); }
+	.cw-tab-label { width: calc(66px * var(--root-scale)); white-space: normal; }
+
+	#panel .cw-btn { decorator: ninepatch(cw-phone-btn-up, cw-phone-btn-up-inner); }
+	#panel .cw-btn:hover { decorator: ninepatch(cw-phone-btn-over, cw-phone-btn-over-inner); }
+	#panel .cw-btn:active { decorator: ninepatch(cw-phone-btn-down, cw-phone-btn-down-inner); }
+	#panel .cw-btn.locked, #panel .cw-btn.locked:hover, #panel .cw-btn.locked:active {
+		decorator: ninepatch(cw-phone-btn-up, cw-phone-btn-up-inner);
+		image-color: #646464;
+	}
+
+	/* The gate and statue pages. */
+	.cw-map, .table-map, #map_title { margin-left: 55px; margin-top: 8px; }
+	.cw-item { margin: 3px 0 0 50px; padding: 5px; }
+	.cw-item .cw-icon, .cw-item .bar { margin-left: 5px; margin-top: 5px; }
+	#stat_hp { top: 252px; }
+	#stat_defense { top: 265px; }
+	#stat_recover { top: 278px; }
+	#btn_buy { left: 105px; top: 258px; width: 90px; height: 38px; }
+	#btn_repair { left: 198px; top: 252px; width: 84px; height: 38px; }
+	.table-improve { left: 62px; top: 294px; width: 226px; }
+	.table-improve .t-tr, .table-improve .t-right, .table-improve .t-br { left: 212px; }
+	.table-improve .t-top, .table-improve .t-bottom { width: 199px; }
+	.table-improve .t-fill, .table-improve .t-bottom-inner { width: 218px; }
+	#improve_title { left: 62px; top: 298px; width: calc(226px * var(--root-scale)); }
+	#next_hp { left: 70px; top: 322px; }
+	#next_defense { left: 70px; top: 345px; }
+	#next_recover { left: 70px; top: 368px; }
+	#btn_hp, #btn_defense, #btn_recover { left: 198px; width: 84px; height: 24px; }
+	#btn_hp { top: 316px; }
+	#btn_defense { top: 339px; }
+	#btn_recover { top: 362px; }
+	.cw-label { width: calc(90px * var(--root-scale)); }
+	#btn_repair .cw-label, #btn_hp .cw-label, #btn_defense .cw-label, #btn_recover .cw-label { width: calc(84px * var(--root-scale)); }
+
+	/* The tax page. */
+	.table-tax { left: 12px; top: 66px; width: 276px; }
+	.table-tax .t-tr, .table-tax .t-right, .table-tax .t-br { left: 262px; }
+	.table-tax .t-top, .table-tax .t-bottom { width: 249px; }
+	.table-tax .t-fill, .table-tax .t-bottom-inner { width: 268px; }
+	.table-tax .t-left, .table-tax .t-right { height: 69px; }
+	.table-tax .t-bl, .table-tax .t-br, .table-tax .t-bottom { top: 76px; }
+	#tax_title { left: 12px; top: 70px; width: calc(276px * var(--root-scale)); }
+	.tax-rate-back { left: 16px; width: 200px; height: 30px; }
+	.tax-rate-chaos { top: 86px; }
+	.tax-rate-store { top: 120px; }
+	.tax-divider { left: 15px; top: 108px; width: 270px; }
+	#chaos_rate { left: 16px; top: 95px; width: calc(200px * var(--root-scale)); }
+	#store_rate { left: 16px; top: 129px; width: calc(200px * var(--root-scale)); }
+	.tax-btn { width: 32px; height: 30px; }
+	#tax_chaos_down { left: 220px; top: 86px; }
+	#tax_chaos_up { left: 254px; top: 86px; }
+	#tax_npc_down { left: 220px; top: 120px; }
+	#tax_npc_up { left: 254px; top: 120px; }
+	#btn_apply { left: 196px; top: 162px; width: 90px; height: 38px; }
+	#tax_note_1 { top: 162px; width: calc(175px * var(--root-scale)); }
+	#tax_note_2 { top: 175px; width: calc(175px * var(--root-scale)); }
+	#tax_note_3 { top: 188px; width: calc(175px * var(--root-scale)); }
+	#tax_rule_1 { top: 206px; width: calc(270px * var(--root-scale)); }
+	#tax_rule_2 { top: 218px; width: calc(270px * var(--root-scale)); }
+	#tax_rule_3 { top: 230px; width: calc(270px * var(--root-scale)); }
+	#tax_rule_4 { top: 242px; width: calc(270px * var(--root-scale)); }
+	#tax_rule_5 { top: 254px; width: calc(270px * var(--root-scale)); }
+	#tax_rule_6 { top: 266px; width: calc(270px * var(--root-scale)); }
+	.cw-separator { left: 56px; top: 278px; }
+	.cw-money { left: 18px; top: 298px; }
+	.cw-money-text { top: 305px; }
+	#zen_label { left: 22px; }
+	#castle_money { right: 122px; }
+	#btn_withdraw { left: 196px; top: 291px; width: 90px; height: 38px; }
+	#tax_footer_1 { top: 334px; width: calc(270px * var(--root-scale)); }
+	#tax_footer_2 { top: 347px; width: calc(270px * var(--root-scale)); }
+	#tax_footer_3 { top: 360px; width: calc(270px * var(--root-scale)); }
+}

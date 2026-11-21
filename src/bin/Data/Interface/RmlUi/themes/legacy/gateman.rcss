@@ -116,3 +116,61 @@
 #denied_3 { width: calc(190px * var(--root-scale)); }
 #denied_4 { width: calc(190px * var(--root-scale)); }
 .gk-label { width: calc(53px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide and every line is
+   centred on it or starts further left, so the phone's readable text keeps to the window; lines stand
+   13-14 units apart, the phone text's own height. The public toggle is a 260 x 34 row with a larger box,
+   the fee arrows 40 x 34 side by side right of the fee, Confirm and Enter 90 x 38; Enter sits under the
+   last line on the guest and member pages. The buttons are drawn from newui_btn_empty_small's stretch-safe
+   middle so their art is not stretched out of shape; a locked one keeps its tint. The frame's ends keep
+   their art while its plain middle repeats (docked_panel_frame.rcss), and the parchment repeats. */
+@spritesheet gk-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	gk-phone-btn-up: 0px 0px 64px 29px; gk-phone-btn-up-inner: 10px 7px 44px 15px;
+	gk-phone-btn-over: 0px 29px 64px 29px; gk-phone-btn-over-inner: 10px 36px 44px 15px;
+	gk-phone-btn-down: 0px 58px 64px 29px; gk-phone-btn-down-inner: 10px 65px 44px 15px;
+}
+@media (theme: mobile) {
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#heading { left: 0; width: calc(300px * var(--root-scale)); }
+	#panel .gk-line { width: calc(300px * var(--root-scale)); }
+
+	#members_1 { top: 66px; }
+	#members_2 { top: 79px; }
+	#members_3 { top: 92px; }
+	#public_toggle { left: 20px; top: 104px; width: 260px; height: 34px; }
+	#checkbox { left: 2px; top: 8px; width: 18px; height: 18px; }
+	#check_mark { left: 3px; top: 3px; width: 10px; height: 10px; }
+	#open_to_non_members { left: 46px; top: 114px; }
+	#entrance_fee { left: 20px; top: 142px; }
+	#fee_setting_label { top: 162px; }
+	#fee_back { left: 30px; top: 180px; width: 160px; height: 34px; }
+	#view_fee { right: 120px; top: 191px; }
+	.fee-btn { top: 180px; width: 40px; height: 34px; }
+	.fee-down { left: 200px; }
+	.fee-up { left: 246px; }
+	#fee_range { top: 268px; }
+	#fee_range_for { top: 281px; }
+	#fee_increment { top: 294px; }
+
+	#guest_pay_prompt { top: 64px; }
+	#guest_question { top: 78px; }
+	#denied_2 { top: 64px; }
+	#denied_3 { top: 78px; }
+	#denied_4 { top: 92px; }
+
+	#panel .gk-btn { width: 90px; height: 38px; decorator: ninepatch(gk-phone-btn-up, gk-phone-btn-up-inner); }
+	#panel .gk-btn:hover { decorator: ninepatch(gk-phone-btn-over, gk-phone-btn-over-inner); }
+	#panel .gk-btn:active { decorator: ninepatch(gk-phone-btn-down, gk-phone-btn-down-inner); }
+	#panel .gk-btn.locked, #panel .gk-btn.locked:hover, #panel .gk-btn.locked:active {
+		decorator: ninepatch(gk-phone-btn-up, gk-phone-btn-up-inner);
+		image-color: #646464;
+	}
+	.gk-label { width: calc(90px * var(--root-scale)); }
+	#btn_confirm { left: 105px; top: 222px; }
+	#btn_enter { left: 105px; top: 114px; }
+	#panel.master #btn_enter { top: 316px; }
+}

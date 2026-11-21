@@ -10013,7 +10013,7 @@
     <comment>legacy_id=2845</comment>
   </data>
   <data name="Register 255 Lucky Coins during the event" xml:space="preserve">
-    <value>Зарегистрируйте 255 Lucky Coins во время мероприятия.</value>
+    <value>Зарегистрируйте 255 Lucky Coins</value>
     <comment>legacy_id=2855</comment>
   </data>
   <data name="for a chance to get" xml:space="preserve">
@@ -10025,7 +10025,7 @@
     <comment>legacy_id=2857</comment>
   </data>
   <data name="Please check the web page for the event details." xml:space="preserve">
-    <value>Пожалуйста, проверьте веб-страницу для получения подробной информации о мероприятии.</value>
+    <value>Подробности события — на сайте.</value>
     <comment>legacy_id=2858</comment>
   </data>
   <data name="You can only apply once per your account." xml:space="preserve">

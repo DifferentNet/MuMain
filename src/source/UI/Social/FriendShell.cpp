@@ -558,26 +558,16 @@ void FriendShell::ActivateFriend()
 {
     const auto& m = m_View.GetModel();
     const auto it = std::find_if(m.friends.begin(), m.friends.end(), [&](const auto& row) { return row.name == m.selectedFriend; });
-    if (it == m.friends.end() || it->server > LastOnlineServer) return;
+    if (it == m.friends.end() || it->server > LastOnlineServer || g_pChatInputBox == nullptr) return;
+    // MU Moldova: a friend's chat room never connected (the client dials the chat server on 55980, ours
+    // listens on 45980, and the /play bridge passes neither), so the window stayed empty. A whisper
+    // reaches the friend instead, as a tap on a party or guild member does. Rooms a friend opens with
+    // us (SocialUpdates ChatRoomOpened) are left as they were.
     const auto name = StringUtils::NarrowToWide(it->name);
-    const DWORD existing = g_pFriendMenu->CheckChatRoomDuplication(name.c_str());
-    if (existing == 0)
-    {
-        if (!g_pWindowMgr->GetChatReject() && !g_pFriendMenu->IsRequestWindow(name.c_str()))
-        {
-            g_pFriendMenu->AddRequestWindow(name.c_str());
-            SocketClient->ToGameServer()->SendChatRoomCreateRequest(MU_C16(name.c_str()));
-        }
-    }
-    else if (existing != static_cast<DWORD>(-1))
-    {
-        auto* room = g_pWindowMgr->GetWindow(existing);
-        if (!room)
-            return;
-        // A room prepared hidden only comes back through the hidden state.
-        room->SetState(UISTATE_HIDE);
-        g_pWindowMgr->SendUIMessage(UI_MESSAGE_SELECT, existing, 0);
-    }
+    // Open the chat input first, otherwise only the whisper target changes and nothing shows.
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+    g_pChatInputBox->StartWhisperTo(name.c_str());
 }
 
 void FriendShell::DeleteFriend()

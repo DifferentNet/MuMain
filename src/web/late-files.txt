@@ -1578,3 +1578,21 @@ Data/Interface/newui_chat_normal_on.OZJ
 Data/Interface/newui_chat_system_on.OZJ
 Data/Interface/newui_option_volume01.OZT
 Data/Interface/newui_option_volume02.OZT
+# Added 2026-11-21 (round 33 C): window textures every first map still read one by one a few seconds after
+# the entry (the zen and trade buttons, the account title, the Gens rank, the command window), the worn
+# weapon's icon, and the repair button and zen icon a walk on Karutan 1 read, 244 KB in all.
+Data/Interface/newui_durable_weapon.OZT
+Data/Interface/newui_item_money3.OZT
+Data/Interface/newui_Bt_money01.OZT
+Data/Interface/newui_Bt_money02.OZT
+Data/Interface/newui_Bt_lock02.OZT
+Data/Interface/newui_Bt_mix.OZT
+Data/Interface/newui_Account_title.OZT
+Data/Interface/newui_Bt_accept.OZT
+Data/Interface/newui_gens_rankback.OZT
+Data/Interface/newui_commamd01.OZT
+Data/Interface/newui_commamd02.OZT
+Data/Interface/newui_commamd03.OZT
+Data/Interface/newui_commamd_Line.OZJ
+Data/Interface/newui_repair_00.OZT
+Data/Interface/newui_item_money2.OZT
