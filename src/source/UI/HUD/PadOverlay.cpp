@@ -3,20 +3,24 @@
 
 #include "Core/Utilities/StringUtils.h"
 #include "I18N/All.h"
+#include "Scenes/SceneCore.h" // SceneFlag
 #include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHub.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
+#include "UI/RmlBridge/RmlStackingOrder.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
+#include <RmlUi/Core/Property.h>
 
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -396,13 +400,15 @@ void SyncLegend(OverlayModel& model, const View& view)
     const bool asks = says == Legend::Answer || says == Legend::DialogButton;
     const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move
                         || says == Legend::Crafting || says == Legend::Use || says == Legend::Keep;
+    // No item's card and nothing for X there: a control, the pointer on no target, an item to repair.
+    const bool noCard = says == Legend::Button || says == Legend::Pointer || says == Legend::Repair;
     SyncBool(model.legendA, says != Legend::Empty && says != Legend::Slider, "legend_a");
     SyncBool(model.legendSlider, says == Legend::Slider, "legend_slider");
     SyncLabel(model.sliderLabel, I18N::Game::PadAdjust, "slider_label");
     SyncBool(model.legendItem, onItem && says != Legend::Keep, "legend_item");
     // The shop's goods have no card and nothing for X: A buys them. The crafting box's items have no card.
     SyncBool(model.legendY,
-             says != Legend::Button && says != Legend::Goods && says != Legend::Empty && says != Legend::Crafting
+             !noCard && says != Legend::Goods && says != Legend::Empty && says != Legend::Crafting
                  && says != Legend::Slider && !asks,
              "legend_y");
     SyncBool(model.legendMenu, !asks, "legend_menu");
@@ -414,6 +420,7 @@ void SyncLegend(OverlayModel& model, const View& view)
                          : says == Legend::Goods   ? &I18N::Game::PadBuy
                          : says == Legend::Holding ? &I18N::Game::PadPutDown
                          : says == Legend::Answer  ? &I18N::Game::PadDialogYes
+                         : says == Legend::Repair  ? &I18N::Game::Repair
                                                    : &I18N::Game::PadPress;
     SyncLabel(model.takeLabel, *aLabel, "take_label");
     const auto* xLabel = says == Legend::Worn   ? &I18N::Game::TouchItemUnequip
@@ -428,6 +435,31 @@ void SyncLegend(OverlayModel& model, const View& view)
               says == Legend::Holding ? I18N::Game::PadPutBack : asks ? I18N::Game::PadDialogNo : I18N::Game::PadClose,
               "close_label");
     SyncLabel(model.windowsLabel, I18N::Game::PadAllWindows, "windows_label");
+}
+
+// The overlay is over the reconnect dialog (SyncDepth()).
+bool g_overReconnect = false;
+
+// The overlay's depth: over the reconnect dialog while it is up (the frame on its Cancel; pad round 8, A4),
+// then back at the scene's own (RmlStackingOrder.h), which RmlTheme gives again on a scene change only.
+void SyncDepth(Rml::ElementDocument* document, bool overReconnect)
+{
+    if (document == nullptr || (!overReconnect && !g_overReconnect))
+        return;
+    g_overReconnect = overReconnect;
+    constexpr std::string_view Name = "pad_overlay.rml";
+    std::optional<float> depth;
+    if (overReconnect)
+        depth = UI::RmlBridge::PadOverlayOverReconnectDepth();
+    else if (SceneFlag == MAIN_SCENE)
+        depth = UI::RmlBridge::StackingDepthForDocument(Name);
+    else
+        depth = UI::RmlBridge::StackingDepthOutsideMainScene(Name);
+    if (!depth)
+        return;
+    const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
+    if (current == nullptr || current->Get<float>() != *depth)
+        document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(*depth, Rml::Unit::NUMBER));
 }
 
 void SyncOffer(OverlayModel& model, const View& view)
@@ -451,6 +483,7 @@ void Update(const View& view, float seconds)
     if (!shown)
     {
         g_frameWasDrawn = false;
+        SyncDepth(g_View.Document(), view.overReconnect);
         UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
         return;
     }
@@ -459,6 +492,7 @@ void Update(const View& view, float seconds)
     Rml::ElementDocument* document = g_View.Document();
     if (document == nullptr)
         return;
+    SyncDepth(document, view.overReconnect);
     OverlayModel& model = g_View.GetModel();
     ForgetLabelsNowAndThen();
     const Rml::Context* context = document->GetContext();

@@ -42,6 +42,10 @@ std::optional<DocumentScene> SceneForDocument(std::string_view documentName);
 // Depth outside the main scene for a DocumentScene::Every document; none for any other.
 std::optional<float> StackingDepthOutsideMainScene(std::string_view documentName);
 
+// The pad's overlay (pad_overlay.rml) while the reconnect dialog is up, in any scene: over the dialog, so
+// the frame is seen on its Cancel (pad round 8, A4). Its depth in the table holds the rest of the time.
+float PadOverlayOverReconnectDepth();
+
 // Depth in the phone view (UI::Mobile::IsPhoneView()) for a HUD overlay the phone's windows reach
 // over (the logs, the pets' column): under every window, where on a PC it drew over the few that
 // shared its corner; and for the full-screen map: under the touch controls, whose Back closes it.

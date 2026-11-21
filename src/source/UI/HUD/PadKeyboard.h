@@ -17,6 +17,7 @@
 // | View | English letters, Russian ones, then (the chat's line only) the quick chat phrases: A sends one at once |
 // | LB, RB | Move the cursor (held, it repeats) |
 // | Menu | Enter: send the chat, log in |
+// | Left stick click | The chat's message line: its channel, All, Party, Guild, Gens (the ones the hero is in) |
 #pragma once
 
 #include "Core/Input/GamepadStepper.h"

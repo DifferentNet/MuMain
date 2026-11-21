@@ -28,6 +28,9 @@ constexpr float SceneMessageBoxDepth = 31.0f; // the login scene's g_MessageBox,
 constexpr float PadKeyboardDepth = 35.0f;
 constexpr float LoadingScreenDepth = 40.0f;   // the loading scene draws nothing else
 constexpr float ReconnectDialogDepth = 50.0f; // after the whole scene
+// The pad's frame over the reconnect dialog while it is up (PadOverlayOverReconnectDepth()).
+constexpr float PadOverlayOverReconnectDialogDepth = 50.5f;
+static_assert(PadOverlayOverReconnectDialogDepth > ReconnectDialogDepth);
 // The phone view's HUD overlays: under every window (the lowest, trade.rml, is 2.1), still over the
 // touch controls (1.06).
 constexpr float UnderPhoneWindowsDepth = 1.95f;
@@ -245,6 +248,11 @@ std::optional<float> StackingDepthOutsideMainScene(std::string_view documentName
     if (documentName == "pad_overlay.rml")
         return PadOverlayOutsideDepth;
     return OverSceneWindowsDepth;
+}
+
+float PadOverlayOverReconnectDepth()
+{
+    return PadOverlayOverReconnectDialogDepth;
 }
 
 std::optional<float> PhoneViewStackingDepth(std::string_view documentName)

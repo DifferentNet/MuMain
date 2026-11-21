@@ -11396,7 +11396,7 @@
     <value>{MENU}：ヒーローハブ（インベントリ、キャラクター、スキル、クエスト、ギルド、設定）。{LB}と{RB}でタブを切り替え。もう一度：すべてのウィンドウ。{MENU}長押し：チャット</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>ログイン画面とキャラクター画面：スティックでポインターを動かす</value>
+    <value>ログイン画面とキャラクター画面：D-padか左スティックで枠を動かし、右スティックでポインターを動かす</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>そこでは{A}がクリック、{B}がEsc、{MENU}がEnter</value>
@@ -11495,7 +11495,7 @@
     <value>D-padまたはスティック：キー。{A}：押す、{X}：消す、{Y}：スペース、{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}：シフト、{RT}：記号、{VIEW}：英語・ロシア語・定型文、{LB}/{RB}：カーソル、{B}：閉じる</value>
+    <value>{LT}：シフト、{RT}：記号、{VIEW}：英語・ロシア語・定型文、{LB}/{RB}：カーソル、{B}：閉じる。チャットでは{WALKSTICK_OBJ}を押し込む：全体、パーティー、ギルド、ゲンス</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>マナが足りません</value>
@@ -12419,6 +12419,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>定型文</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>全体</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>ギルド</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>ゲンス</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>プレイヤーと取引: 見える範囲なら /trade 名前、それ以外は選択中のプレイヤー(距離不問)か、向かい合っている相手。</value>
@@ -12620,6 +12629,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>矢印キー：歩く</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + アイテムをクリック：チャットに表示</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>装備中より良い新しいアイテム：D-pad右を長押しで装備。インベントリでは{Y}でアイテムカードを開く（不用品マーク）。商人では「不用品を売る」ボタンで{A}を押すと不用品を売る。足元のゼンは自動で拾う</value>

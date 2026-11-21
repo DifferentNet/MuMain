@@ -23,6 +23,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 
+#include "Network/Reconnect/ReconnectManager.h"
 #include "Network/Server/ServerListManager.h"
 #include "UI/Scaling/UITransform.h"
 
@@ -204,7 +205,11 @@ void CSceneUICoordinator::Update(double dDeltaTick)
     // m_NewStyleMng.Update() and sets m_bSysMenuToggledByEscThisFrame -- without it, g_LoginWin's
     // own Escape-cancel check would see this frame's post-toggle IsVisible() and fire too.
     m_bSysMenuToggledByEscThisFrame = false;
-    if (rInput.IsKeyDown(VK_ESCAPE))
+    // A reconnect under way (the login, character and loading screens after the teardown): Esc is its
+    // dialog's Cancel (UI/Dialogs/ReconnectDialog), not the system menu over it. The press is read once:
+    // the dialog's cancel ends the reconnect in ReconnectManager::Update() of the next frame, when the
+    // press is over.
+    if (rInput.IsKeyDown(VK_ESCAPE) && !ReconnectManager::Instance().IsActive())
     {
         extern EGameScene SceneFlag;
         if (SceneFlag == LOG_IN_SCENE || SceneFlag == CHARACTER_SCENE)

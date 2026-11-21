@@ -13309,7 +13309,7 @@
     <value>{MENU}：英雄中心（背包、角色、技能、任務、公會、設定），{LB} 和 {RB} 切換分頁。再按一次：所有視窗。按住 {MENU}：聊天</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>登入與角色畫面：搖桿移動游標</value>
+    <value>登入與角色畫面：D-pad 或左搖桿移動外框，右搖桿移動游標</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>在那裡 {A} 是點擊，{B} 是 Esc，{MENU} 是 Enter</value>
@@ -13408,7 +13408,7 @@
     <value>D-pad 或搖桿：按鍵。{A}：按下，{X}：刪除，{Y}：空白，{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}：Shift，{RT}：符號，{VIEW}：英文、俄文、常用語，{LB}/{RB}：游標，{B}：關閉</value>
+    <value>{LT}：Shift，{RT}：符號，{VIEW}：英文、俄文、常用語，{LB}/{RB}：游標，{B}：關閉。聊天時按下{WALKSTICK_OBJ}：全部、隊伍、公會、氏族</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>魔力不足</value>
@@ -14332,6 +14332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>常用語</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>公會</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>氏族</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>與玩家交易：對方在視野內時用 /trade 名字，否則與選取的玩家（不限距離）或面對你的玩家交易。</value>
@@ -14530,6 +14539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>方向鍵：行走</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + 點擊物品：在聊天中顯示</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>比身上更好的新物品：按住 D-pad 右即可穿上。在背包中按 {Y} 開啟物品卡片（垃圾標記）；在商人處對「出售垃圾」按鈕按 {A} 出售垃圾。腳下的 Zen 會自動撿起</value>

@@ -346,10 +346,13 @@ bool CLoginWin::UpdateWhileShown()
     // g_SysMenuWin.IsVisible() because an Esc that just closed the menu this frame already reads
     // back IsVisible()==false. g_CharMakeWin.IsVisible() covers the same gap: this window keeps
     // ticking on the character-select scene too, so without it, Esc closing Character Create also
-    // fires this window's own SubmitCancel() and logs out unexpectedly.
+    // fires this window's own SubmitCancel() and logs out unexpectedly. A reconnect under way: Esc is
+    // its dialog's Cancel (UI/Dialogs/ReconnectDialog), and the system menu no longer opens on it
+    // (CSceneUICoordinator::Update()), so this window stays off itself (pad round 8, A4).
     SetActive(!(g_CreditWin.IsVisible() || g_MsgWin.IsVisible() || g_SysMenuWin.IsVisible()
                 || g_CharMakeWin.IsVisible()
                 || CSceneUICoordinator::Instance().WasSysMenuToggledByEscThisFrame()
+                || ReconnectManager::Instance().IsActive()
                 || UI::Login::RememberPasswordChoiceState() == UI::Login::RememberPasswordChoice::Pending));
 
     // Polls the "Remember Password" dialog's own Enter/Esc while it's open.

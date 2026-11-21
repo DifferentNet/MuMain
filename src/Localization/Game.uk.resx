@@ -13309,7 +13309,7 @@
     <value>{MENU}: центр героя (інвентар, персонаж, навички, квести, гільдія, налаштування), {LB} і {RB} перемикають його вкладки. Ще раз: усі вікна. Утримуй {MENU}: чат</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Екрани входу й персонажів: стіки рухають вказівник</value>
+    <value>Екрани входу й персонажів: D-pad або лівий стік рухають рамку, правий стік — вказівник</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Там {A} клікає, {B} це Esc, {MENU} це Enter</value>
@@ -13408,7 +13408,7 @@
     <value>D-pad або стік: клавіші. {A}: натиснути, {X}: стерти, {Y}: пробіл, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: shift, {RT}: символи, {VIEW}: англійська, російська, фрази, {LB}/{RB}: курсор, {B}: закрити</value>
+    <value>{LT}: shift, {RT}: символи, {VIEW}: англійська, російська, фрази, {LB}/{RB}: курсор, {B}: закрити. У чаті натисніть {WALKSTICK_OBJ}: усі, група, гільдія, Gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Замало мани</value>
@@ -14332,6 +14332,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Фрази</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Усі</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Гільдія</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Обмін з гравцем: /trade Ім'я, якщо він поруч; інакше з вибраним гравцем на будь-якій відстані або з тим, хто стоїть навпроти.</value>
@@ -14530,6 +14539,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Стрілки: ходьба</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Shift + клік по предмету: показати його в чаті</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Новий предмет кращий за вдягнений: утримуй D-pad праворуч, щоб надіти. В інвентарі {Y} відкриває картку предмета (позначка «мотлох»); у торговця {A} на кнопці «Продати мотлох» продає мотлох. Зен під ногами підбирається сам</value>

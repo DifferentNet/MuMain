@@ -1,13 +1,20 @@
 #include "stdafx.h"
 #include "UI/HUD/PadKeyboard.h"
 
+#include "Audio/DSPlaySound.h"
+#include "Core/Input/GamepadStick.h"
+#include "Core/Input/GamepadStickClick.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInventory.h"
+#include "Guild/GuildTypes.h"
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatChannelCycle.h"
 #include "UI/Chat/ChatPhraseTexts.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ChatInputBox.h"
@@ -104,6 +111,9 @@ struct KeyboardModel
     Rml::String typeLabel;
     Rml::String caretLabel;
     Rml::String closeLabel;
+    // The chat's message line: the left stick's click and the channel a line goes to (pad round 8, B1).
+    bool channelShown = false;
+    Rml::String channelLabel;
 };
 
 void BindModel(Rml::DataModelConstructor& c, KeyboardModel& model)
@@ -133,6 +143,8 @@ void BindModel(Rml::DataModelConstructor& c, KeyboardModel& model)
     c.Bind("type_label", &model.typeLabel);
     c.Bind("caret_label", &model.caretLabel);
     c.Bind("close_label", &model.closeLabel);
+    c.Bind("channel_shown", &model.channelShown);
+    c.Bind("channel_label", &model.channelLabel);
 }
 
 // Over every window and the login scene's windows and messages, under the loading screen
@@ -155,6 +167,8 @@ struct State
     Pad::RepeatButton erase{FirstRepeat, KeyRepeat};
     Pad::RepeatButton caretLeft{FirstRepeat, KeyRepeat};
     Pad::RepeatButton caretRight{FirstRepeat, KeyRepeat};
+    // The left stick's click, on purpose: not one while the stick steps the keys.
+    Pad::StickClick stickClick;
 };
 State g_state;
 
@@ -301,6 +315,27 @@ void SwitchLanguage(const Rml::Element* field)
         g_state.rowsDirty = true;
 }
 
+// The chat's channel (CChatInputBox::INPUT_MESSAGE_TYPE) as UI::Chat::ChannelCycle counts it, All for none.
+int ChannelOf(const mu::ui::window::CChatInputBox& chat)
+{
+    return chat.GetInputMsgType() - mu::ui::window::CChatInputBox::INPUT_CHAT_MESSAGE;
+}
+
+// The left stick's click on the chat's message line: the next channel the hero is in (All, Party, Guild,
+// Gens), as the chat bar's buttons choose one, which light up with it.
+void NextChannel(const Rml::Element* field)
+{
+    if (!IsChatMessageLine(field) || g_pChatInputBox == nullptr || Hero == nullptr)
+        return;
+    const bool inParty = PartyNumber > 0;
+    const bool inGuild = Hero->GuildStatus != G_NONE;
+    // CGensRanking::GENSTYPE_NONE is 0; Duprian and Vanert are 1 and 2.
+    const bool inGens = Hero->m_byGensInfluence != 0;
+    const int next = UI::Chat::ChannelCycle::NextChannel(ChannelOf(*g_pChatInputBox), inParty, inGuild, inGens);
+    g_pChatInputBox->SetInputMsgType(mu::ui::window::CChatInputBox::INPUT_CHAT_MESSAGE + next);
+    PlayBuffer(SOUND_CLICK01);
+}
+
 // Sent at once to the chat's channel (or its whisper target), as the chat's own Enter sends a line.
 void SendPhrase(const Layout::Key& key, const Rml::Element* field)
 {
@@ -391,6 +426,7 @@ void Open(Rml::Element* field)
     g_state.spot = Layout::Clamp(g_state.page, digits ? DigitsStart : LettersStart);
     g_state.rowsDirty = true;
     g_state.stepper.Reset();
+    g_state.stickClick = {};
 
     KeyboardModel& model = g_View.GetModel();
     model.top = IsLow(field);
@@ -422,6 +458,10 @@ void Act(Rml::Element* field, const Pad::Presses& presses, Clock::time_point now
         SendKey(SDLK_RIGHT, SDL_SCANCODE_RIGHT);
     if (Pressed(presses, Button::Menu))
         Enter();
+    g_state.stickClick.Update(Pad::Lean(Pad::LeftStick()), Pressed(presses, Button::LeftStick),
+                              Held(Button::LeftStick), now);
+    if (g_state.stickClick.Pressed())
+        NextChannel(field);
     if (Pressed(presses, Button::B))
         Close(field);
 }
@@ -552,6 +592,31 @@ void SyncString(Rml::String& field, Rml::String value, const char* name)
     g_View.MarkDirty(name);
 }
 
+void SyncBool(bool& field, bool value, const char* name)
+{
+    if (field == value)
+        return;
+    field = value;
+    g_View.MarkDirty(name);
+}
+
+// The channel's name. Party is the chat bar's own word; Guild and Gens have their own, as the bar's are not
+// plain names in every language ("found a guild" in Japanese, a lowercase "gens").
+const wchar_t* ChannelName(int channel)
+{
+    switch (channel)
+    {
+    case UI::Chat::ChannelCycle::Party:
+        return I18N::Game::Party;
+    case UI::Chat::ChannelCycle::Guild:
+        return I18N::Game::PadChatGuild;
+    case UI::Chat::ChannelCycle::Gens:
+        return I18N::Game::PadChatGens;
+    default:
+        return I18N::Game::PadChatAll;
+    }
+}
+
 // The cursor, in characters from the start.
 int CaretOf(Rml::Element* field, const Rml::String& value)
 {
@@ -603,6 +668,12 @@ void SyncLabels(KeyboardModel& model)
     SyncString(model.typeLabel, StringUtils::WideToNarrow(I18N::Game::PadKeyboardType), "type_label");
     SyncString(model.caretLabel, StringUtils::WideToNarrow(I18N::Game::PadKeyboardCaret), "caret_label");
     SyncString(model.closeLabel, StringUtils::WideToNarrow(I18N::Game::PadClose), "close_label");
+    // On the chat's message line only: not on the whisper name.
+    const bool channel = g_state.phrases && g_pChatInputBox != nullptr;
+    SyncBool(model.channelShown, channel, "channel_shown");
+    if (channel)
+        SyncString(model.channelLabel, StringUtils::WideToNarrow(ChannelName(ChannelOf(*g_pChatInputBox))),
+                   "channel_label");
 }
 
 // The keyboard stays off the field: the field may move while it is up (the login window steps up).

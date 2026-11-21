@@ -40,6 +40,11 @@ struct View
         Answer,
         // The frame on a question box's buttons: A presses the one it is on, B says no.
         DialogButton,
+        // The frame open and the pointer on no target (the right stick moved it off, a window with none):
+        // A presses what is under it, nothing for X or Y (pad round 8, A5).
+        Pointer,
+        // An item's place while the bag is in repair mode: A repairs the item there.
+        Repair,
     };
     Legend legendSays = Legend::Item;
     // RB takes the frame to the next window (two or more open), RT turns a window's page (pad round 3).
@@ -67,6 +72,8 @@ struct View
     const wchar_t* offerText = nullptr;
     // How far from the right the tabs and the legend end, so they stay off the windows; 0 = the whole width.
     float topRight = 0.f;
+    // The reconnect dialog is up: the overlay draws over it, the frame on its Cancel (pad round 8, A4).
+    bool overReconnect = false;
 };
 
 // Once a frame from UI::HUD::GamepadControls, `seconds` since the last (the frame glides by it); an

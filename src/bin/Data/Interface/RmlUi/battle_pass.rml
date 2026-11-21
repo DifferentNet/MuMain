@@ -66,6 +66,8 @@
 		<!-- The reward items, live 3D, drawn by C++ under the levels' pane. -->
 		<img id="bp_items" class="bp-items" data-class-hidden="tab != 0 || !has_info"/>
 
+		<!-- The reward icons and the chests are "pad-look": the pad's frame rests on each, so its item or its
+		     hint shows as under a mouse (pad round 8). -->
 		<div id="bp_levels" class="sharp-text sharp-flow scroll-pane" data-class-hidden="tab != 0 || !has_info"
 		     data-style-font-size="text_px + 'px'">
 			<div class="bp-row" data-for="r : levels" data-attr-id="r.id" data-class-claimed="r.claimed"
@@ -73,7 +75,7 @@
 			     data-event-click="battle_pass_claim_level(r.level)">
 				<span class="bp-lv" data-attr-data-hint="r.hint"
 				      data-style-font-size="bold_px + 'px'">{{r.label}}</span>
-				<div class="bp-icon" data-for="ic : r.icons" data-attr-id="ic.id" data-class-sign="ic.sign != ''"
+				<div class="bp-icon pad-look" data-for="ic : r.icons" data-attr-id="ic.id" data-class-sign="ic.sign != ''"
 				     data-attr-data-hint="ic.hint" data-event-mouseover="battle_pass_hover(ic.index)"
 				     data-event-mouseout="battle_pass_hover(-1)">
 					<span class="bp-sign" data-if="ic.sign != ''">{{ic.sign}}</span>
@@ -112,13 +114,13 @@
 						<span class="bp-day-count">{{q.detail}}</span>
 					</div>
 					<div class="bp-day-chests">
-						<div class="bp-chest" data-for="c : q.chests" data-style-left="c.at + '%'" data-class-got="c.got"
+						<div class="bp-chest pad-look" data-for="c : q.chests" data-style-left="c.at + '%'" data-class-got="c.got"
 						     data-class-reached="c.reached" data-attr-id="c.id"
 						     data-attr-data-hint="c.hint"><span class="bp-chest-label">{{c.label}}</span></div>
 					</div>
 				</div>
 				<div class="bp-week-chest" data-if="q.type == 6">
-					<div class="bp-chest" data-for="c : q.chests" data-class-got="c.got" data-class-reached="c.reached"
+					<div class="bp-chest pad-look" data-for="c : q.chests" data-class-got="c.got" data-class-reached="c.reached"
 					     data-attr-id="c.id" data-attr-data-hint="c.hint"><span class="bp-chest-label">{{c.label}}</span></div>
 				</div>
 			</div>

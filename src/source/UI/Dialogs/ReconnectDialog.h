@@ -10,4 +10,8 @@ namespace UI::Reconnect
     void CaptureBackground();
 
     void RenderDialog();
+
+    // In the world: this frame's Esc reached the hot keys, no window took it (CHotKey::UpdateKeyEvent()),
+    // so the dialog cancels on it; an Esc that closed the bag or the chat line does not (pad round 8, A4).
+    void TakeEscape();
 }

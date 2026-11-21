@@ -3,11 +3,14 @@
 
 #include "Network/Reconnect/ReconnectManager.h"
 #include "Render/Textures/ZzzOpenglUtil.h" // BeginBitmap/EndBitmap, RenderColorBitmap
+#include <utility>
 #include <vector>
 #include "I18N/All.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "Scenes/SceneCore.h" // SceneFlag
+#include "UI/Core/WindowCommon.h" // IsPress
 #include "UI/Dialogs/ReconnectDialogRmlModel.h"
 #include "UI/RmlBridge/RmlSyncField.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -33,6 +36,8 @@ namespace
     UI::RmlBridge::ThemedView<ReconnectDialogRmlModel> s_view{"reconnect_dialog", BindModel,
         {{"Data/Interface/RmlUi/reconnect_dialog.rml"}}};
     bool s_cancelClicked = false;
+    // TakeEscape() this frame; RenderDialog() reads it once and clears it, every frame.
+    bool s_escapeTaken = false;
 
     // The panel's place in the original's 640x480 screen, below the centre.
     constexpr float PANEL_W = 230.0f;
@@ -138,8 +143,15 @@ void CaptureBackground()
     s_hasBackground = s_backgroundTex != 0u;
 }
 
+void TakeEscape()
+{
+    s_escapeTaken = true;
+}
+
 void RenderDialog()
 {
+    // Read once a frame, whatever the dialog does this frame: an Esc counts in its own frame only.
+    const bool escapeTaken = std::exchange(s_escapeTaken, false);
     ReconnectManager& mgr = ReconnectManager::Instance();
     if (!mgr.IsActive())
     {
@@ -164,6 +176,14 @@ void RenderDialog()
         EndBitmap();
     }
     SyncView(probing || frozenFrame ? DIM_ALPHA : OPAQUE_ALPHA, Progress());
+    // Esc cancels too, and the pad's B, which taps it (pad round 8, A4), in every scene the dialog is up in.
+    // In the world only an Esc no window took (one closing the bag or the chat line leaves the reconnect
+    // on): the hot keys pass it on (TakeEscape()), not the system menu. On the login, character and
+    // loading screens no window takes it first, and CSceneUICoordinator::Update() leaves it to this dialog.
+    const bool escape = SceneFlag == MAIN_SCENE ? escapeTaken && mu::ui::window::IsPress(VK_ESCAPE)
+                                                : mu::ui::window::IsPress(VK_ESCAPE);
+    if (escape)
+        s_cancelClicked = true;
     if (s_cancelClicked)
     {
         s_cancelClicked = false;

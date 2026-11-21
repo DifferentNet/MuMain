@@ -13407,7 +13407,7 @@
     <value>{MENU}: die Heldenzentrale (Inventar, Charakter, Fähigkeiten, Quests, Gilde, Einstellungen), {LB} und {RB} wechseln ihre Tabs. Nochmal: alle Fenster. {MENU} halten: der Chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Login- und Charakterbildschirm: die Sticks bewegen den Zeiger</value>
+    <value>Login- und Charakterbildschirm: D-Pad oder linker Stick bewegen den Rahmen, der rechte Stick den Zeiger</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
     <value>Dort klickt {A}, {B} ist Esc, {MENU} ist Enter</value>
@@ -13506,7 +13506,7 @@
     <value>D-pad oder Stick: Tasten. {A}: drücken, {X}: löschen, {Y}: Leerzeichen, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>{LT}: Umschalt, {RT}: Symbole, {VIEW}: Englisch, Russisch, Sätze, {LB}/{RB}: Cursor, {B}: schließen</value>
+    <value>{LT}: Umschalt, {RT}: Symbole, {VIEW}: Englisch, Russisch, Sätze, {LB}/{RB}: Cursor, {B}: schließen. Im Chat den {WALKSTICK_OBJ} drücken: Alle, Party, Gilde, Gens</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Nicht genug Mana</value>
@@ -14430,6 +14430,15 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Sätze</value>
   </data>
+  <data name="PadChatAll" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="PadChatGuild" xml:space="preserve">
+    <value>Gilde</value>
+  </data>
+  <data name="PadChatGens" xml:space="preserve">
+    <value>Gens</value>
+  </data>
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Handel mit einem Spieler: /trade Name, wenn er in Sicht ist, sonst mit dem gewählten Spieler auf jede Entfernung oder mit dem, der dir gegenübersteht.</value>
@@ -14628,6 +14637,9 @@
   </data>
   <data name="HelpArrowKeys" xml:space="preserve">
     <value>Pfeiltasten: laufen</value>
+  </data>
+  <data name="HelpItemLink" xml:space="preserve">
+    <value>Umschalt + Klick auf einen Gegenstand: im Chat zeigen</value>
   </data>
   <data name="PadHelpItems" xml:space="preserve">
     <value>Ein neuer Gegenstand ist besser: D-pad rechts halten, um ihn anzulegen. Im Inventar öffnet {Y} die Karte des Gegenstands (Ramsch-Markierung); beim Händler verkauft {A} auf der Schaltfläche Ramsch verkaufen den Ramsch. Zen unter deinen Füßen wird von selbst aufgehoben</value>

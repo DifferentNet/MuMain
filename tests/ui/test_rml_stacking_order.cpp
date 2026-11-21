@@ -209,3 +209,10 @@ TEST_CASE("the pad's frame stands over every window and message box it rests on 
     CHECK(Depth("pad_overlay.rml") < Depth("cursor_item.rml"));
     CHECK(Depth("pad_overlay.rml") < Depth("pad_keyboard.rml"));
 }
+
+TEST_CASE("the pad's frame stands over the reconnect dialog while it is up [ui][stacking]")
+{
+    const float over = UI::RmlBridge::PadOverlayOverReconnectDepth();
+    for (const char* below : {"reconnect_dialog.rml", "loading.rml", "pad_keyboard.rml", "msg_win.rml", "sys_menu.rml"})
+        CHECK_MESSAGE(over > Depth(below), below);
+}

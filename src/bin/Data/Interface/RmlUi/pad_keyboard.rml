@@ -37,6 +37,8 @@
 			<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pk-legend-label">{{type_label}}</div>
 			<div class="pad-glyph pad-bumper">{{glyph_lb}}</div><div class="pad-glyph pad-bumper pk-legend-pair">{{glyph_rb}}</div><div class="pk-legend-label">{{caret_label}}</div>
 			<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pk-legend-label">{{close_label}}</div>
+			<!-- The chat's message line: the left stick's click steps the channel, named here (pad round 8). -->
+			<div class="pad-glyph pad-round pad-stick" data-if="channel_shown">{{glyph_l3}}</div><div class="pk-legend-label" data-if="channel_shown">{{channel_label}}</div>
 		</div>
 	</div>
 </body>
