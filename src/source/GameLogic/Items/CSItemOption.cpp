@@ -14,8 +14,11 @@
 #include "UI/Social/SocialWindowBase.h"
 #include "UI/Core/WindowSystem.h"
 #include "GameLogic/Skills/SkillManager.h"
+#include "GameLogic/Items/AncientAura.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Items/GrandStats.h"
 #include "GameLogic/Items/ItemCombatPower.h"
+#include "GameLogic/Items/SetRequirementStats.h"
 #include "Data/GameData/ItemData/ItemDatabase.h"
 #include "I18N/All.h"
 #include "Render/Text/CUIRenderText.h"
@@ -962,6 +965,28 @@ void CSItemOption::getAllAddOptionStatesbyCompare(std::uint16_t* Strength, std::
     AddStatsBySetOptions(Strength, Dexterity, Energy, Vitality, Charisma);
 }
 
+namespace
+{
+// The stats the server checks worn items against, from CharacterAttribute after getAllAddStateOnlyAddValue (the item
+// and set bonuses only): the elixirs and socket bonuses, then the Grand points and the ancient tier, which
+// CHARACTER_MACHINE::CalculateAll adds only after this runs.
+GameLogic::SetRequirementStats::Totals RequirementTotals()
+{
+    int exStrength = 0, exAgility = 0, exVitality = 0, exEnergy = 0, exCommand = 0;
+    CharacterMachine->getAllAddStateOnlyExValues(exStrength, exAgility, exVitality, exEnergy, exCommand);
+
+    GameLogic::SetRequirementStats::Totals totals;
+    totals.strength = CharacterAttribute->Strength + CharacterAttribute->AddStrength + exStrength;
+    totals.agility = CharacterAttribute->Dexterity + CharacterAttribute->AddDexterity + exAgility;
+    totals.vitality = CharacterAttribute->Vitality + CharacterAttribute->AddVitality + exVitality;
+    totals.energy = CharacterAttribute->Energy + CharacterAttribute->AddEnergy + exEnergy;
+    totals.command = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma + exCommand;
+    totals.level = CharacterAttribute->Level;
+    return GameLogic::SetRequirementStats::WithGrandPointsAndTier(
+        totals, GameLogic::GrandStats::Own(), GameLogic::AncientAura::OwnTier());
+}
+} // namespace
+
 void CSItemOption::CheckItemSetOptions()
 {
     SET_SEARCH_RESULT byOptionList[MAX_EQUIPPED_SET_ITEMS] = { };
@@ -1006,12 +1031,7 @@ void CSItemOption::CheckItemSetOptions()
     calcSetOptionList(byOptionList);
     getAllAddStateOnlyAddValue(&CharacterAttribute->AddStrength, &CharacterAttribute->AddDexterity, &CharacterAttribute->AddEnergy, &CharacterAttribute->AddVitality, &CharacterAttribute->AddCharisma);
 
-    const auto AllStrength = static_cast<std::uint16_t>(CharacterAttribute->Strength + CharacterAttribute->AddStrength);
-    const auto AllDexterity = static_cast<std::uint16_t>(CharacterAttribute->Dexterity + CharacterAttribute->AddDexterity);
-    const auto AllEnergy = static_cast<std::uint16_t>(CharacterAttribute->Energy + CharacterAttribute->AddEnergy);
-    auto AllVitality = static_cast<std::uint16_t>(CharacterAttribute->Vitality + CharacterAttribute->AddVitality);
-    const auto AllCharisma = static_cast<std::uint16_t>(CharacterAttribute->Charisma + CharacterAttribute->AddCharisma);
-    const auto AllLevel = static_cast<std::uint16_t>(CharacterAttribute->Level);
+    const auto requirementTotals = RequirementTotals();
 
     // And now we're doing all that again, just for checking the required stats?!
     // TODO: How can this be improved?
@@ -1028,7 +1048,8 @@ void CSItemOption::CheckItemSetOptions()
 
         ITEM* ip = &CharacterMachine->Equipment[i];
 
-        if (ip->RequireDexterity > AllDexterity || ip->RequireEnergy > AllEnergy || ip->RequireStrength > AllStrength || ip->RequireLevel > AllLevel || ip->RequireCharisma > AllCharisma || ip->Durability <= 0 || (IsRequireEquipItem(ip) == false)) {
+        if (ip->Durability <= 0 || !IsRequireEquipItem(ip, requirementTotals))
+        {
             continue;
         }
 

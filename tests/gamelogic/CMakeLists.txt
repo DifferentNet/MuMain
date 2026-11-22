@@ -156,6 +156,15 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GrandStatsLine.cpp
 )
 
+# The stats a worn set piece's requirements are checked against: Grand points, then the +14/+15 tier
+# (GameLogic/Items/SetRequirementStats, CSItemOption::CheckItemSetOptions).
+mu_add_test(
+    NAME test_set_requirement_stats
+    SOURCES
+        test_set_requirement_stats.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/SetRequirementStats.cpp
+)
+
 # The server's "#GRC|grandResets|resets" line for the character window (GameLogic/Character/GrandResetCount).
 mu_add_test(
     NAME test_grand_reset_count_line

@@ -23,6 +23,7 @@
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "GameLogic/Items/AncientAura.h"
 #include "GameLogic/Items/GrandStats.h"
+#include "GameLogic/Items/SetRequirementStats.h"
 #include "GameLogic/Items/CSItemOption.h"
 #include "GameLogic/Pets/GIPetManager.h"
 #include "GameLogic/Items/CComGem.h"
@@ -2139,7 +2140,32 @@ EXIT_CALCULATE:
     return (int64_t)Gold;
 }
 
+namespace
+{
+// CharacterAttribute's base and bonuses, each sum kept in a WORD as IsRequireEquipItem always did.
+GameLogic::SetRequirementStats::Totals CurrentStatTotals()
+{
+    GameLogic::SetRequirementStats::Totals totals;
+    totals.strength = static_cast<WORD>(CharacterAttribute->Strength + CharacterAttribute->AddStrength);
+    totals.agility = static_cast<WORD>(CharacterAttribute->Dexterity + CharacterAttribute->AddDexterity);
+    totals.vitality = static_cast<WORD>(CharacterAttribute->Vitality + CharacterAttribute->AddVitality);
+    totals.energy = static_cast<WORD>(CharacterAttribute->Energy + CharacterAttribute->AddEnergy);
+    totals.command = static_cast<WORD>(CharacterAttribute->Charisma + CharacterAttribute->AddCharisma);
+    totals.level = CharacterAttribute->Level;
+    return totals;
+}
+} // namespace
+
 bool IsRequireEquipItem(ITEM* pItem)
+{
+    if (pItem == NULL) {
+        return false;
+    }
+
+    return IsRequireEquipItem(pItem, CurrentStatTotals());
+}
+
+bool IsRequireEquipItem(ITEM* pItem, const GameLogic::SetRequirementStats::Totals& totals)
 {
     if (pItem == NULL) {
         return false;
@@ -2167,13 +2193,6 @@ bool IsRequireEquipItem(ITEM* pItem)
     if (bEquipable == false)
         return false;
 
-    WORD wStrength = CharacterAttribute->Strength + CharacterAttribute->AddStrength;
-    WORD wDexterity = CharacterAttribute->Dexterity + CharacterAttribute->AddDexterity;
-    WORD wEnergy = CharacterAttribute->Energy + CharacterAttribute->AddEnergy;
-    WORD wVitality = CharacterAttribute->Vitality + CharacterAttribute->AddVitality;
-    WORD wCharisma = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma;
-    WORD wLevel = CharacterAttribute->Level;
-
     int iItemLevel = pItem->Level;
 
     int iDecNeedStrength = 0, iDecNeedDex = 0;
@@ -2191,24 +2210,24 @@ bool IsRequireEquipItem(ITEM* pItem)
         }
     }
 
-    if (pItem->RequireStrength - iDecNeedStrength > wStrength)
+    if (pItem->RequireStrength - iDecNeedStrength > totals.strength)
         return false;
-    if (pItem->RequireDexterity - iDecNeedDex > wDexterity)
+    if (pItem->RequireDexterity - iDecNeedDex > totals.agility)
         return false;
-    if (pItem->RequireEnergy > wEnergy)
+    if (pItem->RequireEnergy > totals.energy)
         return false;
-    if (pItem->RequireVitality > wVitality)
+    if (pItem->RequireVitality > totals.vitality)
         return false;
-    if (pItem->RequireCharisma > wCharisma)
+    if (pItem->RequireCharisma > totals.command)
         return false;
-    if (pItem->RequireLevel > wLevel)
+    if (pItem->RequireLevel > totals.level)
         return false;
 
     if (pItem->Type == ITEM_DARK_RAVEN_ITEM)
     {
         PET_INFO* pPetInfo = giPetManager::GetPetInfo(pItem);
         WORD wRequireCharisma = static_cast<WORD>((185 + pPetInfo->m_wLevel * 15) & 0xFFFF);
-        if (wRequireCharisma > wCharisma) {
+        if (wRequireCharisma > totals.command) {
             return false;
         }
     }
