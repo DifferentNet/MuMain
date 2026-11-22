@@ -45,7 +45,15 @@ BOOL IsCorrectSkillType_CommonAttack(INT iSkillSeq);
 
 extern CLASS_ATTRIBUTE ClassAttribute[MAX_CLASS];
 
+namespace GameLogic::SetRequirementStats
+{
+struct Totals;
+}
+
 bool IsRequireEquipItem(ITEM* pItem);
+// The same check against the given stat totals instead of CharacterAttribute's: CSItemOption::CheckItemSetOptions runs
+// before CHARACTER_MACHINE::CalculateAll adds the Grand points and the ancient tier, so it passes them in itself.
+bool IsRequireEquipItem(ITEM* pItem, const GameLogic::SetRequirementStats::Totals& totals);
 
 class CHARACTER_MACHINE
 {
