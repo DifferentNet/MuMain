@@ -12884,6 +12884,10 @@
     <value>Poziom: %u | Resety: %u</value>
     <comment>legacy_id=3810</comment>
   </data>
+  <data name="LevelGrandResets" xml:space="preserve">
+    <value>Poziom: %u | GR: %u | Resety: %u</value>
+    <comment>Character window (C) after a Grand Reset: level, Grand Resets, resets (MU Skynet, ghinzuro 2026-11-22)</comment>
+  </data>
   <data name="Font" xml:space="preserve">
     <value>Czcionka</value>
   </data>

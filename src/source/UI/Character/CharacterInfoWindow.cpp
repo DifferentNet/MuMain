@@ -7,6 +7,7 @@
 #include "Character/CharacterManager.h"
 #include "GameLogic/Items/CSItemOption.h"
 #include "GameLogic/Character/AdvancedStats.h"
+#include "GameLogic/Character/GrandResetCount.h"
 #include "Audio/DSPlaySound.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
@@ -640,8 +641,11 @@ bool mu::ui::window::CCharacterInfoWindow::StatInputsChanged()
     AppendBytes(inputs, g_ServerListManager->GetNonPVPInfo());
     AppendText(inputs, g_ServerListManager->GetSelectServerName());
     AppendBytes(inputs, g_ServerListManager->GetSelectServerIndex());
+    // The Grand Resets the server sent (/grsync): the level line shows them.
+    AppendBytes(inputs, GameLogic::GrandResetCount::Own());
     // A language switch swaps every text pointer.
     AppendBytes(inputs, I18N::Game::LevelUResetsU);
+    AppendBytes(inputs, I18N::Game::LevelGrandResets);
 
     if (inputs == m_statInputs)
         return false;
@@ -760,7 +764,12 @@ void mu::ui::window::CCharacterInfoWindow::BuildTableTexts()
     wchar_t strExp[128];
     wchar_t strPoint[128];
 
-    mu_swprintf(strLevel, I18N::Game::LevelUResetsU, CharacterAttribute->Level, CharacterAttribute->Resets);
+    // With Grand Resets: "Level: 375 | GR: 1 | Resets: 0" (ghinzuro 2026-11-22, GameLogic/Character/GrandResetCount.h).
+    if (const int grandResets = GameLogic::GrandResetCount::Own(); grandResets > 0)
+        mu_swprintf(strLevel, I18N::Game::LevelGrandResets, CharacterAttribute->Level, static_cast<unsigned>(grandResets),
+                    CharacterAttribute->Resets);
+    else
+        mu_swprintf(strLevel, I18N::Game::LevelUResetsU, CharacterAttribute->Level, CharacterAttribute->Resets);
     mu_swprintf(strExp, I18N::Game::EXPI64dI64d, static_cast<unsigned long long>(CharacterAttribute->Experience),
                 static_cast<unsigned long long>(CharacterAttribute->NextExperience));
 

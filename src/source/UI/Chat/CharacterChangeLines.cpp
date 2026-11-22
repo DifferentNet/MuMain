@@ -4,6 +4,7 @@
 #include "Character/CharacterManager.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInventory.h"
+#include "GameLogic/Character/GrandResetCount.h"
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "I18N/All.h"
@@ -184,7 +185,8 @@ void NoteLevelUp(int level, int freePoints, bool reset)
 
 void NoteWarpUnlocks(int oldLevel, int newLevel)
 {
-    if (CharacterAttribute->Resets != 0)
+    // Only a character's first way up names the warps it reached; after a Grand Reset the resets are 0 again.
+    if (CharacterAttribute->Resets != 0 || GameLogic::GrandResetCount::Own() > 0)
         return;
 
     std::vector<WarpUnlocks::Destination> destinations;

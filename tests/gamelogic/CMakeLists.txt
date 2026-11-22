@@ -156,6 +156,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GrandStatsLine.cpp
 )
 
+# The server's "#GRC|grandResets|resets" line for the character window (GameLogic/Character/GrandResetCount).
+mu_add_test(
+    NAME test_grand_reset_count_line
+    SOURCES
+        test_grand_reset_count_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Character/GrandResetCountLine.cpp
+)
+
 # The character window's "Skill Damage: N %" for the Dark Knight, Magic Gladiator and Dark Lord
 # (GameLogic/Skills/SkillDamagePercent.h).
 mu_add_test(
