@@ -13843,6 +13843,8 @@ static void ProcessPacket(const BYTE* ReceiveBuffer, int32_t Size)
                 UI::LoginScene::ShowMessage(RECEIVE_LOG_IN_FAIL_ID_BLOCK);
                 break;
             case 0x06:
+                // An auto-reconnect would send the same refused login again and again: stop it first.
+                ReconnectManager::Instance().StopOnLoginRefused();
                 UI::LoginScene::ShowMessage(RECEIVE_LOG_IN_FAIL_VERSION);
                 g_ErrorReport.Write(L"Version dismatch. - Login\r\n");
                 break;

@@ -14565,4 +14565,11 @@
   <data name="No network" xml:space="preserve">
     <value>沒有網路</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>已有新版本。請用啟動器更新，</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>或到 skynet-mu.net 網站下載。</value>
+  </data>
 </root>

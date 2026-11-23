@@ -12651,4 +12651,11 @@
   <data name="No network" xml:space="preserve">
     <value>ネットワーク未接続</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>新バージョンです。ランチャーで更新するか、</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>skynet-mu.net からダウンロードしてください。</value>
+  </data>
 </root>

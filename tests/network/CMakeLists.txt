@@ -85,6 +85,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_client_release
+    SOURCES
+        test_client_release.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Network/ClientRelease.cpp
+)
+
+mu_add_test(
     NAME test_grand_shop_lines
     SOURCES
         test_grand_shop_lines.cpp
