@@ -275,6 +275,14 @@ void CMsgWin::SetMsg(MSG_WIN_TYPE eType, std::wstring lpszMsg, std::wstring lpsz
 
 void CMsgWin::PopUp(int nMsgCode, wchar_t* pszMsg)
 {
+    // The server keeps the connection after refusing an old version, so it may drop while the
+    // "a new version is required" box is open. "Disconnected" must not replace it: only its OK starts the update.
+    const int shownCode = PendingMessageCode();
+    if (nMsgCode == MESSAGE_SERVER_LOST && (shownCode == RECEIVE_LOG_IN_FAIL_VERSION || shownCode == MESSAGE_VERSION))
+    {
+        return;
+    }
+
     std::wstring lpszMsg = L"";
     std::wstring lpszMsg2 = L"";
     MSG_WIN_TYPE eType = MWT_BTN_OK;
