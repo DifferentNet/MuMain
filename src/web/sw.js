@@ -236,9 +236,13 @@ function offlinePage() {
 <button type="button" onclick="location.reload()">Повторить</button></div>
 <div lang="ro" hidden><p>Nu ai conexiune la internet. Jocul merge doar online.</p>
 <button type="button" onclick="location.reload()">Încearcă din nou</button></div>
+<div lang="pt" hidden><p>Sem conexão com a internet. O jogo é jogado online.</p>
+<button type="button" onclick="location.reload()">Tentar de novo</button></div>
+<div lang="es" hidden><p>No hay conexión a internet. El juego se juega en línea.</p>
+<button type="button" onclick="location.reload()">Intentar de nuevo</button></div>
 <script>
 (function () {
-  var langs = ["en", "ru", "ro"], key = "mu-page-lang", lang = new URLSearchParams(location.search).get("lang");
+  var langs = ["en", "ru", "ro", "pt", "es"], key = "mu-page-lang", lang = new URLSearchParams(location.search).get("lang");
   if (langs.indexOf(lang) >= 0) {
     try { localStorage.setItem(key, lang); } catch (e) {}
   } else {
@@ -254,7 +258,7 @@ function offlinePage() {
       }
     }
   }
-  document.documentElement.lang = lang;
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : lang === "es" ? "es-419" : lang;
   var notes = document.querySelectorAll("body > div[lang]");
   for (var j = 0; j < notes.length; j++) notes[j].hidden = notes[j].lang !== lang;
 })();

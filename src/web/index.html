@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
 <!-- No "Translate this page?" offer over the game (translate="no" above too): the page's own lines are
-     in the player's language already (English, Russian or Romanian: pageLang), and the game draws its
-     texts itself. -->
+     in the player's language already (English, Russian, Romanian, Portuguese or Spanish: pageLang), and
+     the game draws its texts itself. -->
 <meta name="google" content="notranslate">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
@@ -25,21 +25,24 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://skynet-mu.net/static/og-image.jpg">
 <script>
-  // The language of the page's own texts (TEXT, in the next script): English, Russian or Romanian, one of
-  // them, not two side by side (ghinzuro, 2026-11-21). The site's links carry it (?lang=ru or ?lang=ro,
-  // server/signup/app.py PLAY_HREF), and the page keeps it in the browser (PAGE_LANG_KEY): ?reset and a
-  // link without it come back to it, so does the installed app where it shares the browser's storage
+  // The language of the page's own texts (TEXT, in the next script): English, Russian, Romanian, Brazilian
+  // Portuguese or Latin American Spanish (2026-11-22), one of them, not two side by side (ghinzuro,
+  // 2026-11-21). The site's links carry it (?lang=ru, ro, pt or es, server/signup/app.py PLAY_HREF), and
+  // the page keeps it in the browser (PAGE_LANG_KEY): ?reset and a link without it come back to it, so
+  // does the installed app where it shares the browser's storage
   // (Android). An iPhone's home-screen app has storage of its own: it starts without the choice. Without
   // either, the first of the browser's languages the page has; English when none of them.
-  const PAGE_LANGS = ["en", "ru", "ro"];
+  const PAGE_LANGS = ["en", "ru", "ro", "pt", "es"];
   const PAGE_LANG_KEY = "mu-page-lang";
+  // <html lang>: Portuguese as Brazil writes it, Spanish as Latin America does (the site's /pt and /es).
+  const PAGE_HTML_LANG = { pt: "pt-BR", es: "es-419" };
   function browserPageLang() {
     const tags = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
     for (const tag of tags) {
       const primary = String(tag || "").toLowerCase().split(/[-_;]/)[0];
       if (primary === "ru") return "ru";
       if (primary === "ro" || primary === "mo") return "ro";   // mo: Moldovan, an old code for Romanian
-      if (primary === "en") return "en";
+      if (primary === "pt" || primary === "es" || primary === "en") return primary;   // any pt-*, any es-*
     }
     return "en";
   }
@@ -54,7 +57,7 @@
     return PAGE_LANGS.includes(saved) ? saved : browserPageLang();
   }
   const pageLang = pickPageLang();
-  document.documentElement.lang = pageLang;
+  document.documentElement.lang = PAGE_HTML_LANG[pageLang] || pageLang;
   // The HTML's texts are the English ones; until translatePage (the next script) puts them in the page's
   // language they stay unseen (html.tx-wait): a slow phone draws the page before its last script runs.
   if (pageLang !== "en") document.documentElement.classList.add("tx-wait");
@@ -218,11 +221,13 @@
   </label>
 </footer>
 <script>
-  // The page's own texts in English, Russian and Romanian; pageLang (the first script) picks the one shown.
-  // A text missing in ru or ro shows in English. A text with numbers or names in it is a function of them.
+  // The page's own texts in English, Russian, Romanian, Portuguese and Spanish; pageLang (the first script)
+  // picks the one shown. A text missing in another language shows in English. A text with numbers or names
+  // in it is a function of them.
   // Not here, and English: the log's lines and Copy log's report (they are for us), the tab's title and the
   // head's lines for search engines and link previews. The Romanian pages name the game's own windows in
-  // English (Options → Interface), as the game shows them: it has no Romanian.
+  // English (Options → Interface), as the game shows them: it has no Romanian. So do the Portuguese and
+  // Spanish ones: the game's Portuguese and Spanish leave those words (Interface, Auto) in English.
   const TEXT = {
     en: {
       loading: "Loading…",
@@ -468,6 +473,168 @@
       noRoom: "Nu e loc pe acest dispozitiv pentru joc: se descarcă din nou la fiecare vizită",
       mainJsRetry: (seconds) => `Main.js nu s-a încărcat, încerc din nou în ${seconds} s…`,
       mainJsMissing: "Main.js nu s-a încărcat: e build-ul web în acest folder?",
+    },
+    pt: {
+      loading: "Carregando…",
+      loadingGameData: "Carregando os dados do jogo…",
+      starting: "Iniciando o jogo…",
+      menu: "Menu",
+      play: "Jogar",
+      installGame: "Instalar o jogo",
+      stayInBrowser: "Continuar no navegador",
+      playInBrowser: "Jogar no navegador",
+      gameFiles: "Arquivos do jogo",
+      lite: "Leve",
+      full: "Completo",
+      liteNote: "Leve: os arquivos são baixados enquanto você joga, a primeira visita a um lugar demora um pouco mais",
+      fullNote: "Completo: o jogo todo agora, cerca de 800 MB, melhor no Wi-Fi",
+      install: "Instalar",
+      ok: "Entendi",
+      installApple: "Toque em Compartilhar (o quadrado com uma seta) e depois em “Adicionar à Tela de Início”.",
+      installSamsung: "Abra o menu ≡ e depois “Adicionar página a” → “Tela inicial”.",
+      installFirefox: "Abra o menu ⋮ e depois “Instalar” ou “Adicionar à tela inicial”.",
+      installOther: "Abra o menu do navegador (⋮ ou …) e depois “Instalar app” ou “Adicionar à tela inicial”.",
+      rotate: "Vire o celular na horizontal",
+      inBrowser: "MU Online no navegador",
+      log: "Log",
+      copyLog: "Copiar log",
+      copyLogTitle: "O log, o navegador e a placa de vídeo, para relatar um erro",
+      copied: "Copiado",
+      notCopied: "Não copiado",
+      fullscreen: "Tela cheia",
+      leaveFullscreen: "Sair da tela cheia",
+      fullscreenRefused: (why) => `O navegador não abriu o jogo em tela cheia: ${why}`,
+      noPageFullscreen: "este navegador não tem tela cheia para páginas",
+      downloadGame: "Baixar o jogo todo",
+      downloadGameTitle: (have, total) => `${have} de ${total} arquivos neste dispositivo; os mapas em que você ainda ` +
+        "não entrou são baixados quando você entra neles, ou todos de uma vez com este botão",
+      downloadingGame: (percent) => `Baixando · ${percent} %`,
+      downloadingGameTitle: (have, total, mb) => `${have} de ${total} arquivos, ${mb} MB até agora; toque para parar`,
+      gameDownloaded: "Jogo baixado ✓",
+      gameDownloadedTitle: "O jogo todo está neste dispositivo",
+      newVersion: "Nova versão: recarregar",
+      newVersionTitle: "Saiu uma nova versão do jogo enquanto esta página estava aberta",
+      view: "Layout",
+      viewTitle: "O layout do jogo, como em Options → Interface",
+      viewChoice: (choice, phoneView) => "Layout: " + [phoneView ? "auto (celular)" : "auto (PC)", "PC", "celular"][choice],
+      screenshot: "Captura de tela",
+      screenshotTitle: "Uma imagem do jogo, salva como download",
+      quality: "Qualidade",
+      qualityTitle: "Quantos pixels o jogo desenha enquanto a resolução em Options está em Auto; Mínima também desliga os efeitos e as sombras",
+      qualityHigh: "Alta",
+      qualityMedium: "Média",
+      qualityLow: "Baixa",
+      qualityLowest: "Mínima",
+      leftGame: "Você saiu do jogo.",
+      playAgain: "Jogar de novo",
+      crashTitle: "O jogo parou por causa de um erro.",
+      gpuLost: "A conexão com a placa de vídeo foi perdida (o driver reiniciou ou o navegador a liberou). Recarregue a página para continuar.",
+      reload: "Recarregar a página",
+      resetReload: "Redefinir as configurações e recarregar",
+      updateIos: "Atualize o iOS: Ajustes → Geral → Atualização de Software (iOS 27 ou mais recente) e recarregue esta página.",
+      appleNoFeatures: (features) => `Este iPhone ou iPad ainda não consegue rodar o jogo. Faltam recursos do WebGPU: ${features}`,
+      appleNoGpu: "O Safari não dá gráficos (WebGPU) a esta página.",
+      appleMissing: (what) => `Este iPhone ou iPad ainda não consegue rodar o jogo: não tem ${what}.`,
+      browserMissing: (what) => `Este navegador não consegue rodar o jogo: não tem ${what}. Use um Chrome ou Edge atualizado.`,
+      noFeatures: (features) => "Sua placa de vídeo ainda não consegue rodar o jogo neste navegador.\n" +
+        `Faltam recursos do WebGPU: ${features}\n` +
+        "Atualize o driver da placa de vídeo e o Chrome ou Edge, depois recarregue esta página.",
+      noAdapter: "O navegador não dá a esta página uma placa de vídeo (WebGPU). Para resolver:\n" +
+        "1. Use o Google Chrome ou o Microsoft Edge (não o Yandex, Opera ou Brave).\n" +
+        "2. Configurações → Sistema: ative \"Usar aceleração gráfica quando disponível\" e reinicie o navegador.\n" +
+        "3. Atualize o driver da placa de vídeo (AMD Adrenalin, NVIDIA, Intel).\n" +
+        "4. Se ainda falhar: abra chrome://flags/#enable-unsafe-webgpu, escolha Enabled e reinicie o navegador.\n" +
+        "Depois recarregue esta página. Ainda falha? Envie uma captura de tela de chrome://gpu.",
+      gpuAndBrowser: (gpu, browser) => `Placa de vídeo: ${gpu} · Navegador: ${browser}`,
+      slowNetwork: "Rede lenta, tentando de novo",
+      downloadingGameData: "Baixando os dados do jogo",
+      downloadingMap: "Baixando o mapa",
+      progress: (doing, mb) => `${doing}… ${mb} MB`,
+      progressOf: (doing, mb, all) => `${doing}… ${mb} de ${all} MB`,
+      noRoom: "Não há espaço neste dispositivo para guardar o jogo: ele é baixado de novo a cada visita",
+      mainJsRetry: (seconds) => `Main.js não carregou, tentando de novo em ${seconds} s…`,
+      mainJsMissing: "Main.js não carregou: a versão web está nesta pasta?",
+    },
+    es: {
+      loading: "Cargando…",
+      loadingGameData: "Cargando los datos del juego…",
+      starting: "Iniciando el juego…",
+      menu: "Menú",
+      play: "Jugar",
+      installGame: "Instalar el juego",
+      stayInBrowser: "Seguir en el navegador",
+      playInBrowser: "Jugar en el navegador",
+      gameFiles: "Archivos del juego",
+      lite: "Ligera",
+      full: "Completa",
+      liteNote: "Ligera: los archivos se descargan mientras juegas, la primera visita a un lugar tarda un poco más",
+      fullNote: "Completa: todo el juego ahora, unos 800 MB, mejor con Wi-Fi",
+      install: "Instalar",
+      ok: "Entendido",
+      installApple: "Toca Compartir (el cuadrado con una flecha) y luego “Agregar a inicio”.",
+      installSamsung: "Abre el menú ≡ y luego “Agregar página a” → “Pantalla de inicio”.",
+      installFirefox: "Abre el menú ⋮ y luego “Instalar” o “Agregar a la pantalla de inicio”.",
+      installOther: "Abre el menú del navegador (⋮ o …) y luego “Instalar app” o “Agregar a la pantalla principal”.",
+      rotate: "Gira el celular en horizontal",
+      inBrowser: "MU Online en el navegador",
+      log: "Registro",
+      copyLog: "Copiar registro",
+      copyLogTitle: "El registro, el navegador y la tarjeta gráfica, para reportar un error",
+      copied: "Copiado",
+      notCopied: "No se copió",
+      fullscreen: "Pantalla completa",
+      leaveFullscreen: "Salir de pantalla completa",
+      fullscreenRefused: (why) => `El navegador no abrió el juego en pantalla completa: ${why}`,
+      noPageFullscreen: "este navegador no tiene pantalla completa para páginas",
+      downloadGame: "Descargar todo el juego",
+      downloadGameTitle: (have, total) => `${have} de ${total} archivos en este dispositivo; los mapas donde aún no ` +
+        "entraste se descargan al entrar en ellos, o todos a la vez con este botón",
+      downloadingGame: (percent) => `Descargando · ${percent} %`,
+      downloadingGameTitle: (have, total, mb) => `${have} de ${total} archivos, ${mb} MB hasta ahora; toca para detener`,
+      gameDownloaded: "Juego descargado ✓",
+      gameDownloadedTitle: "Todo el juego está en este dispositivo",
+      newVersion: "Nueva versión: recargar",
+      newVersionTitle: "Salió una nueva versión del juego mientras esta página estaba abierta",
+      view: "Vista",
+      viewTitle: "El diseño del juego, como en Options → Interface",
+      viewChoice: (choice, phoneView) => "Vista: " + [phoneView ? "auto (celular)" : "auto (PC)", "PC", "celular"][choice],
+      screenshot: "Captura de pantalla",
+      screenshotTitle: "Una imagen del juego, guardada como descarga",
+      quality: "Calidad",
+      qualityTitle: "Cuántos píxeles dibuja el juego mientras la resolución en Options está en Auto; Mínima también apaga los efectos y las sombras",
+      qualityHigh: "Alta",
+      qualityMedium: "Media",
+      qualityLow: "Baja",
+      qualityLowest: "Mínima",
+      leftGame: "Saliste del juego.",
+      playAgain: "Jugar de nuevo",
+      crashTitle: "El juego se detuvo por un error.",
+      gpuLost: "Se perdió la conexión con la tarjeta gráfica (se reinició el driver o el navegador la liberó). Recarga la página para continuar.",
+      reload: "Recargar la página",
+      resetReload: "Restablecer la configuración y recargar",
+      updateIos: "Actualiza iOS: Configuración → General → Actualización de software (iOS 27 o posterior) y luego recarga esta página.",
+      appleNoFeatures: (features) => `Este iPhone o iPad todavía no puede ejecutar el juego. Faltan funciones de WebGPU: ${features}`,
+      appleNoGpu: "Safari no le da gráficos (WebGPU) a esta página.",
+      appleMissing: (what) => `Este iPhone o iPad todavía no puede ejecutar el juego: no tiene ${what}.`,
+      browserMissing: (what) => `Este navegador no puede ejecutar el juego: no tiene ${what}. Usa un Chrome o Edge actualizado.`,
+      noFeatures: (features) => "Tu tarjeta gráfica todavía no puede ejecutar el juego en este navegador.\n" +
+        `Faltan funciones de WebGPU: ${features}\n` +
+        "Actualiza el driver de la tarjeta gráfica y Chrome o Edge, y luego recarga esta página.",
+      noAdapter: "El navegador no le da a esta página una tarjeta gráfica (WebGPU). Para solucionarlo:\n" +
+        "1. Usa Google Chrome o Microsoft Edge (no Yandex, Opera ni Brave).\n" +
+        "2. Configuración → Sistema: activa \"Usar la aceleración de gráficos cuando esté disponible\" y reinicia el navegador.\n" +
+        "3. Actualiza el driver de la tarjeta gráfica (AMD Adrenalin, NVIDIA, Intel).\n" +
+        "4. Si sigue fallando: abre chrome://flags/#enable-unsafe-webgpu, elige Enabled y reinicia el navegador.\n" +
+        "Luego recarga esta página. ¿Sigue fallando? Envía una captura de chrome://gpu.",
+      gpuAndBrowser: (gpu, browser) => `Tarjeta gráfica: ${gpu} · Navegador: ${browser}`,
+      slowNetwork: "Red lenta, intentando de nuevo",
+      downloadingGameData: "Descargando los datos del juego",
+      downloadingMap: "Descargando el mapa",
+      progress: (doing, mb) => `${doing}… ${mb} MB`,
+      progressOf: (doing, mb, all) => `${doing}… ${mb} de ${all} MB`,
+      noRoom: "No hay espacio en este dispositivo para guardar el juego: se descarga de nuevo en cada visita",
+      mainJsRetry: (seconds) => `Main.js no se cargó, intentando de nuevo en ${seconds} s…`,
+      mainJsMissing: "Main.js no se cargó: ¿está la versión web en esta carpeta?",
     },
   };
   // The text `key` in the page's language; a function's text with `args` filled in.
