@@ -14565,4 +14565,11 @@
   <data name="No network" xml:space="preserve">
     <value>Немає мережі</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>Потрібна нова версія. Оновіть у лаунчері</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>або завантажте її на сайті skynet-mu.net</value>
+  </data>
 </root>

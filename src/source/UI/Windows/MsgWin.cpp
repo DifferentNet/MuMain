@@ -30,6 +30,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Core/Platform/UpdateLauncher.h"
 #include "Network/Server/WSclient.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
@@ -39,6 +40,16 @@ namespace
     // Same cap the native password box was given (SetTextLimit(20)). Set on #msgwin_input from C++
     // so it stays one rule rather than a literal duplicated per theme.
     constexpr int kResidentPasswordMaxLength = 20;
+
+    // OK on "a new version is required": the PC client first starts its launcher, which waits for the
+    // game to close and then updates it. /play only closes (a page reload brings the new version).
+    void CloseGameForUpdate()
+    {
+#ifndef __EMSCRIPTEN__
+        Core::Platform::UpdateLauncher::Start();
+#endif
+        ::PostMessage(g_hWnd, WM_CLOSE, 0, 0);
+    }
 }
 
 CMsgWin g_MsgWin;
@@ -293,12 +304,15 @@ void CMsgWin::PopUp(int nMsgCode, wchar_t* pszMsg)
         break;
     case MESSAGE_VERSION:
     case RECEIVE_LOG_IN_FAIL_VERSION:
-        lpszMsg = I18N::Game::NewVersionOfGameIsRequired;
 #ifdef __EMSCRIPTEN__
+        lpszMsg = I18N::Game::NewVersionOfGameIsRequired;
         // /play gets the new version from the web server: a page reload is all it takes.
         lpszMsg2 = I18N::Game::ReloadThePageForNewVersion;
 #else
-        lpszMsg2 = I18N::Game::PleaseDownloadTheNewVersion;
+        // The PC client updates through its launcher (OK starts it) or from the site. The two lines are
+        // one sentence; each translation is kept within a line of the box (290 px at 12 px).
+        lpszMsg = I18N::Game::UpdateRequiredLine1;
+        lpszMsg2 = I18N::Game::UpdateRequiredLine2;
 #endif
         break;
     case MESSAGE_INPUT_ID:
@@ -445,10 +459,17 @@ void CMsgWin::ManageOKClick()
     switch (m_nMsgCode)
     {
     case RECEIVE_LOG_IN_FAIL_VERSION:
+        CloseGameForUpdate();
+        break;
     case MESSAGE_SERVER_LOST:
         ::PostMessage(g_hWnd, WM_CLOSE, 0, 0);
         break;
     case MESSAGE_VERSION:
+#ifndef __EMSCRIPTEN__
+        // On PC every "a new version is required" box closes the game for the update the same way.
+        CloseGameForUpdate();
+        break;
+#endif
     case RECEIVE_LOG_IN_FAIL_ERROR:
     case MESSAGE_INPUT_ID:
     case RECEIVE_LOG_IN_FAIL_ID:

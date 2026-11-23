@@ -17561,4 +17561,11 @@
   <data name="No network" xml:space="preserve">
     <value>No network</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>A new version is out. Update in the launcher</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>or download it at skynet-mu.net</value>
+  </data>
 </root>

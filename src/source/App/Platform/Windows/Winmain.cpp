@@ -71,6 +71,7 @@
 #include "Scenes/MainScene.h"
 #include "Network/Reconnect/ReconnectManager.h"
 #include "Network/IncomingPacketQueue.h"
+#include "Network/ClientReleaseSerial.h"
 #include "Core/Time/FrameTimerScheduler.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Utilities/Benchmark/BenchRecorder.h"
@@ -2981,6 +2982,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     GameConfig::GetInstance().Load();
     // The player's key bindings live in config.ini's [KeyBindings] (Core/Input/KeyBindingsRuntime.h).
     Core::Input::KeyBindings::Runtime::Load();
+
+#ifndef __EMSCRIPTEN__
+    // The login packets carry this release's number (release.txt), so the server can turn away an old client.
+    Network::ClientRelease::LoadIntoSerial();
+#endif
 
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.

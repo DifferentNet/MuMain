@@ -17561,4 +17561,11 @@
   <data name="No network" xml:space="preserve">
     <value>Нет сети</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>Нужна новая версия. Обновите в лаунчере</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>или скачайте её на сайте skynet-mu.net</value>
+  </data>
 </root>

@@ -14586,4 +14586,11 @@
   <data name="No network" xml:space="preserve">
     <value>Brak sieci</value>
   </data>
+  <!-- version check (2026-11-24) -->
+  <data name="UpdateRequiredLine1" xml:space="preserve">
+    <value>Jest nowa wersja. Zaktualizuj grę w launcherze</value>
+  </data>
+  <data name="UpdateRequiredLine2" xml:space="preserve">
+    <value>lub pobierz ją ze strony skynet-mu.net</value>
+  </data>
 </root>

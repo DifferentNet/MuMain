@@ -171,6 +171,25 @@ void ReconnectManager::RequestCancel()
     m_cancelRequested = true;
 }
 
+void ReconnectManager::StopOnLoginRefused()
+{
+    if (!IsActive())
+    {
+        return;
+    }
+
+    // The server refuses this client's release (login result 0x06): every retry would send the same
+    // login and get the same answer. The reconnect sends its login only after Begin() tore the game
+    // down, so the login screen is up. It stays as it is: Cancel's Abort() rebuilds it on the next frame,
+    // which would close the message box the caller shows there.
+    m_active = false;
+    m_beginPending = false;
+    m_cancelRequested = false;
+    m_abortAfterTeardown = false;
+    m_phase = Phase::Idle;
+    CloseProbe();
+}
+
 void ReconnectManager::Update()
 {
     if (m_cancelRequested)
