@@ -701,13 +701,13 @@ EM_JS(char*, MuWeb_MergeSavedConfig, (const char* serverText), {
 });
 
 // The language picked on the site, then the browser's languages, one a line. The site's is /play/?lang=
-// when the page takes it (en, ru, ro: index.html pickPageLang), else the one the page kept from an earlier
+// when the page takes it (en, ru, ro, pt, es: index.html pickPageLang), else the one the page kept from an earlier
 // ?lang= (mu-page-lang); an empty line when none.
 EM_JS(char*, MuWeb_PageLanguages, (), {
     let site = "";
     try {
         const asked = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
-        site = ["en", "ru", "ro"].indexOf(asked) >= 0 ? asked : (localStorage.getItem("mu-page-lang") || "");
+        site = ["en", "ru", "ro", "pt", "es"].indexOf(asked) >= 0 ? asked : (localStorage.getItem("mu-page-lang") || "");
     } catch (e) {
     }
     const browser = navigator.languages && navigator.languages.length ? Array.from(navigator.languages)

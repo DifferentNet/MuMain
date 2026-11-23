@@ -5,14 +5,16 @@
 #include <string>
 
 // The jewel bank, from our server's add-on (MU Moldova, JewelBank): an account keeps counts of twelve kinds of
-// jewels instead of the jewels themselves. The jewel bank window (a button in the inventory) shows them.
+// jewels and of Rena instead of the items themselves. The jewel bank window (a button in the inventory) shows them.
 //
 // The window asks "/jbinfo"; the server answers with a blue message this takes out of the chat: "#JBK|count|…",
-// a count per kind in Kinds() order, or "#JBK!|" when the bank isn't set up. The last two kinds (Jewel of Ancient,
-// Jewel of Fate) are optional: -1 when the server hasn't set them up, and an older server sends only the first ten.
+// a count per kind in Kinds() order, or "#JBK!|" when the bank isn't set up. The last three kinds (Jewel of Ancient,
+// Jewel of Fate, Rena) are optional: -1 when the server hasn't set them up, and an older server sends only the first
+// ten or twelve.
 // "/jbdep kind" puts every jewel of a kind from the inventory into the bank (packed ones too) and "/jbwd kind
-// amount" takes jewels out (kind from 1); both answer with the new counts and a message in the chat. The auction
-// (GameLogic/Items/Auction.h) prices its lots in these kinds and pays from the bank.
+// amount" takes jewels out (kind from 1); both answer with the new counts and a message in the chat. Rena (kind 13,
+// 2026-11-23) goes in as stacks of level 0 Rena (a stack counts its size) and comes out in stacks of up to 255. The
+// auction (GameLogic/Items/Auction.h) prices its lots in the first PriceKindCount kinds and pays from the bank.
 namespace GameLogic::JewelBank
 {
 struct Kind
@@ -21,11 +23,16 @@ struct Kind
     int itemType = 0;
     // The packed jewels' item type (group 12): level 0, 1 and 2 hold 10, 20 and 30; -1 for a kind without packs.
     int packedType = 0;
+    // Kept as stacks of level 0 items (Rena, whose item type the Stones and the Mark of Lord share at levels 1-3):
+    // a stack counts its durability.
+    bool stacked = false;
 };
 
-// The ten kinds every bank has, then the Jewel of Ancient (14:160) and the Jewel of Fate (14:161).
+// The ten kinds every bank has, then the Jewel of Ancient (14:160), the Jewel of Fate (14:161) and Rena (14:21).
 constexpr int BaseKindCount = 10;
-constexpr int KindCount = 12;
+constexpr int KindCount = 13;
+// The kinds a price can name (the auction): all but Rena, which is the bank's alone on the server too.
+constexpr int PriceKindCount = 12;
 
 // The kinds in the server's order (JewelBank.Kinds in server/addons/src/JewelBank.cs).
 const std::array<Kind, KindCount>& Kinds();
