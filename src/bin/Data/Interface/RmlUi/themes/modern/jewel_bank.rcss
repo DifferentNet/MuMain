@@ -11,7 +11,8 @@
 .jb-status { left: 10px; top: 28px; text-align: center; color: token(text-muted); }
 
 #jb_rows { position: absolute; left: 10px; top: 44px; width: 170px; }
-/* 31 px rows: twelve kinds fit the dock height (44 + 12 x 31 = 416). */
+/* 31 px rows: the bank has 13 kinds (Rena since 2026-11-23), four of them retired (Harmony) and hidden, so at most
+   9 rows show (44 + 9 x 31 = 323); 12 rows would still fit the dock height (44 + 12 x 31 = 416). */
 .jb-row { position: relative; display: block; width: 170px; height: 31px; }
 .jb-icon {
 	position: absolute;

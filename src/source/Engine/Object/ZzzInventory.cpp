@@ -4557,7 +4557,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             mu_swprintf(TextList[TextNum], I18N::Game::NumberOfItemsD, ip->Durability);
             Success = true;
         }
-        else if (ip->Type == ITEM_RENA && Level == 3)
+        else if (ip->Type == ITEM_RENA && (Level == 3 || (Level == 0 && ip->Durability > 1)))
         {
             mu_swprintf(TextList[TextNum], I18N::Game::NumberOfItemsD, ip->Durability);
             Success = true;

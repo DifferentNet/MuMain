@@ -57,7 +57,7 @@ std::wstring Amount(int count)
 }
 
 // Jewels of a kind in the inventory's bag (page 2 too, BagPages.h), packed ones counted as the jewels they hold
-// (10 per level from +0).
+// (10 per level from +0); for a stacked kind (Rena) the level 0 items, each counted as its stack size.
 int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
 {
     if (g_pMyInventory == nullptr)
@@ -74,7 +74,12 @@ int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
             const ITEM* item = bag->GetItem(static_cast<int>(i));
             if (item == nullptr)
                 continue;
-            if (item->Type == kind.itemType)
+            if (kind.stacked)
+            {
+                if (item->Type == kind.itemType && item->Level == 0)
+                    count += std::max(1, static_cast<int>(item->Durability));
+            }
+            else if (item->Type == kind.itemType)
                 count += 1;
             else if (kind.packedType >= 0 && item->Type == kind.packedType)
                 count += 10 * (item->Level + 1);

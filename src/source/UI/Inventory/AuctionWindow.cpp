@@ -220,7 +220,7 @@ std::wstring KindName(int kind)
         I18N::Game::AuctionKindCreation,   I18N::Game::AuctionKindGuardian,    I18N::Game::AuctionKindHarmony, I18N::Game::AuctionKindGemstone,
         I18N::Game::AuctionKindLowerStone, I18N::Game::AuctionKindHigherStone, I18N::Game::AuctionKindAncient, I18N::Game::AuctionKindFate,
     };
-    static_assert(std::size(names) == GameLogic::JewelBank::KindCount);
+    static_assert(std::size(names) == GameLogic::JewelBank::PriceKindCount);
     return kind >= 0 && kind < static_cast<int>(std::size(names)) ? std::wstring(names[kind]) : std::wstring(I18N::Game::AuctionNoKind);
 }
 
@@ -723,7 +723,7 @@ void mu::ui::window::CAuctionWindow::StepKind(int line, int step)
     int& current = bid ? m_bidKind : m_priceKinds[static_cast<size_t>(line)];
     // The choices: none, then the kinds the server takes; for a price line those no other price line has.
     std::vector<int> choices{NoKind};
-    for (int kind = 0; kind < GameLogic::JewelBank::KindCount; ++kind)
+    for (int kind = 0; kind < GameLogic::JewelBank::PriceKindCount; ++kind)
     {
         bool taken = false;
         for (int other = 0; other < PriceLineSlots && !bid; ++other)
