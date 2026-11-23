@@ -106,6 +106,10 @@ public:
     // The title plates' effects (UI::TitlePlates::Effects).
     bool GetTitleEffects() const { return m_titleEffects; }
     void SetTitleEffects(bool shown) { m_titleEffects = shown; }
+    // Other players' battle pass echoes (Render::Effects::SeasonEcho); empty until the player sets it, which means
+    // the device's default.
+    const std::optional<bool>& GetOtherEchoes() const { return m_otherEchoes; }
+    void SetOtherEchoes(bool shown) { m_otherEchoes = shown; }
     // The live HUD's animation (UI::HUD::LiveHud::Inputs::effects).
     bool GetHudEffects() const
     {
@@ -489,6 +493,7 @@ private:
     bool m_overheadNpcNames = false;
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
+    std::optional<bool> m_otherEchoes;
     bool m_hudEffects = true;
     bool m_titlesTownsOnly = true;
     bool m_declineInvitations = false;

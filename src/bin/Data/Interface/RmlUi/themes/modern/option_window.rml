@@ -810,6 +810,12 @@
 						<span class="opt-label">{{title_effects_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="title_effects"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<!-- MU Skynet: other players' battle pass echoes (config.ini [UI] OtherEchoes; no key: on on the PC,
+					     off on phones). -->
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_other_echoes">
+						<span class="opt-label">{{other_echoes_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="other_echoes"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-if="hud_effects_shown" data-event-click="option_toggle_hud_effects">
 						<span class="opt-label">{{hud_effects_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="hud_effects"><div class="opt-toggle-knob"></div></div></div>

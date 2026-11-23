@@ -21,6 +21,36 @@ void SetActiveBoneTransform(const float (*ptr)[3][4]);
 // kept from an earlier Animation() call can only stand in for a new one while this is unchanged.
 std::uint32_t ModelDataGeneration();
 
+// MU Skynet: while one is held, BMD::RenderMesh draws without writing depth, whatever state its
+// flags pick (alpha test and opaque draws turn the mask on); the depth test stays as they set it.
+// The battle pass echo's copies (Render/Effects/SeasonEcho.h) are drawn so. The depth mask is put
+// back as it was when the scope began.
+class ScopedNoModelDepthWrite
+{
+public:
+    ScopedNoModelDepthWrite();
+    ~ScopedNoModelDepthWrite();
+    ScopedNoModelDepthWrite(const ScopedNoModelDepthWrite&) = delete;
+    ScopedNoModelDepthWrite& operator=(const ScopedNoModelDepthWrite&) = delete;
+
+private:
+    bool m_depthMaskWasOn;
+};
+
+// MU Skynet: while one is held, a BMD::RenderMesh RENDER_COLOR draw below alpha 0.99 stays a flat
+// colour (BodyLight), blended at the alpha given. Without it that draw turns the alpha test on
+// with EnableAlphaTest, which turns textures back on, so the colour is multiplied by whichever
+// texture was bound last (as in the original client; its callers are left so). The battle pass
+// echo's silhouettes (Render/Effects/SeasonEcho.h) are drawn so.
+class ScopedFlatModelColor
+{
+public:
+    ScopedFlatModelColor();
+    ~ScopedFlatModelColor();
+    ScopedFlatModelColor(const ScopedFlatModelColor&) = delete;
+    ScopedFlatModelColor& operator=(const ScopedFlatModelColor&) = delete;
+};
+
 #define MAX_BONES    200
 #define MAX_MESH     50
 #define MAX_VERTICES 15000

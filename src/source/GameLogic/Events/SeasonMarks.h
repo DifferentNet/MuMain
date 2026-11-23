@@ -13,7 +13,7 @@ class OBJECT;
 // titles now, UI/Chat/Chat.cpp) and the season's aura, a rune circle under the feet with the season's falling
 // particles (Render/Effects/SeasonAura.cpp).
 //
-// Our server's add-on (MU Moldova, BattlePassMarks) answers the hidden chat command "/bpmarks 2", which this sends
+// Our server's add-on (MU Moldova, BattlePassMarks) answers the hidden chat command "/bpmarks 3", which this sends
 // once the character entered the world, with a blue server message per marked character in the game, and from then
 // on sends one for each character that enters the world and for each new mark. This takes them out of the chat:
 //   "#BPM|name|season|title 0/1/2|aura 0/1"
@@ -28,12 +28,15 @@ class OBJECT;
 // The seasonal Fenrir (stage 7) is the gold Horn of Fenrir (13:37, excellent option 0x04) with the season's number
 // as its level, the level 50 reward; the trophy (13:128) is named by its level too. Other players' clients learn
 // only "gold" from the appearance packet (no pet level), so the server (the season themes, 2026-10-29) also sends a
-// client that asked "/bpmarks 2" the season of every rider's seasonal Fenrir: in the answer, when such a character
-// enters the world, when a pet slot changes, and 0 when it holds none any more or the character left:
+// client that asked "/bpmarks 2" or higher the season of every rider's seasonal Fenrir: in the answer, when such a
+// character enters the world, when a pet slot changes, and 0 when it holds none any more or the character left:
 //   "#BPF|name|season"
 // A gold Fenrir wears its rider's season's look (Engine/Object/ZzzObject.cpp): the own one by the horn in the own
 // pet slot, the others' by these lines. One whose season isn't known (a server before the themes, which takes
 // "/bpmarks 2" as "/bpmarks"; the character select; the photo viewer) wears the newest season's Fenrir look.
+//
+// Version 3 (the echo, 2026-11-23) adds the "#BPE" lines, which GameLogic/Events/SeasonEchoStore.h takes; a server
+// before the echo answers "/bpmarks 3" as "/bpmarks 2". The echo's colour is the season's (EchoColorOf).
 //
 // The seasons go in pairs of themes: Season 1 «Winter I», 2 «Winter II», then Spring, Summer and Autumn. Their names
 // in Seasons.json name the trophy, the seasonal Fenrir and the battle pass window's marks; a season Seasons.json
@@ -76,6 +79,13 @@ struct FenrirLook
     float Sparks[3] = {1.0f, 0.0f, 0.0f};
 };
 
+// How a season's echo looks (the afterimages of Render/Effects/SeasonEcho.h): their colour, light factors [r, g, b].
+struct EchoLook
+{
+    bool Present = false;
+    float Color[3] = {0.62f, 0.36f, 1.0f};
+};
+
 // How a season's marks look.
 struct SeasonLook
 {
@@ -98,6 +108,7 @@ struct SeasonLook
     float ParticleColor[3] = {0.75f, 0.9f, 1.0f};
 
     FenrirLook Fenrir;
+    EchoLook Echo;
 
     // The name in the game's UI language; empty when it has none.
     std::wstring Name() const;
@@ -122,7 +133,8 @@ public:
     // Takes a server message. True when it was a marks or Fenrir line, which then stays out of the chat.
     bool TakeMessage(const std::wstring& text);
 
-    // Asks the server for the marks and the seasonal Fenrirs of the characters in the game ("/bpmarks 2").
+    // Asks the server for the marks, the seasonal Fenrirs and the echoes of the characters in the game
+    // ("/bpmarks 3").
     void Request();
 
     // Forgets the marks and the Fenrirs, e.g. when the character changed; the next Request() brings them again.
@@ -155,6 +167,10 @@ public:
 
     // The texture of a season look's Fenrir fur, the same way.
     unsigned int FenrirFurTexture(const SeasonLook& look);
+
+    // The echo colour of a season (light factors [r, g, b]): the closest season at or before it that has an "echo"
+    // block in Data/Seasons.json, else the violet of Season 2 «Winter II».
+    void EchoColorOf(int season, float (&color)[3]);
 
     // A season's name in the UI language when Data/Seasons.json has that very season, else empty.
     std::wstring NameOf(int season);

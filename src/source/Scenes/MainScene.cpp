@@ -51,6 +51,7 @@
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/Effects/ParticlesSetting.h"
 #include "Render/Effects/GroundMarks.h"
+#include "Render/Effects/SeasonEcho.h"
 #include <optional>
 #include "Camera/CameraManager.h"
 #include "Camera/CameraMode.h"
@@ -646,6 +647,10 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
     {
         Render::PostProcessing::Haze::PushFrame();
         mu::GetRenderer().EndOpaqueWorld();
+        // The battle pass echoes: copies of the characters and mounts drawn above (Render/Effects/SeasonEcho.h).
+        // Translucent and writing no depth, so after the opaque world and its ground: no ambient occlusion or haze
+        // from them, and nothing drawn later is cut by them.
+        Render::Effects::SeasonEcho::Render();
         // The Remaster's ambient air particles right here: after the opaque world, SSAO and the
         // haze, before joints, effects and the UI.
         if (renderWeatherEffects)
@@ -687,6 +692,8 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
         EndOpengl();
         BeginOpenglPhysical(0, 0, width, height);
         RenderWaterTerrain();
+        // The battle pass echoes over the ground drawn just now (see EndOpaqueWorld above for the other maps).
+        Render::Effects::SeasonEcho::Render();
         { FRAME_PROFILE(Joints); RenderJoints(byWaterMap); }
         { FRAME_PROFILE(Effects); RenderEffects(true); RenderBlurs(); }
         CheckSprites();

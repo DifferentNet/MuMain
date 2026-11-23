@@ -10,12 +10,14 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Events/BattlePass.h"
+#include "GameLogic/Events/SeasonEchoStore.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/KeyHint.h"
 #include "UI/Inventory/ItemMng.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 
+#include "Core/Text/TextLineWrap.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Render/Text/CUIRenderText.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -28,6 +30,8 @@
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <algorithm>
+#include <string>
+#include <string_view>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -245,10 +249,39 @@ bool KnownItem(const RewardItem& item)
     return ItemAttribute[item.Group * MAX_ITEM_INDEX + item.Number].Name[0] != 0;
 }
 
+// The width the echo's description is wrapped to under its name (reference units, the hint's normal font).
+constexpr int MarkAboutWidth = 180;
+
+// MU Skynet: the echo's hint (Render::Effects::SeasonEcho) says what it does under its name, a hint's line each.
+// Wrapped once per season and language: the window syncs its model often.
+const std::wstring& EchoHint(int season)
+{
+    static std::wstring hint;
+    static int hintSeason = -1;
+    static std::string hintLocale;
+    const char* const locale = I18N::GetCurrentLocale();
+    const std::string_view localeNow = locale != nullptr ? locale : "";
+    if (season == hintSeason && localeNow == hintLocale)
+        return hint;
+
+    hint = GameLogic::SeasonEcho::EchoName(season);
+    g_pRenderText->SetFont(g_hFont);
+    for (const std::wstring& line :
+         WrapTextToWidth(GameLogic::SeasonEcho::EchoAbout(), MarkAboutWidth, [](const wchar_t* text, size_t length)
+                         { return g_pRenderText->MeasureText(text, static_cast<int>(length)).cx; }))
+        hint += L"\n" + line;
+    hintSeason = season;
+    hintLocale = localeNow;
+    return hint;
+}
+
 // The hint of a season's mark: by the season's name in Data/Seasons.json («Aura «Winter I»»), by its number for a
 // season it doesn't have.
 std::wstring MarkHint(const RewardItem& item)
 {
+    if (item.Mark == L"echo")
+        return EchoHint(item.Season);
+
     auto& marks = GameLogic::SeasonMarks::Marks();
     if (item.Mark == L"title")
     {

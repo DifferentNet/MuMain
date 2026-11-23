@@ -274,3 +274,23 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+# The battle pass echo line "#BPE|name|season[|hidden]" (GameLogic/Events/SeasonEchoLine, 2026-11-23).
+mu_add_test(
+    NAME test_season_echo_line
+    SOURCES
+        test_season_echo_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Events/SeasonEchoLine.cpp
+)
+
+# The battle pass echo store (GameLogic/Events/SeasonEchoStore): the owner line against the shown lines, the hidden
+# flag, season 0 and entering the world. The store answers through the client's network code, which needs the client
+# globals of Winmain.cpp.
+mu_add_test(
+    NAME test_season_echo_store
+    SOURCES
+        test_season_echo_store.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)

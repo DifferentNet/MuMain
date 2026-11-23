@@ -93,6 +93,11 @@ void GameConfig::Load()
     m_overheadNpcNames = ReadBool(CfgSectionUI, CfgKeyOverheadNpcNames, CfgDefaultOverheadNpcNames);
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
     m_titleEffects = ReadBool(CfgSectionUI, CfgKeyTitleEffects, CfgDefaultTitleEffects);
+    // -1: no key, the device decides (Render::Effects::SeasonEcho::OtherEchoesOn).
+    if (const int otherEchoes = ReadInt(CfgSectionUI, CfgKeyOtherEchoes, -1); otherEchoes >= 0)
+        m_otherEchoes = otherEchoes != 0;
+    else
+        m_otherEchoes.reset();
     m_hudEffects = ReadBool(CfgSectionUI, CfgKeyHudEffects, CfgDefaultHudEffects);
     m_titlesTownsOnly = ReadBool(CfgSectionUI, CfgKeyTitlesTownsOnly, CfgDefaultTitlesTownsOnly);
     m_declineInvitations = ReadBool(CfgSectionUI, CfgKeyDeclineInvitations, CfgDefaultDeclineInvitations);
@@ -276,6 +281,10 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadNpcNames, m_overheadNpcNames);
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
     WriteBool(CfgSectionUI, CfgKeyTitleEffects, m_titleEffects);
+    if (m_otherEchoes.has_value())
+        WriteBool(CfgSectionUI, CfgKeyOtherEchoes, *m_otherEchoes);
+    else
+        RemoveObsoleteKey(CfgSectionUI, CfgKeyOtherEchoes);
     WriteBool(CfgSectionUI, CfgKeyHudEffects, m_hudEffects);
     WriteBool(CfgSectionUI, CfgKeyTitlesTownsOnly, m_titlesTownsOnly);
     WriteBool(CfgSectionUI, CfgKeyDeclineInvitations, m_declineInvitations);

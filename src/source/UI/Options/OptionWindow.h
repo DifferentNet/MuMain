@@ -250,6 +250,8 @@ namespace mu::ui::window
         void RmlToggleOverheadNpcNames();
         void RmlToggleOverheadTitles();
         void RmlToggleTitleEffects();
+        // MU Skynet: other players' battle pass echoes (Render::Effects::SeasonEcho), saved in config.ini at once.
+        void RmlToggleOtherEchoes();
         // MU Skynet: the live HUD's animation (UI::HUD::LiveHud), saved in config.ini at once.
         void RmlToggleHudEffects();
         void RmlToggleTitlesTownsOnly();
@@ -597,6 +599,8 @@ namespace mu::ui::window
             Rml::String overheadTitlesLabel;
             bool titleEffects = true;
             Rml::String titleEffectsLabel;
+            bool otherEchoes = true;
+            Rml::String otherEchoesLabel;
             bool hudEffects = true;
             Rml::String hudEffectsLabel;
             // Only under a theme with a live HUD (UI::RmlBridge::ThemeHasLiveHud()), and not on the phone's HUD.

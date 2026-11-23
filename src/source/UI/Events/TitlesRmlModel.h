@@ -44,6 +44,19 @@ struct TitlesRow
     bool operator==(const TitlesRow&) const = default;
 };
 
+// MU Skynet: the battle pass echo's row over the list (Render::Effects::SeasonEcho), on the "Mine" tab once the echo is
+// owned: its name, on or off, and what a click does (titles_echo).
+struct TitlesEcho
+{
+    bool shown = false;
+    bool on = false;
+    TitlesLine name;
+    TitlesLine state;
+    TitlesLine hint;
+
+    bool operator==(const TitlesEcho&) const = default;
+};
+
 struct TitlesRmlModel
 {
     TitlesLine title;
@@ -54,6 +67,7 @@ struct TitlesRmlModel
     std::vector<TitlesRow> rows;
     // Under the list: an empty "Mine" tab's note, or how many titles are owned.
     TitlesLine footer;
+    TitlesEcho echo;
     // The title effects are on (Options): a light runs over the worn row.
     bool effects = false;
 

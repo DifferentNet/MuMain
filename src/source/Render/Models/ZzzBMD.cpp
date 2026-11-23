@@ -75,6 +75,39 @@ void SetActiveBoneTransform(const float (*ptr)[3][4])
 
 namespace
 {
+// How many ScopedNoModelDepthWrite are held: above 0, RenderMesh keeps the depth mask off.
+int s_noModelDepthWrite = 0;
+// How many ScopedFlatModelColor are held: above 0, a RENDER_COLOR draw below alpha 0.99 keeps
+// textures off.
+int s_flatModelColor = 0;
+} // namespace
+
+ScopedNoModelDepthWrite::ScopedNoModelDepthWrite() : m_depthMaskWasOn(DepthMaskEnable)
+{
+    ++s_noModelDepthWrite;
+}
+
+ScopedNoModelDepthWrite::~ScopedNoModelDepthWrite()
+{
+    --s_noModelDepthWrite;
+    if (m_depthMaskWasOn)
+        EnableDepthMask();
+    else
+        DisableDepthMask();
+}
+
+ScopedFlatModelColor::ScopedFlatModelColor()
+{
+    ++s_flatModelColor;
+}
+
+ScopedFlatModelColor::~ScopedFlatModelColor()
+{
+    --s_flatModelColor;
+}
+
+namespace
+{
 // Written on the main thread only, read by the animation workers while no model loads (see AnimationTaskPool).
 std::atomic<std::uint32_t> s_modelDataGeneration{ 0 };
 
@@ -1842,6 +1875,12 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
         if (alpha < 0.99f)
         {
             EnableAlphaTest();
+            // MU Skynet: EnableAlphaTest turned textures back on; under ScopedFlatModelColor the
+            // colour stays flat (the renderer's white texture), still alpha-tested and blended.
+            if (s_flatModelColor > 0)
+            {
+                DisableTexture(true);
+            }
         }
     }
     else if ((renderFlags & RENDER_CHROME) == RENDER_CHROME ||
@@ -2021,6 +2060,12 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
             EnableCullFace();
             EnableDepthMask();
         }
+    }
+    // MU Skynet: the battle pass echo's copies write no depth (ScopedNoModelDepthWrite), whichever
+    // state was picked above.
+    if (s_noModelDepthWrite > 0)
+    {
+        DisableDepthMask();
     }
 
     const bool shadowMap = (renderFlags & RENDER_SHADOWMAP) == RENDER_SHADOWMAP;
