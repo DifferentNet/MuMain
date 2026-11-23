@@ -1669,6 +1669,8 @@ namespace
         }
         switch (type)
         {
+        case ITEM_RENA:
+            return 255; // server/trim/rena-stack.sql
         case ITEM_SYMBOL_OF_KUNDUN:
             return 5;
         case ITEM_SPLINTER_OF_ARMOR:

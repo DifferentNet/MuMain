@@ -1073,7 +1073,8 @@ int StackCount(const ITEM* pItem)
         || GameLogic::Items::IsElitePotionType(type) || type == ITEM_MEDIUM_ELITE_HEALING_POTION
         || GameLogic::Items::IsElixirType(type)
         || (type >= ITEM_CHERRY_BLOSSOM_WINE && type <= ITEM_GOLDEN_CHERRY_BLOSSOM_BRANCH)
-        || type == ITEM_ELITE_SD_POTION;
+        || type == ITEM_ELITE_SD_POTION
+        || (type == ITEM_RENA && pItem->Level == 0); // stacks of 255 on our server (server/trim/rena-stack.sql)
     if (stack && pItem->Durability > 1)
         return pItem->Durability;
     if (COMGEM::isCompiledGem(pItem))
@@ -1790,6 +1791,15 @@ bool mu::ui::window::CInventoryCtrl::AreItemsStackable(ITEM* pSourceItem, ITEM* 
     }
 
     if (iSrcType == ITEM_SYMBOL_OF_KUNDUN && iTarType == ITEM_SYMBOL_OF_KUNDUN)
+    {
+        return true;
+    }
+
+    // Rena stacks up to 255 on our server (server/trim/rena-stack.sql), each level on its own: the Stones and the
+    // Mark of Lord share its item type at levels 1-3.
+    constexpr int RenaStackLimit = 255;
+    if (iSrcType == ITEM_RENA && iSrcLevel == iTarLevel &&
+        (iSrcDurability < RenaStackLimit && iTarDurability < RenaStackLimit))
     {
         return true;
     }

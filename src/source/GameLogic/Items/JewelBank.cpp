@@ -36,11 +36,12 @@ constexpr Kind Make(int group, int number, int packedNumber)
 const std::array<Kind, KindCount>& Kinds()
 {
     // Chaos, Life, Soul, Bless, Creation, Guardian, Harmony, Gemstone, Lower and Higher Refine Stone, then the
-    // Jewel of Ancient and the Jewel of Fate, which come in no packs.
+    // Jewel of Ancient and the Jewel of Fate, which come in no packs, and Rena, kept in stacks.
     static constexpr std::array<Kind, KindCount> kinds{
         Make(12, 15, 141), Make(14, 16, 136), Make(14, 14, 31), Make(14, 13, 30), Make(14, 22, 137),
         Make(14, 31, 138), Make(14, 42, 140), Make(14, 41, 139), Make(14, 43, 142), Make(14, 44, 143),
         Kind{Data::Items::MakeItemType(14, 160), -1}, Kind{Data::Items::MakeItemType(14, 161), -1},
+        Kind{Data::Items::MakeItemType(14, 21), -1, true},
     };
     return kinds;
 }
