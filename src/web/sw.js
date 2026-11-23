@@ -236,9 +236,9 @@ function offlinePage() {
 <button type="button" onclick="location.reload()">Повторить</button></div>
 <div lang="ro" hidden><p>Nu ai conexiune la internet. Jocul merge doar online.</p>
 <button type="button" onclick="location.reload()">Încearcă din nou</button></div>
-<div lang="pt" hidden><p>Sem conexão com a internet. O jogo é jogado online.</p>
+<div lang="pt" hidden><p>Sem conexão com a internet. O jogo só funciona online.</p>
 <button type="button" onclick="location.reload()">Tentar de novo</button></div>
-<div lang="es" hidden><p>No hay conexión a internet. El juego se juega en línea.</p>
+<div lang="es" hidden><p>No hay conexión a internet. El juego solo funciona en línea.</p>
 <button type="button" onclick="location.reload()">Intentar de nuevo</button></div>
 <script>
 (function () {
