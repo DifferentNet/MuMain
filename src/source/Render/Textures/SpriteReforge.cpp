@@ -65,6 +65,18 @@ constexpr std::array<RampStop, 8> MetalRamp{{{0.0f, {5.0f, 4.0f, 4.0f}},
                                              {220.0f, {232.0f, 198.0f, 132.0f}},
                                              {255.0f, {255.0f, 238.0f, 196.0f}}}};
 
+// Light bronze for window frames, cell lines and slot lines: about the original's own brightness, a
+// quarter more, so they stand off the dark stone as the original's grey frames do (ghinzuro 2026-11-24,
+// variant B: the forged windows had too little contrast).
+constexpr std::array<RampStop, 8> LightMetalRamp{{{0.0f, {5.0f, 4.0f, 4.0f}},
+                                                  {40.0f, {56.0f, 47.0f, 35.0f}},
+                                                  {80.0f, {112.0f, 95.0f, 70.0f}},
+                                                  {115.0f, {161.0f, 137.0f, 101.0f}},
+                                                  {150.0f, {210.0f, 178.0f, 131.0f}},
+                                                  {185.0f, {240.0f, 210.0f, 160.0f}},
+                                                  {220.0f, {252.0f, 232.0f, 190.0f}},
+                                                  {255.0f, {255.0f, 246.0f, 222.0f}}}};
+
 // Warm dark stone for window bodies (by luma).
 constexpr std::array<RampStop, 7> StoneRamp{{{0.0f, {5.0f, 4.0f, 4.0f}},
                                              {25.0f, {14.0f, 11.0f, 10.0f}},
@@ -99,7 +111,7 @@ constexpr float GlowFarShare = 0.65f;
 // the icons land on light gold and stay as readable as the original's.
 constexpr float MetalBrightGain = 1.25f;
 
-// cell: the lattice is dim teal; brightened, it lands on the ramp's dark bronze.
+// cell: the lattice is dim teal; brightened, it lands on the light ramp's bronze.
 constexpr float CellGain = 1.65f;
 
 // stone: a little blur takes the JPEG noise off, the ramp darkens, bright pixels (text) stay.
@@ -114,7 +126,7 @@ constexpr float StoneLightTop = 1.18f;
 constexpr float StoneLightFall = 0.38f;
 constexpr Step StoneLitLuma = MakeStep(150.0f, 190.0f);
 
-// socket: the dark grey background becomes a darker warm recess, the brighter grey lines metal.
+// socket: the dark grey background becomes a darker warm recess, the brighter grey lines light bronze.
 constexpr Step SocketChroma = MakeStep(14.0f, 30.0f);
 constexpr Step SocketLineLuma = MakeStep(80.0f, 125.0f);
 constexpr float SocketShade = 0.55f;
@@ -132,14 +144,16 @@ constexpr Rgb GildFill{0.62f, 0.42f, 0.22f};
 // Below this blurred alpha a block has no opaque neighbours to average.
 constexpr float MinCoverage = 1.0e-4f;
 
-constexpr std::array<std::pair<std::string_view, Preset>, 8> PresetNames{{{"none", Preset::None},
-                                                                          {"metal", Preset::Metal},
-                                                                          {"metal-flat", Preset::MetalFlat},
-                                                                          {"metal-bright", Preset::MetalBright},
-                                                                          {"cell", Preset::Cell},
-                                                                          {"stone", Preset::Stone},
-                                                                          {"socket", Preset::Socket},
-                                                                          {"gild", Preset::Gild}}};
+constexpr std::array<std::pair<std::string_view, Preset>, 10> PresetNames{{{"none", Preset::None},
+                                                                           {"metal", Preset::Metal},
+                                                                           {"metal-flat", Preset::MetalFlat},
+                                                                           {"metal-bright", Preset::MetalBright},
+                                                                           {"cell", Preset::Cell},
+                                                                           {"stone", Preset::Stone},
+                                                                           {"socket", Preset::Socket},
+                                                                           {"gild", Preset::Gild},
+                                                                           {"frame", Preset::Frame},
+                                                                           {"frame-flat", Preset::FrameFlat}}};
 
 // The caller's pixels: rows top-down, 3 or 4 components, straight alpha.
 struct Sprite
@@ -286,6 +300,7 @@ private:
 };
 
 constexpr RampTable MetalColours(MetalRamp);
+constexpr RampTable LightMetalColours(LightMetalRamp);
 constexpr RampTable StoneColours(StoneRamp);
 
 // How much a pixel takes the new colours by its chroma: 1 for grey, 0 for coloured.
@@ -609,13 +624,14 @@ private:
 constexpr ChromaTable PixelShares;
 
 // A pixel of the metal look before its glow; `shares` are its chroma's, `around` is the luma of its
-// opaque surround. `share` gets how much of the pixel took the metal colours: the glow follows it.
+// opaque surround, `colours` the ramp (metal's or frame's). `share` gets how much of the pixel took the
+// metal colours: the glow follows it.
 SPRITE_REFORGE_INLINE Rgb MetalPixel(const Rgb& source, float chroma, const ChromaShares& shares, float around,
-                                     bool gild, float& share)
+                                     bool gild, const RampTable& colours, float& share)
 {
     const float luma = Luma(source);
     const float relief = MetalGain * (luma + MetalRelief * (luma - around));
-    const Rgb metal = MetalColours(relief);
+    const Rgb metal = colours(relief);
     const float text = Smooth(TextLuma, luma) * shares.plain;
     share = shares.grey * (1.0f - text);
     const Rgb out = Mix(source, metal, share);
@@ -636,7 +652,8 @@ Rgb Glowing(const Rgb& colour, float amount)
             colour.b + (MaxChannel - colour.b) * (GlowColour.b * amount)};
 }
 
-// How much warm glow each block gets, 0-1: the blur, near and far, of how light its metal came out.
+// How much warm glow each block gets, 0-1: the blur, near and far, of how light its metal came out. Always
+// measured on metal's own ramp, so a frame on the light ramp glows where metal does, no wider.
 Grid GlowAmount(const Blocks& blocks, const Grid& around, bool gild)
 {
     std::vector<float> highlight(blocks.colour.size());
@@ -645,7 +662,7 @@ Grid GlowAmount(const Blocks& blocks, const Grid& around, bool gild)
         const Rgb& colour = blocks.colour[i];
         const float chroma = Chroma(colour);
         float share = 0.0f;
-        const Rgb metal = MetalPixel(colour, chroma, SharesOf(chroma), around.values[i], gild, share);
+        const Rgb metal = MetalPixel(colour, chroma, SharesOf(chroma), around.values[i], gild, MetalColours, share);
         highlight[i] = share * Smooth(GlowLuma, Luma(metal)) * blocks.alpha[i];
     }
     const std::vector<float> nearGlow = Blur(highlight, blocks.width, blocks.height, GlowNearRadius);
@@ -655,7 +672,7 @@ Grid GlowAmount(const Blocks& blocks, const Grid& around, bool gild)
     return {blocks.width, blocks.height, std::move(amount)};
 }
 
-void ForgeMetal(const Sprite& sprite, bool gild)
+void ForgeMetal(const Sprite& sprite, bool gild, const RampTable& colours)
 {
     const Blocks blocks = Average(sprite);
     const Grid around = Surround(blocks, MetalReliefRadius);
@@ -675,15 +692,16 @@ void ForgeMetal(const Sprite& sprite, bool gild)
             const Rgb source = ColourOf(pixel);
             const float chroma = Chroma(source);
             float share = 0.0f;
-            const Rgb metal = MetalPixel(source, chroma, PixelShares(chroma), SampleAt(aroundAt, x), gild, share);
+            const Rgb metal =
+                MetalPixel(source, chroma, PixelShares(chroma), SampleAt(aroundAt, x), gild, colours, share);
             Put(pixel, Glowing(metal, SampleAt(glowAt, x)));
         }
     }
 }
 
-Rgb MetalFlatPixel(const Rgb& source)
+Rgb MetalFlatPixel(const Rgb& source, const RampTable& colours)
 {
-    return Mix(source, MetalColours(Luma(source)), GreyWeight(Chroma(source)));
+    return Mix(source, colours(Luma(source)), GreyWeight(Chroma(source)));
 }
 
 Rgb MetalBrightPixel(const Rgb& source)
@@ -693,7 +711,7 @@ Rgb MetalBrightPixel(const Rgb& source)
 
 Rgb CellPixel(const Rgb& source)
 {
-    return MetalColours(CellGain * Luma(source));
+    return LightMetalColours(CellGain * Luma(source));
 }
 
 // The top light of a window body at a texture row's centre: brighter at the top.
@@ -733,7 +751,7 @@ Rgb SocketPixel(const Rgb& source)
     const float luma = Luma(source);
     const float grey = 1.0f - Smooth(SocketChroma, Chroma(source));
     const float line = Smooth(SocketLineLuma, luma);
-    const Rgb socket = Mix(Scaled(source, recessTint), MetalColours(luma), line);
+    const Rgb socket = Mix(Scaled(source, recessTint), LightMetalColours(luma), line);
     return Mix(source, socket, grey);
 }
 
@@ -742,16 +760,22 @@ void Forge(Preset preset, const Sprite& sprite)
     switch (preset)
     {
     case Preset::Metal:
-        ForgeMetal(sprite, false);
+        ForgeMetal(sprite, false, MetalColours);
+        break;
+    case Preset::Frame:
+        ForgeMetal(sprite, false, LightMetalColours);
         break;
     case Preset::Gild:
-        ForgeMetal(sprite, true);
+        ForgeMetal(sprite, true, MetalColours);
         break;
     case Preset::Stone:
         ForgeStone(sprite);
         break;
     case Preset::MetalFlat:
-        ForEachPixel(sprite, [](const Rgb& source) { return MetalFlatPixel(source); });
+        ForEachPixel(sprite, [](const Rgb& source) { return MetalFlatPixel(source, MetalColours); });
+        break;
+    case Preset::FrameFlat:
+        ForEachPixel(sprite, [](const Rgb& source) { return MetalFlatPixel(source, LightMetalColours); });
         break;
     case Preset::MetalBright:
         ForEachPixel(sprite, [](const Rgb& source) { return MetalBrightPixel(source); });

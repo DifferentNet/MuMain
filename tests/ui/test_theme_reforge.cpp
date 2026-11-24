@@ -284,6 +284,11 @@ TEST_CASE("legacy reforges nothing and skynet's list names real sprites [ui][rml
     // The green current-skill frame is in newui_menu03; newui_skillbox2 is orange.
     CHECK(list.at("partcharge1/newui_menu03") == Preset::Gild);
     CHECK(list.at("newui_skillbox2") == Preset::MetalFlat);
+    // Window frames and their strips take the light bronze ramp, so they stand off the dark stone; the HUD keeps
+    // metal's darker one.
+    CHECK(list.at("newui_item_back01") == Preset::Frame);
+    CHECK(list.at("newui_item_table01(l)") == Preset::FrameFlat);
+    CHECK(list.at("newui_menu01") == Preset::Metal);
     // The HUD's menu buttons keep their light icons readable.
     for (const char* button :
          {"partcharge1/newui_menu_bt01", "partcharge1/newui_menu_bt02", "partcharge1/newui_menu_bt03",
