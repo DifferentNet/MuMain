@@ -56,8 +56,17 @@ std::wstring Amount(int count)
     return text;
 }
 
+// A bound jewel stays out of the bank (server JewelBank.cs, ghinzuro 2026-11-24): an account-bound one carries the 380
+// flag (AccountBound.cs), the battle pass' bound Jewel of Fate the skill flag (BoundJewelOfFate.cs). Counting it made
+// "(+1)" and a lit deposit button for a jewel the server then refused.
+bool IsBoundJewel(const ITEM& item)
+{
+    return item.option_380 || (item.Type == ITEM_JEWEL_OF_FATE && item.HasSkill);
+}
+
 // Jewels of a kind in the inventory's bag (page 2 too, BagPages.h), packed ones counted as the jewels they hold
 // (10 per level from +0); for a stacked kind (Rena) the level 0 items, each counted as its stack size.
+// Bound jewels are left out.
 int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
 {
     if (g_pMyInventory == nullptr)
@@ -72,7 +81,7 @@ int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
         for (size_t i = 0; i < bag->GetNumberOfItems(); ++i)
         {
             const ITEM* item = bag->GetItem(static_cast<int>(i));
-            if (item == nullptr)
+            if (item == nullptr || IsBoundJewel(*item))
                 continue;
             if (kind.stacked)
             {

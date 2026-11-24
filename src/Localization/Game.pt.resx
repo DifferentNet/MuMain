@@ -14572,4 +14572,14 @@
   <data name="UpdateRequiredLine2" xml:space="preserve">
     <value>ou baixe-a no site skynet-mu.net</value>
   </data>
+  <!-- jewel bank: bound jewels (2026-11-24) -->
+  <data name="BoundToCharacter" xml:space="preserve">
+    <value>Vinculado a este personagem</value>
+  </data>
+  <data name="GrandShopBoundToAccount" xml:space="preserve">
+    <value>Vinculado à conta</value>
+  </data>
+  <data name="GrandShopNotTransferable" xml:space="preserve">
+    <value>Não pode ser transferido; o baú é permitido</value>
+  </data>
 </root>

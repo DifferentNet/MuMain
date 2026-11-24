@@ -5020,9 +5020,13 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
     // MU Moldova: the 380 flag marks a Grand Reset shop piece, bound to the account (no real 380 option exists on
     // this server), so it shows the label instead of the 380 lines. Rena and the SkyNet Box can't be passed on either.
+    // The battle pass' bound Jewel of Fate carries the skill flag (server BoundJewelOfFate.cs) and stays with its
+    // character (ghinzuro 2026-11-24).
     const wchar_t* bindLabel = nullptr;
     if (ip->option_380 != 0)
         bindLabel = I18N::Game::GrandShopBoundToAccount;
+    else if (ip->Type == ITEM_JEWEL_OF_FATE && ip->HasSkill)
+        bindLabel = I18N::Game::BoundToCharacter;
     else if (ip->Type == ITEM_RENA || ip->Type == ITEM_GOLDEN_BOX)
         bindLabel = I18N::Game::GrandShopNotTransferable;
 

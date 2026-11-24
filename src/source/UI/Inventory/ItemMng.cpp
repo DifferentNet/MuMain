@@ -23,6 +23,10 @@ ItemCreationParams ParseItemData(std::span<const BYTE> itemData)
     auto flags = static_cast<ItemOptionFlags>(itemData[4]);
     params.WithLuck = flags & ItemOptionFlags::HasLuck;
     params.WithSkill = flags & ItemOptionFlags::HasSkill;
+    // MU Moldova: OpenMU's extended item format marks a level-380 (guardian) option with this flag and no data
+    // byte. Our server puts one on account-bound items (AccountBound.cs), which the tooltip and the jewel bank
+    // read as option_380; without this the client never saw the binding (2026-11-24).
+    params.HasGuardianOption = (flags & ItemOptionFlags::HasGuardian) != 0;
 
     int offset = 0;
     if (flags & ItemOptionFlags::HasOption)
