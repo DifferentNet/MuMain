@@ -268,8 +268,9 @@ partcharge1/newui_menu03=gild
   (`metal` and `metal-flat` on a light bronze ramp, about the original's own brightness: window
   frames that stand off the dark stone as the original's grey ones do), `cell` (the inventory
   lattice: light bronze lines), `stone` (window bodies, lit from the top), `socket` (equipment
-  slots: a dark recess, light bronze lines), `gild` (the HUD's current-skill box: `metal`, its green frame gold and its green fill
-  deep bronze, so a skill icon on it stands out) and `none`. They recolour the grey parts only
+  slots: a dark recess, light bronze lines), `gild` (the HUD's current-skill box:
+  `metal`, its green frame gold and its green fill deep bronze, so a skill icon on it stands out) and
+  `none`. They recolour the grey parts only
   (`cell` recolours all, `gild` its green too): saturated pixels (coloured gems, painted marks)
   keep their colour, and `metal` and `stone` also keep bright text.
   The blurred parts (`metal`'s relief and glow, `stone`'s softening) are worked out on the
