@@ -17,14 +17,17 @@ enum class Preset
     Metal,       // frames: dark iron with antique gold on the light curls, deeper relief, a warm glow
     MetalFlat,   // thin frame pieces and buttons: the metal colours without relief or glow
     MetalBright, // buttons with a light icon (the HUD's menu buttons): metal-flat, lifted so the icon stays readable
-    Cell,        // the inventory cell lattice (newui_item_box): dark bronze lines
+    Cell,        // the inventory cell lattice (newui_item_box): light bronze lines
     Stone,       // window bodies (newui_msgbox_back): warm dark stone, lit from the top
-    Socket,      // equipment slots: a dark recess, bronze lines
+    Socket,      // equipment slots: a dark recess, light bronze lines
     Gild,        // the HUD's current-skill box (partcharge1/newui_menu03): metal, its green frame gold and its
                  // green fill deep bronze
+    Frame,       // window frames: metal on the light bronze ramp, so they stand off the dark stone
+    FrameFlat,   // window frame strips, table edges and buttons: metal-flat on the light bronze ramp
 };
 
-// "none", "metal", "metal-flat", "metal-bright", "cell", "stone", "socket" or "gild"; nothing for any other name.
+// "none", "metal", "metal-flat", "metal-bright", "cell", "stone", "socket", "gild", "frame" or "frame-flat";
+// nothing for any other name.
 [[nodiscard]] std::optional<Preset> ParsePreset(std::string_view name);
 
 // Recolours `pixels` in place: width x height pixels, rows top-down, 3 (RGB) or 4 (RGBA, straight

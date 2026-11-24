@@ -253,7 +253,7 @@ the decoded pixels as RmlUi loads the texture, before the upload. The original a
 ```ini
 [Reforge]
 newui_msgbox_back=stone
-newui_item_table01(l)=metal-flat
+newui_item_table01(l)=frame-flat
 partcharge1/newui_menu03=gild
 ```
 
@@ -264,17 +264,20 @@ partcharge1/newui_menu03=gild
 - **Presets** (`Render/Textures/SpriteReforge.h`): `metal` (frames: dark iron, antique gold on the
   light curls, deeper relief, a warm glow), `metal-flat` (the same colours without relief or glow,
   for thin and tiling pieces and buttons), `metal-bright` (`metal-flat` lifted, for buttons with a
-  light icon such as the HUD's menu buttons, so the icon stays readable), `cell` (the inventory
-  lattice: dark bronze lines), `stone` (window bodies, lit from the top), `socket` (equipment
-  slots), `gild` (the HUD's current-skill box: `metal`, its green frame gold and its green fill
+  light icon such as the HUD's menu buttons, so the icon stays readable), `frame` and `frame-flat`
+  (`metal` and `metal-flat` on a light bronze ramp, about the original's own brightness: window
+  frames that stand off the dark stone as the original's grey ones do), `cell` (the inventory
+  lattice: light bronze lines), `stone` (window bodies, lit from the top), `socket` (equipment
+  slots: a dark recess, light bronze lines), `gild` (the HUD's current-skill box: `metal`, its green frame gold and its green fill
   deep bronze, so a skill icon on it stands out) and `none`. They recolour the grey parts only
   (`cell` recolours all, `gild` its green too): saturated pixels (coloured gems, painted marks)
   keep their colour, and `metal` and `stone` also keep bright text.
   The blurred parts (`metal`'s relief and glow, `stone`'s softening) are worked out on the
   original's grid and spread over an HD copy, so a copy at four times the size costs little more
   than one pass over its pixels.
-  A `metal` piece that shows a seam where it meets its neighbour (its relief and glow blur within
-  the sprite) goes to `metal-flat`.
+  A `metal` or `frame` piece that shows a seam where it meets its neighbour (its relief and glow
+  blur within the sprite) goes to `metal-flat` or `frame-flat`. `frame` glows where `metal` would,
+  no wider: the glow is measured on `metal`'s ramp.
 - **Inheritance**: the section merges down the chain like any other; a child replaces a parent's
   entry and `none` turns one off. An unknown preset name is logged once in `MuError.log` and the
   sprite is drawn as it is.

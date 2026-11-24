@@ -22,8 +22,9 @@ struct Size
     int height = 0;
 };
 
-constexpr std::array<Preset, 7> ChangingPresets{Preset::Metal, Preset::MetalFlat, Preset::MetalBright, Preset::Cell,
-                                                Preset::Stone, Preset::Socket,    Preset::Gild};
+constexpr std::array<Preset, 9> ChangingPresets{Preset::Metal, Preset::MetalFlat, Preset::MetalBright,
+                                                Preset::Cell,  Preset::Stone,     Preset::Socket,
+                                                Preset::Gild,  Preset::Frame,     Preset::FrameFlat};
 
 Pixels Uniform(int width, int height, std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a = 255)
 {
@@ -114,7 +115,7 @@ void CheckColour(const Pixels& pixels, std::size_t pixel, int r, int g, int b, i
 }
 } // namespace
 
-TEST_CASE("a reforge preset is one of the eight names [render][textures][reforge]")
+TEST_CASE("a reforge preset is one of the ten names [render][textures][reforge]")
 {
     CHECK(ParsePreset("none") == Preset::None);
     CHECK(ParsePreset("metal") == Preset::Metal);
@@ -124,6 +125,8 @@ TEST_CASE("a reforge preset is one of the eight names [render][textures][reforge
     CHECK(ParsePreset("stone") == Preset::Stone);
     CHECK(ParsePreset("socket") == Preset::Socket);
     CHECK(ParsePreset("gild") == Preset::Gild);
+    CHECK(ParsePreset("frame") == Preset::Frame);
+    CHECK(ParsePreset("frame-flat") == Preset::FrameFlat);
     CHECK_FALSE(ParsePreset("Metal").has_value());
     CHECK_FALSE(ParsePreset("metal ").has_value());
     CHECK_FALSE(ParsePreset("metal_flat").has_value());
@@ -168,6 +171,32 @@ TEST_CASE("metal-flat puts grey on the metal ramp [render][textures][reforge]")
     CheckColour(Forged(Uniform(4, 4, 150, 150, 150), Preset::MetalFlat, 4, 4), 5, 132, 104, 64, 1);
     CheckColour(Forged(Uniform(4, 4, 0, 0, 0), Preset::MetalFlat, 4, 4), 5, 5, 4, 4, 0);
     CheckColour(Forged(Uniform(4, 4, 255, 255, 255), Preset::MetalFlat, 4, 4), 5, 255, 238, 196, 0);
+}
+
+TEST_CASE("frame-flat puts grey on the light bronze ramp [render][textures][reforge]")
+{
+    // The window frames' ramp: 150 is a light bronze, where metal-flat gives a mid bronze (132, 104, 64).
+    CheckColour(Forged(Uniform(4, 4, 150, 150, 150), Preset::FrameFlat, 4, 4), 5, 210, 178, 131, 1);
+    CheckColour(Forged(Uniform(4, 4, 0, 0, 0), Preset::FrameFlat, 4, 4), 5, 5, 4, 4, 0);
+    CHECK(Forged(Uniform(4, 4, 200, 40, 40), Preset::FrameFlat, 4, 4) == Uniform(4, 4, 200, 40, 40));
+}
+
+TEST_CASE("frame is metal on the light ramp: never darker, lighter in the mids [render][textures][reforge]")
+{
+    const Pixels source = Pattern(20, 14);
+    const Pixels metal = Forged(source, Preset::Metal, 20, 14);
+    const Pixels frame = Forged(source, Preset::Frame, 20, 14);
+    int lighter = 0;
+    for (std::size_t i = 0; i < source.size(); i += 4)
+    {
+        CHECK(frame[i + 3] == source[i + 3]);
+        const int frameSum = frame[i] + frame[i + 1] + frame[i + 2];
+        const int metalSum = metal[i] + metal[i + 1] + metal[i + 2];
+        CHECK(frameSum + 3 >= metalSum);
+        if (frameSum > metalSum)
+            ++lighter;
+    }
+    CHECK(lighter > 0);
 }
 
 TEST_CASE("metal-bright lifts grey before the ramp and keeps colour [render][textures][reforge]")
@@ -250,18 +279,18 @@ TEST_CASE("stone is lit from the top, evenly across, and keeps light text [rende
     CHECK(Forged(Uniform(8, 8, 230, 230, 230), Preset::Stone, 8, 8) == Uniform(8, 8, 230, 230, 230));
 }
 
-TEST_CASE("socket sinks the dark background and turns the light lines to metal [render][textures][reforge]")
+TEST_CASE("socket sinks the dark background and turns the light lines to light bronze [render][textures][reforge]")
 {
     const Pixels recess = Forged(Uniform(4, 4, 50, 50, 50), Preset::Socket, 4, 4);
     CheckColour(recess, 0, 28, 24, 21, 1); // 50 * 0.55 * (1, 0.88, 0.76)
     CHECK(Forged(Uniform(4, 4, 150, 150, 150), Preset::Socket, 4, 4) ==
-          Forged(Uniform(4, 4, 150, 150, 150), Preset::MetalFlat, 4, 4));
+          Forged(Uniform(4, 4, 150, 150, 150), Preset::FrameFlat, 4, 4));
 }
 
-TEST_CASE("cell brightens the lattice onto the ramp's dark bronze [render][textures][reforge]")
+TEST_CASE("cell brightens the lattice onto the light ramp's bronze [render][textures][reforge]")
 {
-    // 50 * 1.65 = 82.5 on the ramp, even for a coloured pixel.
-    CheckColour(Forged(Uniform(3, 3, 50, 50, 50), Preset::Cell, 3, 3), 4, 46, 40, 34, 1);
+    // 50 * 1.65 = 82.5 on the light ramp, even for a coloured pixel.
+    CheckColour(Forged(Uniform(3, 3, 50, 50, 50), Preset::Cell, 3, 3), 4, 116, 98, 72, 1);
     const Pixels teal = Forged(Uniform(3, 3, 20, 60, 60), Preset::Cell, 3, 3);
     CHECK(teal[0] > teal[2]);
 }
