@@ -17568,4 +17568,8 @@
   <data name="UpdateRequiredLine2" xml:space="preserve">
     <value>или скачайте её на сайте skynet-mu.net</value>
   </data>
+  <!-- jewel bank: bound jewels (2026-11-24) -->
+  <data name="BoundToCharacter" xml:space="preserve">
+    <value>Привязано к этому персонажу</value>
+  </data>
 </root>
