@@ -66,7 +66,7 @@
 		<div id="bar_sd" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="sd_tooltip">
 			<div class="gauge-fill gauge-fill-sd gauge-fill-vertical" data-style-height="sd_fraction * 100 + '%'"></div>
 			<div class="gauge-fill gauge-fill-sd gauge-fill-horizontal" data-style-width="sd_fraction * 100 + '%'"></div>
-			<span class="gauge-num value-current">{{sd_current_text}}</span>
+			<span class="gauge-num value-current"><span class="gauge-tag live-only">SD</span>{{sd_current_text}}</span>
 			<span class="gauge-num value-full">{{sd_text}}</span>
 			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>
@@ -85,7 +85,7 @@
 		<div id="bar_ag" class="gauge-slot slot-frame slot-fill" data-attr-data-hint="ag_tooltip">
 			<div class="gauge-fill gauge-fill-ag gauge-fill-vertical" data-style-height="ag_fraction * 100 + '%'"></div>
 			<div class="gauge-fill gauge-fill-ag gauge-fill-horizontal" data-style-width="ag_fraction * 100 + '%'"></div>
-			<span class="gauge-num value-current">{{ag_current_text}}</span>
+			<span class="gauge-num value-current"><span class="gauge-tag live-only">AG</span>{{ag_current_text}}</span>
 			<span class="gauge-num value-full">{{ag_text}}</span>
 			<div class="arc-hits live-only"><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/><div/></div>
 		</div>

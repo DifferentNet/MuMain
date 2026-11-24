@@ -4,8 +4,9 @@
    live parts too. Only what changes is here; potions, skills, buttons and EXP stay where legacy puts them. The
    meshes' shapes and timings are theme.ini's [LiveHud]. */
 
-/* The ring round each gem stands 12.4dp above the strip: the HUD's unit keeps that room clear of windows. */
-#hud_layout { height: 64dp; }
+/* The ring round each gem stands 12.4dp above the strip, and the SD and AG plates 12dp above the ring: the HUD's
+   unit keeps that room clear of windows. */
+#hud_layout { height: 76dp; }
 
 /* The ring's box, 62x62 round the gem, from 14.4dp above the group's box; every mesh layer fills it. */
 .orb { position: absolute; left: 0; top: -14.4dp; width: 62dp; height: 62dp; pointer-events: none; }
@@ -49,27 +50,38 @@
 .arc-hits div:nth-child(12) { left: 54.22dp; top: 34.08dp; transform: rotate(100deg); }
 .arc-hits div:nth-child(13) { left: 50.77dp; top: 43.56dp; transform: rotate(120deg); }
 
-/* The life and mana numbers centred on the gem, 3dp under legacy's height and with nothing behind them, so even a
-   low liquid shows above and round the digits; the outline keeps them readable on any colour. */
+/* The life and mana numbers big in the middle of the gem, with nothing behind them, so the liquid shows round the
+   digits; the outline keeps them readable on any colour. Players took the small SD number in the gem for life
+   (ghinzuro 2026-11-24, variant B). */
 #bar_hp .gauge-num.value-current, #bar_mp .gauge-num.value-current {
 	left: 50%;
-	top: 40.8dp;
+	top: 16.4dp;
 	width: auto;
+	font-size: 13dp;
+	line-height: 14dp;
 	transform: translateX(-50%) scaleX(0.91);
 	font-effect: outline(1px #000000);
 }
-/* SD over the life gem and AG over the mana gem, small in the gem's upper part, inside the ring. */
+/* SD over the life gem and AG over the mana gem: a small plate centred over the ring's top, edged in the ring's
+   colour, with its name in front of the number. */
 #bar_sd .gauge-num, #bar_ag .gauge-num {
-	left: -17dp;
-	top: 16.4dp;
+	left: 50%;
+	top: -12dp;
+	width: auto;
+	padding: 0 5dp;
 	font-size: 9dp;
-	line-height: 10dp;
+	line-height: 9dp;
+	transform: translateX(-50%) scaleX(0.91);
+	background-color: token(hud-num-plate);
+	border-width: 1dp;
+	border-radius: 5dp;
 }
-#bar_sd .gauge-num { color: token(hud-sd-num); }
-#bar_ag .gauge-num { color: token(hud-ag-num); }
+#bar_sd .gauge-num { color: token(hud-sd-num); border-color: token(hud-sd-edge); }
+#bar_ag .gauge-num { color: token(hud-ag-num); border-color: token(hud-ag-edge); }
+.gauge-tag { margin-right: 3dp; }
 
-/* The open skill grid clears the ring. */
-#skill_list { bottom: 65dp; }
+/* The open skill grid clears the ring and the SD and AG plates over it. */
+#skill_list { bottom: 77dp; }
 
 /* The skill row's cooldowns: a dark sweep drawn by C++ over the slot replaces the old wipe (the open grid's cells
    keep theirs), the whole seconds left stand in the middle while two or more remain, and a slot that is ready again

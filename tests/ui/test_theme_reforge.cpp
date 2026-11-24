@@ -783,6 +783,8 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
             CHECK(display(document, "#orb_right") == Display::None);
             CHECK(display(document, "#bar_sd .arc-hits") == Display::None);
             CHECK(display(document, "#bar_ag .arc-hits") == Display::None);
+            CHECK(display(document, "#bar_sd .gauge-tag") == Display::None);
+            CHECK(display(document, "#bar_ag .gauge-tag") == Display::None);
             if (std::string(name) == "legacy")
             {
                 CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(51.f));
@@ -799,7 +801,7 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
     {
         UI::RmlBridge::SetActiveThemeName("skynet");
         auto* document = fixture.LoadThemed("skynet", "main_frame.rml");
-        CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(64.f));
+        CHECK(BorderSize(*Fixture::First(document, "#hud_layout")).y == doctest::Approx(76.f));
         for (const auto& [orb, gem, bar, body] :
              {std::array<const char*, 4>{"#orb_left", "#orb_hp_box", "#bar_hp", "#orb_hp_body"},
               std::array<const char*, 4>{"#orb_right", "#orb_mp_box", "#bar_mp", "#orb_mp_body"}})
@@ -829,8 +831,8 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
         CHECK(Fixture::First(document, "#orb_hp_box")->GetComputedValues().pointer_events() ==
               Rml::Style::PointerEvents::None);
 
-        // The number is centred on the gem (its translateX(-50%) takes half its width back), 3dp under legacy's
-        // height, outlined, with nothing behind it.
+        // The number is centred on the gem (its translateX(-50%) takes half its width back), in its middle, outlined,
+        // with nothing behind it.
         Rml::Element* number = Fixture::First(document, "#bar_hp .gauge-num.value-current");
         number->SetInnerRML("1234");
         fixture.context->Update();
@@ -839,12 +841,12 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
         CHECK(style.border_top_width() == doctest::Approx(0.f));
         CHECK(style.has_font_effect());
         Rml::Element* gauge = Fixture::First(document, "#bar_hp");
-        CHECK(BorderOffset(*number).y - gauge->GetAbsoluteOffset(Rml::BoxArea::Padding).y == doctest::Approx(40.8f));
+        CHECK(BorderOffset(*number).y - gauge->GetAbsoluteOffset(Rml::BoxArea::Padding).y == doctest::Approx(16.4f));
         const float gemCentre =
             gauge->GetAbsoluteOffset(Rml::BoxArea::Padding).x + gauge->GetBox().GetSize(Rml::BoxArea::Padding).x / 2.f;
         CHECK(BorderOffset(*number).x == doctest::Approx(gemCentre));
         CHECK(BorderSize(*number).x < 54.f);
-        CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value == doctest::Approx(65.f));
+        CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value == doctest::Approx(77.f));
         document->Close();
     }
 
@@ -915,10 +917,28 @@ TEST_CASE("the live gems show only in skynet, round its gauges, and never on the
             CHECK(within(at(135.f, 29.25f), gemRect));
             CHECK(within(at(45.f, 29.25f), gemRect));
         }
-        // The SD number keeps its place, small in the gem's upper part.
-        Rml::Element* number = Fixture::First(document, "#bar_sd .gauge-num.value-current");
-        CHECK(BorderOffset(*number).y - BorderOffset(*Fixture::First(document, "#orb_left")).y ==
-              doctest::Approx(16.4f));
+        // SD and AG stand on a plate centred over the ring's top, named, inside the room the HUD keeps clear.
+        const float hudTop = BorderOffset(*Fixture::First(document, "#hud_layout")).y;
+        for (const auto& [bar, orb, tag] : {std::array<const char*, 3>{"#bar_sd", "#orb_left", "SD"},
+                                            std::array<const char*, 3>{"#bar_ag", "#orb_right", "AG"}})
+        {
+            CAPTURE(bar);
+            Rml::Element* number = Fixture::First(document, (std::string(bar) + " .gauge-num.value-current").c_str());
+            number->SetInnerRML("<span class=\"gauge-tag live-only\">" + std::string(tag) + "</span>12345");
+            fixture.context->Update();
+            Rml::Element* ring = Fixture::First(document, orb);
+            CHECK(BorderOffset(*number).y - BorderOffset(*ring).y == doctest::Approx(-12.f));
+            CHECK(BorderOffset(*number).y >= hudTop);
+            CHECK(BorderOffset(*number).x == doctest::Approx(BorderOffset(*ring).x + 31.f));
+            CHECK(number->GetComputedValues().background_color().alpha > 0);
+            CHECK(number->GetComputedValues().border_top_width() == doctest::Approx(1.f));
+            CHECK(display(document, (std::string(bar) + " .gauge-tag").c_str()) != Display::None);
+            // The open skill list starts above the plate.
+            Rml::Element* hud = Fixture::First(document, "#hud_layout");
+            const float plateTopFromBottom = BorderOffset(*hud).y + BorderSize(*hud).y - BorderOffset(*number).y;
+            CHECK(Fixture::First(document, "#skill_list")->GetComputedValues().bottom().value >=
+                  plateTopFromBottom);
+        }
         document->Close();
     }
 
