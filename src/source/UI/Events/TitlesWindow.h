@@ -84,6 +84,8 @@ private:
     int m_pendingTab = -1;
     int m_pendingWear = -1;
     bool m_pendingExit = false;
+    // The echo row was clicked (titles_echo): turn the battle pass echo the other way.
+    bool m_pendingEcho = false;
     // The title of each row shown ("" for "No title"), for a click; and whether the row may be worn.
     std::vector<std::wstring> m_rowIds;
     std::vector<bool> m_rowOwned;

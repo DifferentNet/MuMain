@@ -52,7 +52,7 @@ rows are hidden on phones and tablets.
 | Graphics | Graphics preset; Suggest a lower preset when FPS is low (desktop); Enhanced graphics and under it Enhanced lighting, Dynamic lights, Darker map light, Bloom and colour grading (a click on the name opens its tuning sliders); Anti-aliasing; FXAA; HD textures (Remaster); Sharpening; Anisotropic filtering; HD texture size (Remaster, while HD textures are on); Sun shadows (desktop); Soft sun shadow edges, SSAO (contact shadows), Wind, Smooth animation, Distance haze, Air particles, Torch light on the ground, Smooth foliage edges (Remaster; most with a strength slider under them while on); render level and Render full effects; Disable effects, Disable particles, Disable skill effect models, Disable ambient wildlife, Disable shadows; Soft shadows (browser only); Disable wing shadow |
 | Audio | Sound volume, Music volume, Sound in background, Beep sound for whispering |
 | Gameplay | Automatic attack, Slide help, Pick up zen underfoot (pad and touch: zen on the hero's tile or next to it is asked for without a step; on by default), Decline invitations (party, trade and duel invitations are refused by themselves, each with one chat line), Loot filter (in the game only), Key bindings (in the game only, not on phones) |
-| Interface | Language, Font; UI theme, Interface view and Controls (not on phones); Button size (while the on-screen controls show); Gamepad, and while it is not Off: Stick dead zone, Pad pointer speed, Button glyphs, Attack on A, Second page on RT, Gamepad layout (Standard, Left-handed: sticks and their clicks swapped, Bumpers/triggers swapped: LB with LT and RB with RT); Names over players, Names over NPCs, Titles over players, Titles in towns only, Title effects; Show FPS counter, Show debug info |
+| Interface | Language, Font; UI theme, Interface view and Controls (not on phones); Button size (while the on-screen controls show); Gamepad, and while it is not Off: Stick dead zone, Pad pointer speed, Button glyphs, Attack on A, Second page on RT, Gamepad layout (Standard, Left-handed: sticks and their clicks swapped, Bumpers/triggers swapped: LB with LT and RB with RT); Names over players, Names over NPCs, Titles over players, Titles in towns only, Title effects, Other players' echoes (the battle pass echo of other players; on by default on the PC, off on phones); Show FPS counter, Show debug info |
 
 Each setting is a row with its name on the left and its control on the
 right, aligned in two columns. A tab's settings scroll when they don't fit,
@@ -180,6 +180,10 @@ window writes to these sections:
   triggers swapped; another number reads as `0`) and `ZenWalkPickup` (`0`/`1`,
   default `1`) come from the Interface and Gameplay tabs. `DeclineInvitations`
   (`0`/`1`, default `0`) is the Gameplay tab's Decline invitations row.
+  `OtherEchoes` (`0`/`1`) is the Interface tab's Other players' echoes row:
+  without the key the device decides (on on the PC, off on phones and with
+  the on-screen controls), and the key is written only once the player
+  changes the row.
 - `[Audio]` - volumes.
 - `[Login]` - language, and the remembered-credential keys (`RememberMe`,
   `SavePassword`, `EncryptedUsername`, `EncryptedPassword`); see

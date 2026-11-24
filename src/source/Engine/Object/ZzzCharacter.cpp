@@ -149,6 +149,7 @@ namespace
 #include "Render/Effects/FullSetGlow.h"
 #include "Render/Items/EnchantFx.h"
 #include "Render/Effects/SeasonAura.h"
+#include "Render/Effects/SeasonEcho.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "UI/HUD/GamepadControls.h"
 
@@ -7128,7 +7129,11 @@ void RenderLinkObject(float x, float y, float z, CHARACTER* c, PART_t* f, int Ty
         && Type != MODEL_WING + 135 // Small Cape of Fighter
         )
     {
+        // The battle pass echo copies the item as transformed (no capes: they are cloth), and once it is drawn the
+        // meshes it hid and drew in light (its item effect may set them while it is drawn).
+        Render::Effects::SeasonEcho::NoteLinkedItem(o, Type);
         RenderPartObjectEffect(Object, Type, c->Light, o->Alpha, Level, Option1, false, 0, RenderType | ((c->MonsterIndex == MONSTER_METAL_BALROG || c->MonsterIndex == MONSTER_ORC_ARCHER_OF_DOOM) ? (RENDER_EXTRA | RENDER_TEXTURE) : RENDER_TEXTURE));
+        Render::Effects::SeasonEcho::NoteLinkedItemDrawn(o, Object);
     }
 
     // Restore the caller's active bone transform — the linked item render above overwrote
@@ -8914,6 +8919,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
     }
 
+    // The battle pass echo: its trail moves on, and when a copy is due the models drawn below are copied.
+    Render::Effects::SeasonEcho::BeginCharacter(c, o);
+
     if (byRender == CHARACTER_RENDER_OBJ)
     {
         if (MONSTER_METAL_BALROG == c->MonsterIndex || MONSTER_ALPHA_CRUST == c->MonsterIndex || MONSTER_GREAT_DRAKAN == c->MonsterIndex
@@ -9908,6 +9916,8 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             }
                         }
                     }
+
+                    Render::Effects::SeasonEcho::NoteBodyPart(o, Type, p->Level, Translate);
 
                     if (c->MonsterIndex >= MONSTER_TERRIBLE_BUTCHER && c->MonsterIndex <= MONSTER_DOPPELGANGER_SUM)
                     {

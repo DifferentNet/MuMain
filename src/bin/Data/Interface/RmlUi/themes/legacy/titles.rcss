@@ -129,6 +129,13 @@
 .tt-row { position: relative; overflow: hidden; }
 .tt-row-shine { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
 
+/* MU Skynet: the battle pass echo's row over the own titles (titles_echo): its name in the echo's violet, dimmed while
+   it is off; while it is on, on a violet band. A little apart from the titles under it. */
+.tt-row.tt-echo { margin-bottom: calc(4px * var(--root-scale)); }
+.tt-row.tt-echo .tt-row-name { color: rgb(190, 145, 255); opacity: 0.6; }
+.tt-row.tt-echo.on .tt-row-name { opacity: 1; }
+.tt-row.tt-echo.on, .tt-row.tt-echo.on:hover { background-color: rgba(160, 100, 255, 40); }
+
 /* MU Moldova: the phone view (theme flag "mobile"): the tabs and the rows a finger high (36 reference px), the rows'
    text kept at the top-left with more room around it. */
 @media (theme: mobile) {

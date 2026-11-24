@@ -27,8 +27,10 @@ namespace
 constexpr std::wstring_view Line = L"#BPM|";
 // "#BPF|name|season": the season of the seasonal Fenrir a character rides, 0 for none.
 constexpr std::wstring_view FenrirLine = L"#BPF|";
-// Version 2 of the marks: the #BPM lines and the #BPF lines. A server before the season themes ignores the "2".
-constexpr const wchar_t* MarksCommand = L"/bpmarks 2";
+// Version 3 of the marks: the #BPM lines, the #BPF lines and the echoes' #BPE lines
+// (GameLogic/Events/SeasonEchoStore.h). A server before the echo takes the "3" as "2" (no #BPE), one before the season
+// themes ignores it.
+constexpr const wchar_t* MarksCommand = L"/bpmarks 3";
 // The gold Horn of Fenrir's excellent option (the seasonal Fenrir).
 constexpr int GoldFenrirOption = 0x04;
 
@@ -337,6 +339,12 @@ void Store::LoadLooks()
 
         ReadFenrir(entry, look.Fenrir);
 
+        if (const auto echo = entry.find("echo"); echo != entry.end() && echo->is_object())
+        {
+            look.Echo.Present = true;
+            ReadLight(*echo, "color", look.Echo.Color);
+        }
+
         m_looks.push_back(std::move(look));
     }
 }
@@ -437,6 +445,23 @@ unsigned int Store::FenrirFurTexture(const SeasonLook& look)
     }
     m_fenrirFurTextures.emplace(look.Season, texture);
     return texture;
+}
+
+void Store::EchoColorOf(int season, float (&color)[3])
+{
+    if (!m_looksLoaded)
+        LoadLooks();
+
+    const SeasonLook* best = nullptr;
+    for (const SeasonLook& look : m_looks)
+    {
+        if (look.Echo.Present && look.Season <= season && (best == nullptr || look.Season > best->Season))
+            best = &look;
+    }
+    const EchoLook fallback;
+    const float* source = best != nullptr ? best->Echo.Color : fallback.Color;
+    for (int i = 0; i < 3; ++i)
+        color[i] = source[i];
 }
 
 std::wstring Store::NameOf(int season)

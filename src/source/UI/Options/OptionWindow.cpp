@@ -22,6 +22,7 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/Effects/ParticlesSetting.h"
+#include "Render/Effects/SeasonEcho.h"
 #include "Render/Terrain/TorchLights.h"
 #include "Render/Textures/FoliageSmoothing.h"
 #include "Render/Lighting/SunShadowSoftEdges.h"
@@ -900,6 +901,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("overhead_titles_label", &model.overheadTitlesLabel);
     c.Bind("title_effects", &model.titleEffects);
     c.Bind("title_effects_label", &model.titleEffectsLabel);
+    c.Bind("other_echoes", &model.otherEchoes);
+    c.Bind("other_echoes_label", &model.otherEchoesLabel);
     c.Bind("hud_effects", &model.hudEffects);
     c.Bind("hud_effects_label", &model.hudEffectsLabel);
     c.Bind("hud_effects_shown", &model.hudEffectsShown);
@@ -1108,6 +1111,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleOverheadTitles(); });
     c.BindEventCallback("option_toggle_title_effects",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTitleEffects(); });
+    c.BindEventCallback("option_toggle_other_echoes",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleOtherEchoes(); });
     c.BindEventCallback("option_toggle_hud_effects",
                         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHudEffects(); });
     c.BindEventCallback("option_toggle_background_sound",
@@ -2598,6 +2603,12 @@ void mu::ui::window::COptionWindow::RmlToggleTitleEffects()
     config.Save();
 }
 
+void mu::ui::window::COptionWindow::RmlToggleOtherEchoes()
+{
+    // SetOtherEchoes saves it: from now on the key is in config.ini and the device's default no longer applies.
+    Render::Effects::SeasonEcho::SetOtherEchoes(!Render::Effects::SeasonEcho::OtherEchoesOn());
+}
+
 void mu::ui::window::COptionWindow::RmlToggleHudEffects()
 {
     GameConfig& config = GameConfig::GetInstance();
@@ -3200,6 +3211,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.overheadNpcNamesLabel, "overhead_npc_names_label", I18N::Game::OverheadNpcNames);
     syncLabel(model.overheadTitlesLabel, "overhead_titles_label", I18N::Game::OverheadTitles);
     syncLabel(model.titleEffectsLabel, "title_effects_label", I18N::Game::TitleEffects);
+    syncLabel(model.otherEchoesLabel, "other_echoes_label", I18N::SeasonEcho::OtherEchoes);
     syncLabel(model.hudEffectsLabel, "hud_effects_label", I18N::Game::HudEffects);
     syncLabel(model.backgroundSoundLabel, "background_sound_label", I18N::Game::BackgroundSound);
     syncLabel(model.titlesTownsOnlyLabel, "titles_towns_only_label", I18N::Game::TitlesTownsOnly);
@@ -3508,6 +3520,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.overheadTitles != overheadTitles) { model.overheadTitles = overheadTitles; m_RmlView.MarkDirty("overhead_titles"); }
     const bool titleEffects = GameConfig::GetInstance().GetTitleEffects();
     if (model.titleEffects != titleEffects) { model.titleEffects = titleEffects; m_RmlView.MarkDirty("title_effects"); }
+    const bool otherEchoes = Render::Effects::SeasonEcho::OtherEchoesOn();
+    if (model.otherEchoes != otherEchoes) { model.otherEchoes = otherEchoes; m_RmlView.MarkDirty("other_echoes"); }
     const bool hudEffects = GameConfig::GetInstance().GetHudEffects();
     if (model.hudEffects != hudEffects)
     {

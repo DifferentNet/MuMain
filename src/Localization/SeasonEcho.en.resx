@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- The battle pass mark "Echo" (Render::Effects::SeasonEcho, GameLogic::SeasonEcho::EchoName): its name with the
+       season's name from Data/Seasons.json (argument), else with the season's number. -->
+  <data name="EchoNamed" xml:space="preserve">
+    <value>Echo «%ls»</value>
+  </data>
+  <data name="EchoNumbered" xml:space="preserve">
+    <value>Season %d echo</value>
+  </data>
+  <!-- What the echo does: the battle pass window's reward hint, under the echo's name. -->
+  <data name="EchoAbout" xml:space="preserve">
+    <value>Your steps leave an echo: violet afterimages of your hero and mount follow you and fade. A permanent mark of the season; turn it on or off in the Titles window.</value>
+  </data>
+  <!-- The Titles window's echo row (Mine tab, only once the echo is owned): its state and what a click does. -->
+  <data name="EchoOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="EchoOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="EchoClickOff" xml:space="preserve">
+    <value>Click to turn it off.</value>
+  </data>
+  <data name="EchoClickOn" xml:space="preserve">
+    <value>Click to turn it on.</value>
+  </data>
+  <!-- Options, Interface: whether other players' echoes show (config.ini [UI] OtherEchoes). -->
+  <data name="OtherEchoes" xml:space="preserve">
+    <value>Other players' echoes</value>
+  </data>
+</root>

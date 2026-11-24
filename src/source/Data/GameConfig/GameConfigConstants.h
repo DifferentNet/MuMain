@@ -61,6 +61,9 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyOverheadTitles[] = L"OverheadTitles";
     // MU Moldova: the title plates' light, sparkles and glow (UI::TitlePlates::Effects).
     inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
+    // MU Skynet: other players' battle pass echoes (Render::Effects::SeasonEcho). No key = the device's default (on
+    // on the PC, off on phones); written only once the player changes it in Options.
+    inline constexpr wchar_t CfgKeyOtherEchoes[] = L"OtherEchoes";
     // MU Skynet: the live HUD's animation under a theme with LiveHud=1 (UI::HUD::LiveHud): the liquid's wave, the
     // sheen and the low-life pulse.
     inline constexpr wchar_t CfgKeyHudEffects[] = L"HudEffects";

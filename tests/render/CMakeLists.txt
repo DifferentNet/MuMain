@@ -695,3 +695,12 @@ mu_add_test(
         test_ancient_color_rules.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Render/Items/AncientColorRules.cpp
 )
+
+# The battle pass echo's afterimages: when a copy is taken, how long it stays, how many
+# (Render/Effects/EchoTrail, 2026-11-23).
+mu_add_test(
+    NAME echo_trail_tests
+    SOURCES
+        test_echo_trail.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Effects/EchoTrail.cpp
+)

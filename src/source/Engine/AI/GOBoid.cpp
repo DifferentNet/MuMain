@@ -4,6 +4,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Core/Utilities/FrameProfiler.h"
 #include "Render/Effects/FramePow.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
@@ -15,6 +16,7 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/AI/BoidSteering.h"
 #include "Render/Effects/ZzzEffect.h"
+#include "Render/Effects/SeasonEcho.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
@@ -25,6 +27,8 @@
 #include "Scenes/MainScene.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "Render/Renderer/MuRenderer.h"
+
+#include <optional>
 
 int EnableEvent = 0;
 
@@ -707,7 +711,24 @@ bool RenderMount(OBJECT* o, bool bForceRender)
                 State = 10;
             }
 
-            RenderObject(o, false, 0, State);
+            // RenderObject in its two halves, with its profiler detail (the login scene draws its mount inside the
+            // Objects pass): the battle pass echo copies the mount as transformed.
+            const bool objectsPass = FrameProfiler::CurrentPass() == FrameProfiler::Pass::Objects;
+            bool transformed = false;
+            {
+                std::optional<FrameProfiler::DetailScope> animate;
+                if (objectsPass)
+                    animate.emplace(FrameProfiler::Pass::ObjectsAnimate);
+                transformed = Calc_RenderObject(o, false, 0, State);
+            }
+            if (transformed)
+            {
+                Render::Effects::SeasonEcho::NoteMount(o);
+                std::optional<FrameProfiler::DetailScope> draw;
+                if (objectsPass)
+                    draw.emplace(FrameProfiler::Pass::ObjectsDraw);
+                Draw_RenderObject(o, false, 0, State);
+            }
 
             vec3_t Light;
             float  Luminosity = (float)(rand() % 30 + 70) * 0.01f;

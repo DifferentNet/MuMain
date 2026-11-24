@@ -5,6 +5,7 @@
 
 #include "Audio/DSPlaySound.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "GameLogic/Events/SeasonEchoStore.h"
 #include "GameLogic/Events/Titles.h"
 #include "Render/RmlUi/RmlAdditiveMeshElement.h"
 #include "UI/Character/TitlePlateEffects.h"
@@ -193,9 +194,11 @@ bool mu::ui::window::CTitlesWindow::Update()
     const bool exit = m_pendingExit;
     const int tab = m_pendingTab;
     const int wear = m_pendingWear;
+    const bool echo = m_pendingEcho;
     m_pendingExit = false;
     m_pendingTab = -1;
     m_pendingWear = -1;
+    m_pendingEcho = false;
     if (m_pendingHover != -2)
     {
         m_hoverRow = m_pendingHover;
@@ -228,6 +231,14 @@ bool mu::ui::window::CTitlesWindow::Update()
                     store.Wear(id);
                     m_lastRequest = now;
                 }
+                PlayBuffer(SOUND_CLICK01);
+            }
+
+            // The echo row: the server answers with the owner line, which turns the row.
+            auto& echoes = GameLogic::SeasonEcho::Echoes();
+            if (echo && m_tab == 0 && echoes.OwnedSeason() > 0)
+            {
+                echoes.SetShown(echoes.OwnHidden());
                 PlayBuffer(SOUND_CLICK01);
             }
 
@@ -278,6 +289,14 @@ void mu::ui::window::CTitlesWindow::BindRmlModel(Rml::DataModelConstructor& c, T
     c.RegisterArray<std::vector<TitlesRow>>();
     c.Bind("rows", &model.rows);
 
+    auto echoType = c.RegisterStruct<TitlesEcho>();
+    echoType.RegisterMember("shown", &TitlesEcho::shown);
+    echoType.RegisterMember("on", &TitlesEcho::on);
+    echoType.RegisterMember("name", &TitlesEcho::name);
+    echoType.RegisterMember("state", &TitlesEcho::state);
+    echoType.RegisterMember("hint", &TitlesEcho::hint);
+    c.Bind("echo", &model.echo);
+
     c.Bind("exit_tooltip", &model.exitTooltip);
     c.Bind("fx", &model.effects);
 
@@ -301,6 +320,8 @@ void mu::ui::window::CTitlesWindow::BindRmlModel(Rml::DataModelConstructor& c, T
                             if (args.size() == 1)
                                 m_pendingHover = args[0].Get<int>(-1);
                         });
+    c.BindEventCallback("titles_echo",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { m_pendingEcho = true; });
 
     wchar_t closeText[256] = {};
     mu_swprintf_s(closeText, I18N::Game::CloseS, L"Esc");
@@ -445,6 +466,18 @@ void mu::ui::window::CTitlesWindow::SyncContent()
                 line(Printf(I18N::Game::TitlesOwnedCount, ownedCount, static_cast<int>(list.size())), CONTENT_WIDTH);
     }
 
+    // The battle pass echo, over the own titles once it is owned (whatever the titles' answer).
+    const auto& echoes = GameLogic::SeasonEcho::Echoes();
+    if (m_tab == 0 && echoes.OwnedSeason() > 0)
+    {
+        updated.echo.shown = true;
+        updated.echo.on = !echoes.OwnHidden();
+        updated.echo.name = line(GameLogic::SeasonEcho::EchoName(echoes.OwnedSeason()), ROW_WIDTH, true);
+        updated.echo.state =
+            line(updated.echo.on ? I18N::SeasonEcho::EchoOn : I18N::SeasonEcho::EchoOff, ROW_WIDTH - MARK_WIDTH);
+        updated.echo.hint = wrapped(updated.echo.on ? I18N::SeasonEcho::EchoClickOff : I18N::SeasonEcho::EchoClickOn);
+    }
+
     m_rowIds = std::move(ids);
     m_rowOwned = std::move(owned);
     m_rowPlates = std::move(plates);
@@ -458,6 +491,7 @@ void mu::ui::window::CTitlesWindow::SyncContent()
     SyncFieldFrom(binder, &TitlesRmlModel::detail, "detail", updated);
     SyncFieldFrom(binder, &TitlesRmlModel::rows, "rows", updated);
     SyncFieldFrom(binder, &TitlesRmlModel::footer, "footer", updated);
+    SyncFieldFrom(binder, &TitlesRmlModel::echo, "echo", updated);
     SyncFieldFrom(binder, &TitlesRmlModel::effects, "fx", updated);
 
     SyncPreview();

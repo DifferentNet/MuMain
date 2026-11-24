@@ -13,7 +13,7 @@
 	     ones not owned dimmed with how to get them; the bonus of its rarity in gold under each; under the rows a note)
 	     flow; and the exit button. The workspace
 	     slot places and scales #panel. C++ keeps the state; clicks are queued with titles_tab(index),
-	     titles_wear(row) and titles_exit. -->
+	     titles_wear(row), titles_echo and titles_exit. -->
 	<div id="panel" data-model="titles">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -44,6 +44,17 @@
 			</div>
 
 			<div class="tt-list scroll-pane">
+				<!-- MU Skynet: the battle pass echo over the own titles once it is owned: its name, on or off, and a
+				     click turns it the other way. -->
+				<div class="tt-row tt-echo owned" data-if="echo.shown" data-class-on="echo.on"
+				     data-event-click="titles_echo">
+					<span class="tt-row-name" data-style-font-size="echo.name.text_px + 'px'">{{echo.name.text}}</span>
+					<div class="tt-row-line">
+						<span class="tt-row-detail" data-style-font-size="echo.state.text_px + 'px'">{{echo.state.text}}</span>
+					</div>
+					<span class="tt-row-hint" data-if="echo.hint.text != ''"
+					      data-style-font-size="echo.hint.text_px + 'px'">{{echo.hint.text}}</span>
+				</div>
 				<div class="tt-row" data-for="r : rows" data-class-owned="r.owned" data-class-worn="r.worn"
 				     data-class-none="r.rarity == -1" data-class-r0="r.rarity == 0" data-class-r1="r.rarity == 1"
 				     data-class-r2="r.rarity == 2" data-class-r3="r.rarity == 3" data-class-r4="r.rarity == 4"
