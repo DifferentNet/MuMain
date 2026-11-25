@@ -21,6 +21,7 @@ struct TierMapsRow
 {
     int tier = 0;
     TierMapsLine title;
+    TierMapsLine cp;
     TierMapsLine detail;
     bool open = false;
     bool selected = false;

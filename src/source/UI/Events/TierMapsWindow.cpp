@@ -237,6 +237,7 @@ void mu::ui::window::CTierMapsWindow::BindRmlModel(Rml::DataModelConstructor& c,
     auto rowType = c.RegisterStruct<TierMapsRow>();
     rowType.RegisterMember("tier", &TierMapsRow::tier);
     rowType.RegisterMember("title", &TierMapsRow::title);
+    rowType.RegisterMember("cp", &TierMapsRow::cp);
     rowType.RegisterMember("detail", &TierMapsRow::detail);
     rowType.RegisterMember("open", &TierMapsRow::open);
     rowType.RegisterMember("selected", &TierMapsRow::selected);
@@ -332,13 +333,19 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
             row.tier = tier.Number;
             row.open = tier.Open;
             row.selected = tier.Number == selected;
-            row.title = line(Printf(I18N::Game::TierMapsTierTitle, tier.Number, tier.Name.c_str()), ROW_WIDTH, true);
+            // Ten tiers since 2026-11-25: a row is one line, the tier's name with its Combat Power in thousands at the
+            // right ("56k", "14.7k"); only the picked tier adds the detail line (CP, HP floor, record), so the list, the
+            // party and the button still fit the dock height.
+            const int cpTenths = (tier.CombatPower + 50) / 100;
+            row.cp = line(cpTenths % 10 == 0 ? Printf(L"%dk", cpTenths / 10) : Printf(L"%d.%dk", cpTenths / 10, cpTenths % 10),
+                          CP_WIDTH, true);
+            row.title = line(Printf(I18N::Game::TierMapsTierTitle, tier.Number, tier.Name.c_str()), ROW_WIDTH - CP_WIDTH - CP_GAP, true);
             const std::wstring record = tier.RecordSeconds > 0
                 ? Printf(I18N::Game::TierMapsRecord, FormatDuration(tier.RecordSeconds).c_str())
                 : std::wstring(I18N::Game::TierMapsNoRecord);
-            // With the HP floor the boss leaves the row (it didn't fit): tiers 1-5 have today's boss from the line at
-            // the top, tier 6 is the Throne of Gaion.
-            row.detail = line(tier.MinimumHealth > 0
+            // With the HP floor the boss leaves the line (it didn't fit): the rotating tiers have today's boss from
+            // the line at the top, tiers 6 and 10 are the throne.
+            row.detail = !row.selected ? TierMapsLine{} : line(tier.MinimumHealth > 0
                                   ? Printf(I18N::Game::TierMapsTierDetailHealth, Thousands(tier.CombatPower).c_str(),
                                            Thousands(tier.MinimumHealth).c_str(), record.c_str())
                                   : Printf(I18N::Game::TierMapsTierDetail, Thousands(tier.CombatPower).c_str(), tier.Boss.c_str(), record.c_str()),

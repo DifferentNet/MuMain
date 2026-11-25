@@ -6,7 +6,7 @@
 
 // The Tier Maps for their window (opened at Jerint the Assistant in Devias).
 //
-// Our server's add-on (MU Moldova, TierMaps) runs the endgame dungeons: six tiers in the Imperial Guardian fortress,
+// Our server's add-on (MU Moldova, TierMaps) runs the endgame dungeons: ten tiers in the Imperial Guardian fortress,
 // a party goes in from the NPC with a Gaion's Order, three runs a day per character, the party's Combat Power
 // deciding the tiers. Talking to the NPC sends "#TMO|" (open the window) and the state; "/tierinfo" asks for the
 // state again. The state comes as blue server messages, which this takes out of the chat:
