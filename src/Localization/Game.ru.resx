@@ -13533,7 +13533,7 @@
     <value>Заходов в день: %d, новые через %ls</value>
   </data>
   <data name="TierMapsTierTitle" xml:space="preserve">
-    <value>Тир %d: %ls</value>
+    <value>%d. %ls</value>
   </data>
   <data name="TierMapsTierDetail" xml:space="preserve">
     <value>%ls CP · %ls · %ls</value>

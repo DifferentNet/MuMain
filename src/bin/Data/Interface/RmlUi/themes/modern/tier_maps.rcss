@@ -29,12 +29,13 @@
 #tm_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
 .tm-tier {
 	display: block;
-	padding: calc(2px * var(--root-scale)) calc(4px * var(--root-scale));
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
 	margin-bottom: calc(1px * var(--root-scale));
 	border-radius: token(radius-sm)px;
 	cursor: pointer;
 	pointer-events: auto;
 }
+.tm-tier-cp { float: right; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .tm-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .tm-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
 .tm-note { display: block; margin-top: calc(3px * var(--root-scale)); white-space: nowrap; }
@@ -70,7 +71,7 @@
 .tm-tier { color: token(text-muted); }
 .tm-tier:hover { background-color: rgba(255, 255, 255, 12); }
 .tm-tier.open .tm-tier-title { color: token(text-primary); }
-.tm-tier.open .tm-tier-detail { color: token(text-secondary); }
+.tm-tier.open .tm-tier-detail, .tm-tier.open .tm-tier-cp { color: token(text-secondary); }
 .tm-tier.selected { background-color: rgba(255, 200, 90, 40); }
 .tm-tier.selected .tm-tier-title { color: token(accent-gold); }
 .tm-note { color: token(semantic-warning); }

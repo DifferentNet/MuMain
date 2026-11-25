@@ -15,7 +15,7 @@ class ElementDocument;
 
 namespace mu::ui::window
 {
-// The Tier Maps window, opened by Jerint the Assistant in Devias (the server sends "#TMO|"): the six tiers of the
+// The Tier Maps window, opened by Jerint the Assistant in Devias (the server sends "#TMO|"): the ten tiers of the
 // endgame dungeons in the Imperial Guardian fortress with their Combat Power and today's boss, which ones the party
 // may enter, the party's members with their Combat Power and runs left today, the leader's Gaion's Order, and the
 // button that takes the party in. It asks the server again every few seconds while it is open; the answers stay out
@@ -28,6 +28,8 @@ class CTierMapsWindow : public CObject
         WINDOW_WIDTH = 190,
         CONTENT_WIDTH = 166,
         ROW_WIDTH = 162,
+        CP_WIDTH = 34,
+        CP_GAP = 12, // the row is 158 px inside its padding (162 - 4): keep a gap between the name and the CP
     };
 
 public:

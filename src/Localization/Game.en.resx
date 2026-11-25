@@ -13956,7 +13956,7 @@
     <value>%d runs a day, new ones in %ls</value>
   </data>
   <data name="TierMapsTierTitle" xml:space="preserve">
-    <value>Tier %d: %ls</value>
+    <value>%d. %ls</value>
   </data>
   <data name="TierMapsTierDetail" xml:space="preserve">
     <value>%ls CP · %ls · %ls</value>
