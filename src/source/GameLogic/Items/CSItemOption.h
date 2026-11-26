@@ -2,6 +2,7 @@
 #include "Core/Globals/_define.h"
 #include "Core/Globals/_enum.h"
 #include "Core/Utilities/Singleton.h"
+#include "GameLogic/Items/SetStatPercent.h"
 #include "UI/Inventory/ItemOptionTooltipModel.h"
 
 #include <array>
@@ -183,6 +184,8 @@ public:
 
     static bool    IsNonWeaponSkillOrIsSkillEquipped(ActionSkillType skill);
     void	CheckItemSetOptions(void);
+    // The factors of the active set options that raise a total stat by a percentage (GameLogic/Items/SetStatPercent.h).
+    GameLogic::SetStatPercent::Factors StatPercentFactors() const;
     void	MoveSetOptionList(const int StartX, const int StartY);
     void	RenderSetOptionButton(const int StartX, const int StartY);
 

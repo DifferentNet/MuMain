@@ -17572,4 +17572,25 @@
   <data name="BoundToCharacter" xml:space="preserve">
     <value>Привязано к этому персонажу</value>
   </data>
+  <data name="IncreaseStrengthPercentD" xml:space="preserve">
+    <value>Увеличение силы +%d%%</value>
+  </data>
+  <data name="IncreaseAgilityPercentD" xml:space="preserve">
+    <value>Увеличение ловкости +%d%%</value>
+  </data>
+  <data name="IncreaseEnergyPercentD" xml:space="preserve">
+    <value>Увеличение энергии +%d%%</value>
+  </data>
+  <data name="IncreaseStaminaPercentD" xml:space="preserve">
+    <value>Увеличение выносливости +%d%%</value>
+  </data>
+  <data name="IncreaseCommandPercentD" xml:space="preserve">
+    <value>Увеличение командования +%d%%</value>
+  </data>
+  <data name="IncreaseMaxManaPercentD" xml:space="preserve">
+    <value>Увеличение макс. маны +%d%%</value>
+  </data>
+  <data name="IncreaseMaxAgPercentD" xml:space="preserve">
+    <value>Увеличение макс. АГ +%d%%</value>
+  </data>
 </root>

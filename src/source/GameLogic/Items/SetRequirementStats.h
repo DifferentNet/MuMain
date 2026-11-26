@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameLogic/Items/GrandStatsLine.h"
+#include "GameLogic/Items/SetStatPercent.h"
 
 // The stat totals the server checks a worn item's requirements against (MU Skynet): the base and every item and set
 // bonus, then the Grand stat points (GameLogic/Items/GrandStats.h), then the +14/+15 ancient tier
@@ -33,4 +34,8 @@ struct Totals
 
 // The Grand points first, then the tier, in the server's order.
 [[nodiscard]] Totals WithGrandPointsAndTier(Totals totals, const Items::GrandStatsLine::Points& points, int tier);
+
+// The totals raised by the ancient set options' percentages (GameLogic/Items/SetStatPercent.h). The server multiplies
+// the same totals as the tier does; the order of the two changes a total by at most a point.
+[[nodiscard]] Totals WithSetPercents(Totals totals, const SetStatPercent::Factors& factors);
 } // namespace GameLogic::SetRequirementStats

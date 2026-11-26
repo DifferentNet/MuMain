@@ -551,6 +551,26 @@ bool CSItemOption::AddSetOptions(SET_SEARCH_RESULT_OPT& set, const int firstClas
     return isThisSetComplete;
 }
 
+namespace
+{
+// "Increase strength +n %" and the like for the options of GameLogic/Items/SetStatPercent.h; nullptr for any other.
+const wchar_t* StatPercentFormat(const std::uint8_t option)
+{
+    namespace Percent = GameLogic::SetStatPercent;
+    switch (option)
+    {
+    case Percent::StrengthPercent: return I18N::Game::IncreaseStrengthPercentD;
+    case Percent::AgilityPercent: return I18N::Game::IncreaseAgilityPercentD;
+    case Percent::EnergyPercent: return I18N::Game::IncreaseEnergyPercentD;
+    case Percent::VitalityPercent: return I18N::Game::IncreaseStaminaPercentD;
+    case Percent::CommandPercent: return I18N::Game::IncreaseCommandPercentD;
+    case Percent::ManaPercent: return I18N::Game::IncreaseMaxManaPercentD;
+    case Percent::AgPercent: return I18N::Game::IncreaseMaxAgPercentD;
+    default: return nullptr;
+    }
+}
+} // namespace
+
 bool CSItemOption::getExplainText(wchar_t* text, std::uint8_t option, int value)
 {
     if (option == EMPTY_OPTION)
@@ -561,6 +581,12 @@ bool CSItemOption::getExplainText(wchar_t* text, std::uint8_t option, int value)
     if (option == SET_OPTION_PHYSICAL_DAMAGE_PERCENT)
     {
         mu_swprintf(text, I18N::Game::IncreasePhysicalDamagePercentD, value);
+        return true;
+    }
+
+    if (const wchar_t* format = StatPercentFormat(option))
+    {
+        mu_swprintf(text, format, value);
         return true;
     }
 
@@ -970,7 +996,7 @@ namespace
 // The stats the server checks worn items against, from CharacterAttribute after getAllAddStateOnlyAddValue (the item
 // and set bonuses only): the elixirs and socket bonuses, then the Grand points and the ancient tier, which
 // CHARACTER_MACHINE::CalculateAll adds only after this runs.
-GameLogic::SetRequirementStats::Totals RequirementTotals()
+GameLogic::SetRequirementStats::Totals RequirementTotals(const GameLogic::SetStatPercent::Factors& setPercents)
 {
     int exStrength = 0, exAgility = 0, exVitality = 0, exEnergy = 0, exCommand = 0;
     CharacterMachine->getAllAddStateOnlyExValues(exStrength, exAgility, exVitality, exEnergy, exCommand);
@@ -982,8 +1008,8 @@ GameLogic::SetRequirementStats::Totals RequirementTotals()
     totals.energy = CharacterAttribute->Energy + CharacterAttribute->AddEnergy + exEnergy;
     totals.command = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma + exCommand;
     totals.level = CharacterAttribute->Level;
-    return GameLogic::SetRequirementStats::WithGrandPointsAndTier(
-        totals, GameLogic::GrandStats::Own(), GameLogic::AncientAura::OwnTier());
+    return GameLogic::SetRequirementStats::WithSetPercents(GameLogic::SetRequirementStats::WithGrandPointsAndTier(
+        totals, GameLogic::GrandStats::Own(), GameLogic::AncientAura::OwnTier()), setPercents);
 }
 } // namespace
 
@@ -1031,7 +1057,7 @@ void CSItemOption::CheckItemSetOptions()
     calcSetOptionList(byOptionList);
     getAllAddStateOnlyAddValue(&CharacterAttribute->AddStrength, &CharacterAttribute->AddDexterity, &CharacterAttribute->AddEnergy, &CharacterAttribute->AddVitality, &CharacterAttribute->AddCharisma);
 
-    const auto requirementTotals = RequirementTotals();
+    const auto requirementTotals = RequirementTotals(StatPercentFactors());
 
     // And now we're doing all that again, just for checking the required stats?!
     // TODO: How can this be improved?
@@ -1072,6 +1098,25 @@ void CSItemOption::CheckItemSetOptions()
     }
 
     calcSetOptionList(byOptionList);
+}
+
+GameLogic::SetStatPercent::Factors CSItemOption::StatPercentFactors() const
+{
+    GameLogic::SetStatPercent::Factors factors;
+    for (int i = 0; i < m_SetSearchResultCount; i++)
+    {
+        const auto& set = m_SetSearchResult[i];
+        for (int j = 0; j < set.SetOptionCount; j++)
+        {
+            const auto& option = set.SetOption[j];
+            if (option.IsActive)
+            {
+                GameLogic::SetStatPercent::AddOption(factors, option.OptionNumber, option.Value);
+            }
+        }
+    }
+
+    return factors;
 }
 
 void CSItemOption::MoveSetOptionList(const int StartX, const int StartY)

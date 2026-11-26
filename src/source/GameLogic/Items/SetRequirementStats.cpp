@@ -45,6 +45,16 @@ Totals WithAncientTier(Totals totals, int tier)
     return totals;
 }
 
+Totals WithSetPercents(Totals totals, const SetStatPercent::Factors& factors)
+{
+    totals.strength = SetStatPercent::Apply(totals.strength, factors.strength);
+    totals.agility = SetStatPercent::Apply(totals.agility, factors.agility);
+    totals.vitality = SetStatPercent::Apply(totals.vitality, factors.vitality);
+    totals.energy = SetStatPercent::Apply(totals.energy, factors.energy);
+    totals.command = SetStatPercent::Apply(totals.command, factors.command);
+    return totals;
+}
+
 Totals WithGrandPointsAndTier(Totals totals, const Items::GrandStatsLine::Points& points, int tier)
 {
     return WithAncientTier(WithGrandPoints(totals, points), tier);
