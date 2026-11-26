@@ -3520,6 +3520,26 @@ void AddAncientTierStats(CHARACTER_ATTRIBUTE& character)
     AddAncientTierStat(character.Energy, character.AddEnergy, tier);
     AddAncientTierStat(character.Charisma, character.AddCharisma, tier);
 }
+
+// Raises a stat's bonus so that the total is multiplied by the set options' factor, without overflowing the WORD.
+void AddSetPercentStat(WORD base, WORD& add, double factor)
+{
+    const int total = base + add;
+    const int raised = GameLogic::SetStatPercent::Apply(total, factor);
+    add = static_cast<WORD>(add + std::max(0, raised - total));
+}
+
+// The ancient set options that raise a total stat by a percentage (GameLogic/Items/SetStatPercent.h): the server
+// multiplies the total strength, agility, vitality, energy and command; the character window shows the same.
+void AddSetPercentStats(CHARACTER_ATTRIBUTE& character)
+{
+    const auto factors = g_csItemOption.StatPercentFactors();
+    AddSetPercentStat(character.Strength, character.AddStrength, factors.strength);
+    AddSetPercentStat(character.Dexterity, character.AddDexterity, factors.agility);
+    AddSetPercentStat(character.Vitality, character.AddVitality, factors.vitality);
+    AddSetPercentStat(character.Energy, character.AddEnergy, factors.energy);
+    AddSetPercentStat(character.Charisma, character.AddCharisma, factors.command);
+}
 } // namespace
 
 void CHARACTER_MACHINE::CalculateAll()
@@ -3568,6 +3588,7 @@ void CHARACTER_MACHINE::CalculateAll()
     // The Grand stat points first: the server adds them before it multiplies by the ancient tier.
     AddGrandStats(Character);
     AddAncientTierStats(Character);
+    AddSetPercentStats(Character);
 
     CalculateBasicState();
     CalculateDamage();

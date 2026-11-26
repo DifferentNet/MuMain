@@ -17572,4 +17572,25 @@
   <data name="BoundToCharacter" xml:space="preserve">
     <value>Bound to this character</value>
   </data>
+  <data name="IncreaseStrengthPercentD" xml:space="preserve">
+    <value>Increase strength +%d%%</value>
+  </data>
+  <data name="IncreaseAgilityPercentD" xml:space="preserve">
+    <value>Increase agility +%d%%</value>
+  </data>
+  <data name="IncreaseEnergyPercentD" xml:space="preserve">
+    <value>Increase energy +%d%%</value>
+  </data>
+  <data name="IncreaseStaminaPercentD" xml:space="preserve">
+    <value>Increase stamina +%d%%</value>
+  </data>
+  <data name="IncreaseCommandPercentD" xml:space="preserve">
+    <value>Increase command +%d%%</value>
+  </data>
+  <data name="IncreaseMaxManaPercentD" xml:space="preserve">
+    <value>Increase max. mana +%d%%</value>
+  </data>
+  <data name="IncreaseMaxAgPercentD" xml:space="preserve">
+    <value>Increase max. AG +%d%%</value>
+  </data>
 </root>

@@ -165,6 +165,15 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/SetRequirementStats.cpp
 )
 
+# The ancient set options that raise a total stat by a percentage (GameLogic/Items/SetStatPercent.h) and the
+# requirement totals with them (SetRequirementStats::WithSetPercents).
+mu_add_test(
+    NAME test_set_stat_percent
+    SOURCES
+        test_set_stat_percent.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/SetRequirementStats.cpp
+)
+
 # The server's "#GRC|grandResets|resets" line for the character window (GameLogic/Character/GrandResetCount).
 mu_add_test(
     NAME test_grand_reset_count_line

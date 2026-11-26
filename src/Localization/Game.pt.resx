@@ -14582,4 +14582,25 @@
   <data name="GrandShopNotTransferable" xml:space="preserve">
     <value>Não pode ser transferido; o baú é permitido</value>
   </data>
+  <data name="IncreaseStrengthPercentD" xml:space="preserve">
+    <value>Aumentar força +%d%%</value>
+  </data>
+  <data name="IncreaseAgilityPercentD" xml:space="preserve">
+    <value>Aumentar agilidade +%d%%</value>
+  </data>
+  <data name="IncreaseEnergyPercentD" xml:space="preserve">
+    <value>Aumentar energia +%d%%</value>
+  </data>
+  <data name="IncreaseStaminaPercentD" xml:space="preserve">
+    <value>Aumentar resistência +%d%%</value>
+  </data>
+  <data name="IncreaseCommandPercentD" xml:space="preserve">
+    <value>Aumentar comando +%d%%</value>
+  </data>
+  <data name="IncreaseMaxManaPercentD" xml:space="preserve">
+    <value>Aumentar máx. mana +%d%%</value>
+  </data>
+  <data name="IncreaseMaxAgPercentD" xml:space="preserve">
+    <value>Aumentar máx. AG +%d%%</value>
+  </data>
 </root>
