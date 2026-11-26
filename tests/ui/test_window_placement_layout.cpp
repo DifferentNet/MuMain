@@ -133,7 +133,7 @@ TEST_CASE("The header's corners and the docks the content area caps [ui][window-
     context->SetDensityIndependentPixelRatio(Scale);
     // The HUD's scale, as UI::RmlBridge::ApplyScaleInputs() gives every context.
     context->GetRootElement()->SetProperty("--hud-scale", std::to_string(Scale));
-    for (const char* theme : {"legacy", "modern"})
+    for (const char* theme : {"legacy", "modern", "skynet"})
     {
         CAPTURE(theme);
         auto* document = context->LoadDocumentFromMemory(WorkspaceFor(theme));
@@ -162,7 +162,8 @@ TEST_CASE("The header's corners and the docks the content area caps [ui][window-
         const float content = 768.f - 25.f * Scale - 51.f * Scale;
         CHECK(document->GetElementById("safe_area")->GetBox().GetSize().y == doctest::Approx(content));
         const float dock = docks[0]->GetBox().GetSize().y;
-        CHECK(dock == doctest::Approx(std::string(theme) == "modern" ? content : 432.f * Scale));
+        // modern and skynet cap the dock to the content area; legacy keeps the original's full height.
+        CHECK(dock == doctest::Approx(std::string(theme) == "legacy" ? 432.f * Scale : content));
 
         // The chat stands on the HUD: the input box on the content area's bottom, the log on the
         // input, overlapping it by one unit as the original drew them.
@@ -256,7 +257,7 @@ TEST_CASE("A theme-sized slot fills the safe area's height [ui][window-placement
 // The game's inputs at 1920x1080: dock scale 2.25, HUD scale 2.0 (51 units tall). Open windows
 // must land on the original's columns, 190 units each from the right, on the dock's top edge,
 // even though the workspace document is never shown.
-TEST_CASE("Both themes' workspaces place docked windows on the original columns [ui][window-placement]")
+TEST_CASE("Every theme's workspace places docked windows on the original columns [ui][window-placement]")
 {
     NullRenderer renderer;
     Rml::SetRenderInterface(&renderer);
@@ -264,13 +265,15 @@ TEST_CASE("Both themes' workspaces place docked windows on the original columns 
     constexpr float Width = 1920.f;
     constexpr float Height = 1080.f;
     constexpr float Scale = 2.25f;
-    constexpr float HudTop = Height - 51.f * 2.f;
     auto* context = Rml::CreateContext("window-placement", {1920, 1080});
     REQUIRE(context != nullptr);
 
-    for (const char* theme : {"legacy", "modern"})
+    for (const char* theme : {"legacy", "modern", "skynet"})
     {
         CAPTURE(theme);
+        // Skynet's live HUD reserves 76 units (main_frame_live.rcss #hud_layout), legacy's and modern's 51.
+        const bool skynet = std::string(theme) == "skynet";
+        const float HudTop = Height - (skynet ? 76.f : 51.f) * 2.f;
         auto* document = context->LoadDocumentFromMemory(WorkspaceFor(theme));
         REQUIRE(document != nullptr);
 
@@ -295,7 +298,9 @@ TEST_CASE("Both themes' workspaces place docked windows on the original columns 
         // A theme that caps its docks at the content area starts them below its header; the
         // service then draws the windows smaller to fit (not part of this RCSS-only check).
         const float header = document->GetElementById("shell_header")->GetBox().GetSize(Rml::BoxArea::Border).y;
-        const float dockTop = std::string(theme) == "modern" ? header : HudTop - 432.f * Scale;
+        // Skynet's taller HUD leaves less than the dock's 432 units: uncapped, the vault's top (its page
+        // buttons) rose 44 px past the screen's top.
+        const float dockTop = std::string(theme) == "legacy" ? HudTop - 432.f * Scale : header;
         const auto column = [&](const char* window, int n)
         {
             CAPTURE(window);
@@ -320,4 +325,49 @@ TEST_CASE("Both themes' workspaces place docked windows on the original columns 
     Rml::RemoveContext("window-placement");
     Rml::Shutdown();
     Rml::SetRenderInterface(nullptr);
+}
+
+// Skynet's workspace.rcss is legacy's with the docks capped and the header steady (as modern's);
+// anything else in it would fall out of step with legacy's unseen.
+TEST_CASE("Skynet's workspace is legacy's with capped docks and a steady header [ui][window-placement]")
+{
+    const std::string root = MU_RMLUI_DIR;
+    const auto rules = [](std::string text)
+    {
+        // Comments and line endings aside, the two files must match once the caps and the header's
+        // min-height are taken out.
+        std::string out;
+        for (std::size_t at = 0; at < text.size();)
+        {
+            if (text.compare(at, 2, "/*") == 0)
+            {
+                const std::size_t end = text.find("*/", at + 2);
+                at = end == std::string::npos ? text.size() : end + 2;
+                continue;
+            }
+            if (text[at] != '\r')
+                out += text[at];
+            ++at;
+        }
+        const std::string cap = "\tmax-height: 100%;\n";
+        for (std::size_t at; (at = out.find(cap)) != std::string::npos;)
+            out.erase(at, cap.size());
+        const std::string steady = " min-height: 25dp;";
+        for (std::size_t at; (at = out.find(steady)) != std::string::npos;)
+            out.erase(at, steady.size());
+        std::string squeezed;
+        std::istringstream lines(out);
+        for (std::string line; std::getline(lines, line);)
+            if (line.find_first_not_of(" \t") != std::string::npos)
+                squeezed += line + "\n";
+        return squeezed;
+    };
+    const std::string skynet = ReadFile(root + "/themes/skynet/workspace.rcss");
+    REQUIRE(!skynet.empty());
+    CHECK(rules(skynet) == rules(ReadFile(root + "/themes/legacy/workspace.rcss")));
+    std::size_t caps = 0;
+    for (std::size_t at = 0; (at = skynet.find("max-height: 100%;", at)) != std::string::npos; ++at)
+        ++caps;
+    CHECK(caps == 2);
+    CHECK(skynet.find("#shell_header { align-items: flex-start; min-height: 25dp; }") != std::string::npos);
 }
