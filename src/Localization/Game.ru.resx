@@ -17585,7 +17585,7 @@
     <value>Увеличение выносливости +%d%%</value>
   </data>
   <data name="IncreaseCommandPercentD" xml:space="preserve">
-    <value>Командование +%d%%</value>
+    <value>Увеличение командования +%d%%</value>
   </data>
   <data name="IncreaseMaxManaPercentD" xml:space="preserve">
     <value>Увеличение макс. маны +%d%%</value>
