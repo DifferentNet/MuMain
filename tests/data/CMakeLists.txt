@@ -132,3 +132,16 @@ mu_add_test(
 target_compile_definitions(test_monster_preload PRIVATE
     MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
 )
+
+# Loads the shipped map object files through the game's loader: a broken record makes no object.
+mu_add_test(
+    NAME test_map_objects
+    SOURCES
+        test_map_objects.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)
+target_compile_definitions(test_map_objects PRIVATE
+    MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
+)
