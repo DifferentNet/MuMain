@@ -33,6 +33,7 @@ Data/Interface/RmlUi/themes/skynet/tokens.ini
 Data/Interface/RmlUi/themes/skynet/tooltip.rml
 Data/Interface/RmlUi/themes/skynet/tooltip_rich.rcss
 Data/Interface/RmlUi/themes/skynet/main_frame_live.rcss
+Data/Interface/RmlUi/themes/skynet/workspace.rcss
 Data/Interface/RmlUi/themes/legacy/base.rcss
 Data/Render/Look.json
 Data/Maps/LightMood.json

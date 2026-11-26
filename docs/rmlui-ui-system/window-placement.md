@@ -178,7 +178,8 @@ A region's `data-scale` picks the scale: `dock` (default; the original docks, ca
 **fitted**: its windows draw at the scale that fits (resolved height over `data-ref-height` at
 the region's scale), scaled whole — RmlUi, native grids and 3D icons follow the slot transform.
 Modern caps its docks below the header; legacy doesn't, so its docks reach the screen top as the
-original's did.
+original's did. Skynet (legacy's windows) caps them like modern, header height included: its live HUD
+reserves 76 units, and the uncapped 432-unit dock rose past the screen's top at 1920x1080.
 
 A slot's `data-touch-scale` raises its window, in the phone view with touch controls, to at least
 that many finger units (`UI/Mobile/TouchUnit`) per layout unit; the rest of the region keeps its
