@@ -4790,8 +4790,27 @@ void CreateOperate(OBJECT* Owner)
     }
 }
 
+namespace
+{
+// One record of a map object file: short type, position, angle, float scale.
+constexpr int ObjectRecordBytes = static_cast<int>(sizeof(short) + 2 * sizeof(vec3_t) + sizeof(float));
+
+// The records a file can hold after its header: a count beyond them would read past the file's end.
+short ClampObjectCount(short count, int bytesLeft)
+{
+    const int whole = bytesLeft > 0 ? bytesLeft / ObjectRecordBytes : 0;
+    if (count < 0) return 0;
+    return static_cast<short>(count < whole ? count : whole);
+}
+} // namespace
+
 OBJECT* CreateObject(int Type, vec3_t Position, vec3_t Angle, float Scale)
 {
+    // A map object file can hold a broken record: the original Arena (World7\EncTerrain7.obj, record 18) has
+    // type -515 at the map's corner. No model slot has that number, and drawing the object wrote outside Models
+    // (client crash of 2026-11-26, whenever the camera saw that corner). Such a record makes no object.
+    if (Type < 0 || Type >= MAX_MODELS) return NULL;
+
     int i = (int)(Position[0] / (16 * TERRAIN_SCALE));
     int j = (int)(Position[1] / (16 * TERRAIN_SCALE));
     if (i < 0 || j < 0 || i >= 16 || j >= 16) return NULL;
@@ -5258,6 +5277,12 @@ int OpenObjects(wchar_t* FileName)
 
     unsigned char* Data = EncData;
     int DataBytes = EncBytes;
+    // The header (version byte, record count) must fit before anything is read from it.
+    if (DataBytes < 1 + static_cast<int>(sizeof(short)))
+    {
+        delete[] Data;
+        return (-1);
+    }
 
     int DataPtr = 0;
 
@@ -5268,6 +5293,7 @@ int OpenObjects(wchar_t* FileName)
     short Count = 0;
     memcpy(&Count, Data + DataPtr, sizeof(Count));
     DataPtr += sizeof(Count);
+    Count = ClampObjectCount(Count, DataBytes - DataPtr);
     for (int i = 0; i < Count; i++)
     {
         vec3_t Position;
@@ -5311,6 +5337,12 @@ int OpenObjectsEnc(wchar_t* FileName)
     auto* Data = new unsigned char[DataBytes];
     MapFileDecrypt(Data, EncData, EncBytes);
     delete[] EncData;
+    // The header (version byte, map byte, record count) must fit before anything is read from it.
+    if (DataBytes < 2 + static_cast<int>(sizeof(short)))
+    {
+        delete[] Data;
+        return (-1);
+    }
 
     int DataPtr = 0;
     DataPtr += 1;
@@ -5319,6 +5351,7 @@ int OpenObjectsEnc(wchar_t* FileName)
     short Count = 0;
     memcpy(&Count, Data + DataPtr, sizeof(Count));
     DataPtr += sizeof(Count);
+    Count = ClampObjectCount(Count, DataBytes - DataPtr);
     g_iTotalObj = Count;
     for (int i = 0; i < Count; i++)
     {
