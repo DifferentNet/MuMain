@@ -135,8 +135,8 @@ TEST_CASE("wings count their kind and twice their level")
 {
     CHECK(GetItemCombatPower(Gear(12, 0, Wings, 100, 9)) == 500 + 500);
     CHECK(GetItemCombatPower(Gear(13, 30, Wings, 180, 0)) == 1500);
-    CHECK(GetItemCombatPower(Gear(12, 36, Wings, 380, 13)) == 4000 + 1800);
-    CHECK(GetItemCombatPower(Gear(12, 43, Wings, 380, 0)) == 4000);
+    CHECK(GetItemCombatPower(Gear(12, 36, Wings, 380, 13)) == 2500 + 1800);
+    CHECK(GetItemCombatPower(Gear(12, 43, Wings, 380, 0)) == 2500);
     CHECK(GetItemCombatPower(Gear(12, 49, Wings, 180, 9)) == 0);
 }
 
