@@ -22,7 +22,22 @@
 #sk_ticket { left: 12px; top: 49px; pointer-events: none; }
 #sk_runs { left: 12px; top: 63px; pointer-events: none; }
 
-#sk_list { left: 12px; top: 80px; --flow-w: 166px; line-height: 1.12; }
+/* The tiers and curses pane stops above the foot (80 + 274 < 358) and scrolls (wheel, finger) when its rows no longer
+   fit, so it never covers the hint or the enter button; on PCs too since 2026-11-27 (ten tiers). */
+#sk_list {
+	left: 12px;
+	top: 80px;
+	--flow-w: 166px;
+	line-height: 1.12;
+	height: calc(274px * var(--root-scale));
+	overflow: hidden auto;
+	pointer-events: auto;
+}
+/* A narrow scrollbar (chat_command.rcss's .cc-rows recipe), so the rows keep the width their texts are fitted to. */
+#sk_list scrollbarvertical { width: 4px; }
+#sk_list scrollbarvertical slidertrack { decorator: none; background-color: rgba(255, 255, 255, 20); }
+#sk_list scrollbarvertical sliderbar { decorator: none; height: auto; min-height: 24px; background-color: rgba(255, 220, 120, 150); }
+#sk_list scrollbarvertical sliderarrowdec, #sk_list scrollbarvertical sliderarrowinc { height: 0; }
 .sk-tier {
 	display: block;
 	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
@@ -30,6 +45,7 @@
 	cursor: pointer;
 	pointer-events: auto;
 }
+.sk-tier-cp { float: right; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .sk-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .sk-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
 .sk-record { display: block; margin-top: calc(2px * var(--root-scale)); white-space: nowrap; }
@@ -84,7 +100,7 @@
 .sk-tier { color: rgb(130, 130, 130); }
 .sk-tier:hover { background-color: rgba(255, 255, 255, 14); }
 .sk-tier.open .sk-tier-title { color: rgb(240, 240, 240); }
-.sk-tier.open .sk-tier-detail { color: rgb(200, 220, 255); }
+.sk-tier.open .sk-tier-detail, .sk-tier.open .sk-tier-cp { color: rgb(200, 220, 255); }
 .sk-tier.selected { background-color: rgba(255, 210, 100, 48); }
 .sk-tier.selected .sk-tier-title { color: rgb(255, 220, 120); }
 .sk-record { color: rgb(170, 170, 170); }
@@ -101,16 +117,10 @@
 #sk_title { width: calc(100% * var(--root-scale)); }
 #sk_power, #sk_ticket, #sk_runs { width: calc(166px * var(--root-scale)); }
 
-/* MU Moldova: the phone view (theme flag "mobile"): rows, checkboxes and the button a finger can take. The tiers and
-   curses pane stops above the foot (80 + 274 < 358) and scrolls when its rows no longer fit, so it never covers the
-   hint or the enter button. */
+/* MU Moldova: the phone view (theme flag "mobile"): rows, checkboxes and the button a finger can take (the pane's
+   height and scrolling are #sk_list's own, above). */
 @media (theme: mobile) {
-	.sk-tier, .sk-curse { padding: calc(5px * var(--root-scale)) calc(4px * var(--root-scale)); }
+	.sk-tier, .sk-curse { padding: calc(4px * var(--root-scale)) calc(4px * var(--root-scale)); }
 	.sk-check { width: calc(14px * var(--root-scale)); height: calc(14px * var(--root-scale)); }
-	#sk_list {
-		height: calc(274px * var(--root-scale));
-		overflow: hidden auto;
-		pointer-events: auto;
-	}
 	#sk_enter { height: calc(42px * var(--root-scale)); }
 }

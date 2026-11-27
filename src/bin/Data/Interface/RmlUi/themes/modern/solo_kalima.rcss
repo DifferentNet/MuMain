@@ -26,7 +26,20 @@
 #sk_ticket { left: 12px; top: 49px; pointer-events: none; }
 #sk_runs { left: 12px; top: 63px; pointer-events: none; }
 
-#sk_list { left: 12px; top: 80px; --flow-w: 166px; line-height: 1.12; }
+/* The tiers and curses pane stops above the foot (80 + 274 < 358) and scrolls (wheel, finger) when its rows no longer
+   fit, so it never covers the hint or the enter button; on PCs too since 2026-11-27 (ten tiers). */
+#sk_list {
+	left: 12px;
+	top: 80px;
+	--flow-w: 166px;
+	line-height: 1.12;
+	height: calc(274px * var(--root-scale));
+	overflow: hidden auto;
+	pointer-events: auto;
+}
+/* A narrow scrollbar (chat_command.rcss's .cc-rows recipe), so the rows keep the width their texts are fitted to. */
+#sk_list scrollbarvertical { width: 4px; }
+#sk_list scrollbarvertical sliderbar { min-height: 24px; }
 .sk-tier {
 	display: block;
 	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
@@ -35,6 +48,7 @@
 	cursor: pointer;
 	pointer-events: auto;
 }
+.sk-tier-cp { float: right; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .sk-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .sk-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
 .sk-record { display: block; margin-top: calc(2px * var(--root-scale)); white-space: nowrap; }
@@ -99,7 +113,7 @@
 .sk-tier { color: token(text-muted); }
 .sk-tier:hover { background-color: rgba(255, 255, 255, 12); }
 .sk-tier.open .sk-tier-title { color: token(text-primary); }
-.sk-tier.open .sk-tier-detail { color: token(text-secondary); }
+.sk-tier.open .sk-tier-detail, .sk-tier.open .sk-tier-cp { color: token(text-secondary); }
 .sk-tier.selected { background-color: rgba(255, 200, 90, 40); }
 .sk-tier.selected .sk-tier-title { color: token(accent-gold); }
 .sk-record { color: token(text-muted); }
