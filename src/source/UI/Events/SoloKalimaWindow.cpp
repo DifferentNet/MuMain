@@ -416,7 +416,7 @@ void mu::ui::window::CSoloKalimaWindow::SyncTiers(SoloKalimaRmlModel& updated, i
                                       ? Printf(I18N::Game::SoloKalimaServerBest, tier.Number, FormatDuration(tier.ServerBestSeconds).c_str(),
                                                tier.ServerBestName.c_str())
                                       : Printf(I18N::Game::SoloKalimaNoServerBest, tier.Number),
-                                  CONTENT_WIDTH);
+                                  CONTENT_WIDTH - SCROLLBAR_ROOM);
         }
         updated.tiers.push_back(std::move(row));
     }
@@ -430,7 +430,7 @@ void mu::ui::window::CSoloKalimaWindow::SyncCurses(SoloKalimaRmlModel& updated) 
         return;
 
     const int picked = static_cast<int>(m_pickedCurses.size());
-    updated.cursesTitle = Line(Printf(I18N::Game::SoloKalimaCurses, picked, status.MaxCurses), CONTENT_WIDTH, true);
+    updated.cursesTitle = Line(Printf(I18N::Game::SoloKalimaCurses, picked, status.MaxCurses), CONTENT_WIDTH - SCROLLBAR_ROOM, true);
     int index = 0;
     for (const auto& curse : lair.Curses())
     {
