@@ -7,7 +7,7 @@
 // Kundun's Lair (solo Kalima) for its window.
 //
 // Our server's add-on (MU Moldova, SoloKalima) runs a solo dungeon in a copy of a Kalima map: one run a day per
-// account, a Mirror of Dimensions to go in, six tiers by the character's Combat Power and maximum HP, up to a few
+// account, a Mirror of Dimensions to go in, ten tiers (since 2026-11-27) by the character's Combat Power and maximum HP, up to a few
 // curses that make it harder for more loot. Talking to its NPC sends "#SKO|" (open the window); "/soloinfo" asks for
 // the state, which comes as blue server messages this takes out of the chat:
 //   "#SK0|near|tickets|runs left today|seconds to the reset|cp enforced|my counted cp|my max hp|in a run|max curses"

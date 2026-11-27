@@ -16990,10 +16990,10 @@
     <value>Runs left today: %d, reset in %ls</value>
   </data>
   <data name="SoloKalimaTierTitle" xml:space="preserve">
-    <value>%d. %ls · Kalima %d</value>
+    <value>%d. %ls</value>
   </data>
-  <data name="SoloKalimaTierClosed" xml:space="preserve">
-    <value> · closed</value>
+  <data name="SoloKalimaTierKalima" xml:space="preserve">
+    <value>Kalima %d</value>
   </data>
   <data name="SoloKalimaTierDetail" xml:space="preserve">
     <value>%ls CP · %ls HP · best %ls</value>

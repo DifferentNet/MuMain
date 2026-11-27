@@ -310,6 +310,8 @@ void mu::ui::window::CSoloKalimaWindow::BindRmlModel(Rml::DataModelConstructor& 
     auto rowType = c.RegisterStruct<SoloKalimaRow>();
     rowType.RegisterMember("tier", &SoloKalimaRow::tier);
     rowType.RegisterMember("title", &SoloKalimaRow::title);
+    rowType.RegisterMember("cp", &SoloKalimaRow::cp);
+    rowType.RegisterMember("kalima", &SoloKalimaRow::kalima);
     rowType.RegisterMember("detail", &SoloKalimaRow::detail);
     rowType.RegisterMember("open", &SoloKalimaRow::open);
     rowType.RegisterMember("selected", &SoloKalimaRow::selected);
@@ -396,18 +398,25 @@ void mu::ui::window::CSoloKalimaWindow::SyncTiers(SoloKalimaRmlModel& updated, i
         row.tier = tier.Number;
         row.open = tier.Open || !status.Enforced;
         row.selected = tier.Number == selected;
-        const std::wstring title = Printf(I18N::Game::SoloKalimaTierTitle, tier.Number, tier.Name.c_str(), tier.Kalima);
-        row.title = Line(row.open ? title : title + I18N::Game::SoloKalimaTierClosed, ROW_WIDTH, true);
-        row.detail = Line(Printf(I18N::Game::SoloKalimaTierDetail, Thousands(tier.CombatPower).c_str(),
-                                 Thousands(tier.Health).c_str(), BestTime(tier.MyBestSeconds).c_str()),
-                          ROW_WIDTH);
+        const std::wstring title = Printf(I18N::Game::SoloKalimaTierTitle, tier.Number, tier.Name.c_str());
+        // Ten tiers since 2026-11-27: a row is one line, "N. Name" with its Combat Power in thousands at the right
+        // ("75k", "14.7k"), as in the Tier Maps window (a closed tier is grey, no " · closed"); only the picked tier adds
+        // its Kalima line and the detail line (CP, HP, best time), so the list, the record and the curses still stop above the foot.
+        const int cpTenths = (tier.CombatPower + 50) / 100;
+        row.cp = Line(cpTenths % 10 == 0 ? Printf(L"%dk", cpTenths / 10) : Printf(L"%d.%dk", cpTenths / 10, cpTenths % 10),
+                      CP_WIDTH, true);
+        row.title = Line(title, ROW_WIDTH - CP_WIDTH - CP_GAP, true);
         if (row.selected)
         {
+            row.kalima = Line(Printf(I18N::Game::SoloKalimaTierKalima, tier.Kalima), ROW_WIDTH - SCROLLBAR_ROOM);
+            row.detail = Line(Printf(I18N::Game::SoloKalimaTierDetail, Thousands(tier.CombatPower).c_str(),
+                                     Thousands(tier.Health).c_str(), BestTime(tier.MyBestSeconds).c_str()),
+                              ROW_WIDTH - SCROLLBAR_ROOM);
             updated.record = Line(tier.ServerBestSeconds > 0
                                       ? Printf(I18N::Game::SoloKalimaServerBest, tier.Number, FormatDuration(tier.ServerBestSeconds).c_str(),
                                                tier.ServerBestName.c_str())
                                       : Printf(I18N::Game::SoloKalimaNoServerBest, tier.Number),
-                                  CONTENT_WIDTH);
+                                  CONTENT_WIDTH - SCROLLBAR_ROOM);
         }
         updated.tiers.push_back(std::move(row));
     }
@@ -421,7 +430,7 @@ void mu::ui::window::CSoloKalimaWindow::SyncCurses(SoloKalimaRmlModel& updated) 
         return;
 
     const int picked = static_cast<int>(m_pickedCurses.size());
-    updated.cursesTitle = Line(Printf(I18N::Game::SoloKalimaCurses, picked, status.MaxCurses), CONTENT_WIDTH, true);
+    updated.cursesTitle = Line(Printf(I18N::Game::SoloKalimaCurses, picked, status.MaxCurses), CONTENT_WIDTH - SCROLLBAR_ROOM, true);
     int index = 0;
     for (const auto& curse : lair.Curses())
     {
@@ -430,7 +439,7 @@ void mu::ui::window::CSoloKalimaWindow::SyncCurses(SoloKalimaRmlModel& updated) 
         row.checked = IsCursePicked(curse.Key);
         row.locked = !row.checked && picked >= status.MaxCurses;
         const std::wstring text = Printf(I18N::Game::SoloKalimaCurse, curse.Name.c_str(), curse.Description.c_str());
-        row.text = Line(text, CURSE_WIDTH);
+        row.text = Line(text, CURSE_WIDTH - SCROLLBAR_ROOM);
         row.hint = StringUtils::WideToNarrow(text.c_str());
         updated.curses.push_back(std::move(row));
     }

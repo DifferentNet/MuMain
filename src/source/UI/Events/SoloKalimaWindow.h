@@ -18,7 +18,7 @@ class ElementDocument;
 namespace mu::ui::window
 {
 // Kundun's Lair (solo Kalima), opened by the lair's NPC in Lorencia and Devias (the server sends "#SKO|"): the
-// character's counted Combat Power and HP, the Mirrors of Dimensions, the runs left today, the six tiers with what
+// character's counted Combat Power and HP, the Mirrors of Dimensions, the runs left today, the tiers (ten since 2026-11-27) with what
 // they need and the best times, the curses to pick, and the button that takes the character in. It asks the server
 // again every few seconds while it is open; the answers stay out of the chat (GameLogic/Events/SoloKalima.h). Docked
 // right like the other NPC windows, in the Tier Maps window's look; solo_kalima.rml draws it.
@@ -30,7 +30,10 @@ class CSoloKalimaWindow : public CObject
         WINDOW_WIDTH = 190,
         CONTENT_WIDTH = 166,
         ROW_WIDTH = 162,
+        CP_WIDTH = 34,
+        CP_GAP = 12, // the row is 158 px inside its padding (162 - 4): keep a gap between the name and the CP
         CURSE_WIDTH = 148,
+        SCROLLBAR_ROOM = 6, // the list's 4 px scroll bar takes this off the full-width lines when it shows
         ENTER_WIDTH = 120,
     };
 

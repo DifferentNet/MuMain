@@ -16,12 +16,15 @@ struct SoloKalimaLine
     bool operator==(const SoloKalimaLine&) const = default;
 };
 
-// A tier: its name and Kalima, the Combat Power and HP it needs, the character's best time; whether the character may
-// go in, and whether it is the one picked.
+// A tier: its number and name with the Combat Power it needs in thousands at the right; only the picked one also has
+// its Kalima line and the detail line (the Combat Power and HP it needs, the character's best time). Whether the character may go in, and
+// whether it is the one picked.
 struct SoloKalimaRow
 {
     int tier = 0;
     SoloKalimaLine title;
+    SoloKalimaLine cp;
+    SoloKalimaLine kalima;
     SoloKalimaLine detail;
     bool open = false;
     bool selected = false;
