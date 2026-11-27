@@ -33,6 +33,7 @@ class CSoloKalimaWindow : public CObject
         CP_WIDTH = 34,
         CP_GAP = 12, // the row is 158 px inside its padding (162 - 4): keep a gap between the name and the CP
         CURSE_WIDTH = 148,
+        SCROLLBAR_ROOM = 6, // the list's 4 px scroll bar takes this off the full-width lines when it shows
         ENTER_WIDTH = 120,
     };
 

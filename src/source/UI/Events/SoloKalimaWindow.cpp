@@ -408,10 +408,10 @@ void mu::ui::window::CSoloKalimaWindow::SyncTiers(SoloKalimaRmlModel& updated, i
         row.title = Line(title, ROW_WIDTH - CP_WIDTH - CP_GAP, true);
         if (row.selected)
         {
-            row.kalima = Line(Printf(I18N::Game::SoloKalimaTierKalima, tier.Kalima), ROW_WIDTH);
+            row.kalima = Line(Printf(I18N::Game::SoloKalimaTierKalima, tier.Kalima), ROW_WIDTH - SCROLLBAR_ROOM);
             row.detail = Line(Printf(I18N::Game::SoloKalimaTierDetail, Thousands(tier.CombatPower).c_str(),
                                      Thousands(tier.Health).c_str(), BestTime(tier.MyBestSeconds).c_str()),
-                              ROW_WIDTH);
+                              ROW_WIDTH - SCROLLBAR_ROOM);
             updated.record = Line(tier.ServerBestSeconds > 0
                                       ? Printf(I18N::Game::SoloKalimaServerBest, tier.Number, FormatDuration(tier.ServerBestSeconds).c_str(),
                                                tier.ServerBestName.c_str())
@@ -439,7 +439,7 @@ void mu::ui::window::CSoloKalimaWindow::SyncCurses(SoloKalimaRmlModel& updated) 
         row.checked = IsCursePicked(curse.Key);
         row.locked = !row.checked && picked >= status.MaxCurses;
         const std::wstring text = Printf(I18N::Game::SoloKalimaCurse, curse.Name.c_str(), curse.Description.c_str());
-        row.text = Line(text, CURSE_WIDTH);
+        row.text = Line(text, CURSE_WIDTH - SCROLLBAR_ROOM);
         row.hint = StringUtils::WideToNarrow(text.c_str());
         updated.curses.push_back(std::move(row));
     }
