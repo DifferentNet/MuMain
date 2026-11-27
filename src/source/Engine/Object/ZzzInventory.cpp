@@ -4278,7 +4278,8 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     }
     else if (GameLogic::Items::IsThirdTierWing(ip))
     {
-        mu_swprintf(TextList[TextNum], I18N::Game::IncreaseDOfDamage, 39 + Level * 2);
+        // Damage grows 3 % per level (was 2 %), as on the server (ghinzuro 2026-11-27); absorb is unchanged.
+        mu_swprintf(TextList[TextNum], I18N::Game::IncreaseDOfDamage, 39 + Level * 3);
         TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
         if (ip->Type == ITEM_CAPE_OF_EMPEROR || ip->Type == ITEM_CAPE_OF_OVERRULE)
         {
