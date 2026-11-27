@@ -138,7 +138,7 @@ int GetWingPoints(const CombatPowerItem& item)
     }
     else if (item.Group == ItemGroupWings && ((number >= 36 && number <= 40) || number == 43))
     {
-        basePoints = 4000; // 3rd wings and the Cape of Emperor
+        basePoints = 2500; // 3rd wings and the Cape of Emperor (was 4000 until ghinzuro 2026-11-27)
     }
 
     return basePoints == 0 ? 0 : basePoints + 2 * GetLevelPoints(item.Level);
